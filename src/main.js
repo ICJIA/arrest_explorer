@@ -256,34 +256,6 @@ new Vue({
     },
   },
   methods: {
-    sample: function(x, n) {
-      var o = {},
-        p = [],
-        s = 0,
-        r = 0,
-        np = 0,
-        i,
-        w,
-        k;
-      for (k in x)
-        if (Object.prototype.hasOwnProperty.call(x, k)) {
-          o[k] = 0;
-          s += x[k];
-          if (np++) {
-            for (i = p.length + 1; i--; ) if (!i || x[k] >= p[i - 1].pr) break;
-            p.splice(i, 0, { v: k, pr: x[k] });
-          } else {
-            p.push({ v: k, pr: x[k] });
-          }
-        }
-      for (i = np - 1; i--; ) p[i].pr += p[i + 1].pr;
-      for (i = n; i--; ) {
-        for (r = Math.random() * s, w = np; w--; )
-          if (!w || r <= p[w].pr) break;
-        o[p[w].v]++;
-      }
-      return o;
-    },
     to_area: function(s) {
       return s.replace(/[^0-9%pxrem]+/, "").replace(/(?<=[0-9])$/, "px");
     },

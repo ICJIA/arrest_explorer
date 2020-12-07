@@ -94,7 +94,7 @@
         </v-row>
       </v-col>
     </v-row>
-    <span class="code-note">download_data through the API:</span>
+    <span class="code-note">download through the API:</span>
     <div class="api-display">
       <a :href="api_url.string" target="_blank">
         <span class="url-base">{{ $root.settings.base_url }}</span>
@@ -127,15 +127,16 @@
 function save(uri, name) {
   var e = document.createElement("a");
   e.setAttribute("rel", "noopener");
+  e.setAttribute("target", "_blank");
   if ("string" !== typeof uri) {
     uri = URL.createObjectURL(uri);
     setTimeout(URL.revokeObjectURL.bind(null, uri), 1e4);
   }
   e.setAttribute("href", uri);
-  e.setAttribute("download_data", name);
+  e.setAttribute("download", name);
   document.body.appendChild(e);
   setTimeout(function() {
-    e.click();
+    e.dispatchEvent(new MouseEvent("click"));
     document.body.removeChild(e);
   }, 0);
 }
