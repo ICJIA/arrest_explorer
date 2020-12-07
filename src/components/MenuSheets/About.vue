@@ -52,7 +52,7 @@
           block
           x-large
           target="_blank"
-          href="https://github.com/ICJIA/icjia-arrest-explorer"
+          href="https://github.com/miserman/arrest_explorer"
           >GitHub<v-icon right>mdi-open-in-new</v-icon></v-btn
         > </v-col
       ><v-col>
