@@ -1,31 +1,38 @@
 <template>
   <div class="bottom-menu">
     <div id="menu-sheet-wrap">
-      <v-card outlined class="menu-sheet">
-        <component class="menu-sheet-content" :is="this.sheet"></component>
-      </v-card>
+      <component
+        class="menu-sheet-content"
+        :is="$root.settings.sheet"
+      ></component>
     </div>
-    <div class="menu-bar">
-      <div class="menu-items">
-        <v-btn
-          v-for="{ name, hint } in sheets"
-          :key="name"
-          :title="hint"
-          :active="name === 'Data' ? data_menu_open : sheet === name"
-          @click="name === 'Data' ? toggleDataMenu() : toggleSheet(name)"
-          >{{ name }}</v-btn
-        >
-      </div>
-    </div>
+    <v-row no-gutters class="menu-bar">
+      <v-col>
+        <div class="menu-bar-central">
+          <v-btn
+            v-for="{ name, hint } in sheets"
+            :key="name"
+            :title="hint"
+            :active="$root.settings.sheet === name"
+            @click="toggleSheet(name)"
+            >{{ name }}</v-btn
+          >
+        </div>
+      </v-col>
+      <v-col class="menu-bar-offset">
+        <v-btn @click="toggleDataMenu()" :active="data_menu_open">Data</v-btn>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
 <script>
 import About from "./MenuSheets/About";
+import Examples from "./MenuSheets/Examples";
 import Options from "./MenuSheets/Options";
 
 var watch = {
-  sheet: {
+  "$root.settings.sheet": {
     handler: function(s) {
       if (!this.menu_wrap)
         this.menu_wrap = document.getElementById("menu-sheet-wrap");
@@ -37,6 +44,7 @@ var watch = {
 export default {
   components: {
     About,
+    Examples,
     Options,
   },
   data() {
@@ -49,14 +57,14 @@ export default {
           name: "About",
           hint: "Find more information about this site and API.",
         },
+        { name: "Examples", hint: "View preset plots for specific questions." },
         { name: "Options", hint: "Adjust site options and download data." },
-        {
-          name: "Data",
-          hint:
-            "Visualize and filter by variables, and adjust data display settings.",
-        },
+        // {
+        //   name: "Data",
+        //   hint:
+        //     "Visualize and filter by variables, and adjust data display settings.",
+        // },
       ],
-      sheet: "",
     };
   },
   mounted() {
@@ -66,18 +74,24 @@ export default {
   },
   methods: {
     toggleSheet: function(sheet) {
-      this.sheet = this.sheet === sheet ? "" : sheet;
+      this.$root.settings.sheet =
+        this.$root.settings.sheet === sheet ? "" : sheet;
     },
     toggleDataMenu: function() {
+      var w = document.body.getBoundingClientRect().width;
       if (this.data_menu_open) {
         this.data_container.style.right = "0px";
-        this.menu_wrap.style.right = "0px";
         this.data_menu.style.right = "-300px";
+        this.data_menu.style.width = "300px";
         this.data_menu_open = false;
       } else {
-        this.data_container.style.right = "300px";
-        this.menu_wrap.style.right = "300px";
         this.data_menu.style.right = "0px";
+        if (w < 600) {
+          this.data_menu.style.width = "100%";
+        } else {
+          this.data_container.style.right = "300px";
+          this.data_menu.style.width = "300px";
+        }
         this.data_menu_open = true;
       }
       if (!this.$root.settings.as_table && this.$root.$options.plot.instance) {
@@ -103,17 +117,23 @@ export default {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14),
     0 1px 10px 0 rgba(0, 0, 0, 0.12);
 }
-.menu-items {
+.menu-bar-central {
   margin: 0 auto;
   height: 100%;
   max-width: 500px;
   min-width: 200px;
 }
-.menu-items > button.v-btn {
+.menu-bar button.v-btn {
   border-radius: 0;
   box-shadow: none;
   width: 33%;
   height: 100%;
+}
+.menu-bar-offset {
+  max-width: 300px;
+}
+.menu-bar-offset button.v-btn {
+  width: 100%;
 }
 button[active="true"] {
   font-weight: bold;
@@ -124,23 +144,29 @@ button[active="true"] {
   max-height: 100%;
   overflow-y: auto;
   left: 0;
-  right: 0;
+  right: 300px;
   bottom: -500px;
   padding: 0 0 2.5em 0;
   transition: bottom 0.3s cubic-bezier(0, 1.4, 0.01, 0.91);
   -webkit-transition: bottom 0.3s cubic-bezier(0, 1.4, 0.01, 0.91);
 }
+@media screen and (max-width: 590px) {
+  .menu-bar-offset {
+    max-width: 24%;
+  }
+}
 </style>
 
 <style>
-.menu-sheet {
-  width: 100%;
+.menu-sheet-content {
+  margin: 0 auto;
+  max-width: 600px;
   padding: 0.5em;
 }
 .theme--dark .v-card {
   background: #393939;
 }
-.theme--light .menu-sheet,
+.theme--light .menu-sheet-content,
 .theme--light #side-menu .v-card {
   background: #f9f9f9;
 }

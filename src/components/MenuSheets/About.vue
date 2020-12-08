@@ -1,19 +1,21 @@
 <template>
-  <v-col>
+  <v-card outlined>
     <v-row>
-      <v-col style="flex-grow: 0; min-height: 110px">
-        <a href="http://www.icjia.state.il.us" target="_blank">
-          <v-img eager alt="ICJIA logo" src="../../assets/logo-icjia.png" />
-        </a>
-      </v-col>
-      <v-col class="about-header">
-        <h1>Arrest Explorer</h1>
-        <h2>
-          Illinois Criminal Justice Information Authority
-        </h2>
+      <v-col cols="4">
+        <v-img
+          height="100%"
+          contain
+          alt="ICJIA logo"
+          src="../../assets/logo-icjia.png"
+        /> </v-col
+      ><v-col>
+        <v-card-title>Arrest Explorer</v-card-title>
+        <v-card-subtitle
+          >Illinois Criminal Justice Information Authority</v-card-subtitle
+        >
       </v-col>
     </v-row>
-    <v-row>
+    <v-card-text>
       <v-expansion-panels>
         <v-expansion-panel>
           <v-expansion-panel-header
@@ -41,31 +43,37 @@
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
-    <v-row class="button-row">
-      <v-col>
-        <v-btn block x-large target="_blank" href="http://www.icjia.state.il.us"
-          >ICJIA Website<v-icon right>mdi-open-in-new</v-icon></v-btn
-        ></v-col
-      ><v-col>
-        <v-btn
-          block
-          x-large
-          target="_blank"
-          href="https://github.com/miserman/arrest_explorer"
-          >GitHub<v-icon right>mdi-open-in-new</v-icon></v-btn
-        > </v-col
-      ><v-col>
-        <v-btn
-          block
-          x-large
-          target="_blank"
-          href="https://icjia-arrest-explorer-docs.netlify.app"
-          >Documentation<v-icon right>mdi-open-in-new</v-icon></v-btn
-        >
-      </v-col>
-    </v-row>
-  </v-col>
+
+      <v-row class="button-blocks">
+        <v-col>
+          <v-btn
+            block
+            x-large
+            target="_blank"
+            href="https://icjia-arrest-explorer-docs.netlify.app"
+            >About this Project<v-icon right>mdi-open-in-new</v-icon></v-btn
+          >
+        </v-col>
+        <v-col>
+          <v-btn
+            block
+            x-large
+            target="_blank"
+            href="http://www.icjia.state.il.us"
+            >About the ICJIA<v-icon right>mdi-open-in-new</v-icon></v-btn
+          ></v-col
+        ><v-col>
+          <v-btn
+            block
+            x-large
+            target="_blank"
+            href="https://github.com/miserman/arrest_explorer"
+            >Code Repository<v-icon right>mdi-open-in-new</v-icon></v-btn
+          >
+        </v-col>
+      </v-row>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script></script>
@@ -80,18 +88,19 @@ h1 {
 .theme--dark.v-expansion-panels .v-expansion-panel {
   background-color: #272727;
 }
+.v-item-group {
+  margin: 0 0 1.5em 0;
+}
 .v-expansion-panel-content {
   font-size: 16px;
 }
 .row {
   margin: 0 0 0.5em 0;
 }
-@media screen and (max-width: 955px) {
-  h1 {
-    font-size: 1.3em;
-  }
-  h2 {
-    font-size: 1em;
-  }
+.button-blocks {
+  display: block;
+}
+.button-blocks .col {
+  margin: 0.5em 0 0 0;
 }
 </style>

@@ -98,8 +98,9 @@ function check_object(o, c) {
   return true;
 }
 
-function Dataview(data, options) {
+function Dataview(data, levels, options) {
   this.raw = data;
+  this.levels = levels || {};
   this.options = options || {};
   this.criteria = {};
   this.variables = function() {
@@ -143,6 +144,7 @@ function Dataview(data, options) {
     for (val in this.raw)
       if (
         val !== "year" &&
+        val !== "levels" &&
         Object.prototype.hasOwnProperty.call(this.raw, val)
       ) {
         ckt = false;
@@ -386,35 +388,68 @@ Dataview.prototype = {
         };
   },
   filter_levels: function(o, crit, split) {
-    var r, l, i, c, f;
-    r = { sum: 0, min: Infinity, max: -Infinity, labels: [], levels: [] };
+    var r, l, i, c, f, get_l;
+    r = {
+      sum: 0,
+      min: Infinity,
+      max: -Infinity,
+      labels: [],
+      display: [],
+      levels: [],
+    };
     if (o) {
       if (crit) attach_criteria(crit);
       f =
         Object.prototype.hasOwnProperty.call(this.options, "sort") &&
         Object.prototype.hasOwnProperty.call(this.options.sort, split) &&
         this.options.sort[split]
-          ? function(c, l) {
-              if (r.labels.length) {
-                for (i = r.labels.length; i--; ) if (r.labels[i] >= l) break;
+          ? function(c, l, d) {
+              if (r.display.length) {
+                for (i = r.display.length; i--; ) if (r.display[i] >= d) break;
                 if (i === -1) i = 0;
                 r.levels.splice(i, 0, c);
                 r.labels.splice(i, 0, l);
+                r.display.splice(i, 0, d);
               } else {
                 r.levels.push(c);
                 r.labels.push(l);
+                r.display.push(d);
               }
             }
-          : function(c, l) {
+          : function(c, l, d) {
               r.levels.push(c);
               r.labels.push(l);
+              r.display.push(d);
             };
+      switch (this.options.format_category) {
+        case "indices":
+          get_l = function(l) {
+            return (
+              "" +
+              (Object.prototype.hasOwnProperty.call(this.levels[split], l)
+                ? this.levels[split][l].index
+                : l)
+            );
+          }.bind(this);
+          break;
+        case "codes":
+          get_l = function(l) {
+            return Object.prototype.hasOwnProperty.call(this.levels[split], l)
+              ? this.levels[split][l].code
+              : l;
+          }.bind(this);
+          break;
+        default:
+          get_l = function(l) {
+            return l;
+          }.bind(this);
+      }
       for (l in o) {
         if (Object.prototype.hasOwnProperty.call(o, l)) {
           c = this.filter(o[l]);
-          c.label = l;
+          c.label = get_l(l);
           if (!crit || check_object(c, crit)) {
-            f(c, l);
+            f(c, l, c.label);
             if (c.sum) r.sum += c.sum;
             if (r.min > c.sum) r.min = c.sum;
             if (r.max < c.sum) r.max = c.sum;
@@ -441,12 +476,13 @@ Dataview.prototype = {
       g = h[within].labels[i];
       h[within].subgroups[split].push(
         (r = {
-          label: g,
+          label: h[within].display[i],
           sum: 0,
           mean: 0,
           min: Infinity,
           max: -Infinity,
           labels: [],
+          display: [],
           levels: [],
         })
       );
@@ -454,8 +490,9 @@ Dataview.prototype = {
         for (il = 0, nl = h[split].labels.length; il < nl; il++) {
           l = h[split].labels[il];
           r.labels.push(l);
+          r.display.push(h[split].display[il]);
           r.levels.push((c = this.filter(o[g][l])));
-          c.label = l;
+          c.label = h[split].display[il];
           if (c.sum) r.sum += c.sum;
           if (r.min > c.sum) r.min = c.sum;
           if (r.max < c.sum) r.max = c.sum;
@@ -525,7 +562,7 @@ Dataview.prototype = {
     }
     return r;
   },
-  reformat: function(format, encode, to_object) {
+  reformat: function(format, to_object) {
     function init_getter(v, fun, rep, s2) {
       const write = to_object
           ? function(p, n) {
@@ -547,10 +584,7 @@ Dataview.prototype = {
           },
           down: function() {
             if (this.value.length > this.group) {
-              write(
-                encode ? this.group : this.value[this.group].label,
-                header[1]
-              );
+              write(this.value[this.group].label, header[1]);
               if (!this.anys2)
                 write(
                   this.value[this.group].filtered.length > this.row
@@ -575,10 +609,7 @@ Dataview.prototype = {
               this.value.length > this.group &&
               this.value[this.group].labels.length > this.level
             ) {
-              write(
-                encode ? this.level : this.value[this.group].labels[this.level],
-                header[2]
-              );
+              write(this.value[this.group].display[this.level], header[2]);
               write(
                 this.value[this.group].levels[this.level].filtered.length >
                   this.row
@@ -647,13 +678,7 @@ Dataview.prototype = {
           Object.prototype.hasOwnProperty.call(v.data[0], "levels");
       return {
         get_label: function(o, g, l) {
-          return this.s2
-            ? encode
-              ? l
-              : o[g][l].label
-            : encode
-            ? g
-            : o[g].label;
+          return this.s2 ? o[g][l].label : o[g].label;
         },
         get_value: function(o, g, l, i) {
           return this.s2
@@ -746,14 +771,14 @@ Dataview.prototype = {
                   ":" +
                   this.view.slot.split2.name +
                   "_" +
-                  this.view.slot.split2.data[i].labels[j]
+                  this.view.slot.split2.data[i].display[j]
               );
         } else if (s2f === "across_s2") {
           for (i = 0; i < n2; i++)
             header.push(
               this.view.slot.split2.name +
                 "_" +
-                this.view.slot.split2.data[0].labels[i]
+                this.view.slot.split2.data[0].display[i]
             );
         } else header.push(this.view.slot.split2.name);
       }
@@ -855,6 +880,8 @@ Dataview.prototype = {
                 if (lvs[l] !== "")
                   par[arg[0]].value[lvs[l].replace(not, "")] = not.test(lvs[l]);
             }
+          } else if (arg[0] === "split") {
+            par[arg[0]].value = [arg[2]];
           } else par[arg[0]].value[arg[2].replace(not, "")] = not.test(arg[2]);
         }
       }

@@ -2,29 +2,46 @@
   <v-app>
     <v-col>
       <v-row class="data-wrap" no-gutters>
-        <div id="data-container" @click="closeMenu"><DataDisplay /></div>
+        <div id="data-container" @click="$root.settings.sheet = ''">
+          <DataDisplay />
+        </div>
         <div id="side-menu"><DataSheet /></div>
+        <v-toolbar
+          elevation="2"
+          floating
+          dense
+          bottom
+          absolute
+          rounded
+          class="floating-menu"
+        >
+          <v-btn
+            text
+            @click="$root.settings.as_table = !$root.settings.as_table"
+          >
+            View as {{ $root.settings.as_table ? "plot" : "table" }}
+          </v-btn>
+          <v-btn text @click="$root.settings.export_open = true">Export</v-btn>
+        </v-toolbar>
       </v-row>
       <v-row no-gutters><Menu /></v-row>
     </v-col>
+    <Export />
   </v-app>
 </template>
 
 <script>
 import DataDisplay from "./components/DataDisplay";
 import DataSheet from "./components/MenuSheets/Data";
+import Export from "./components/MenuSheets/Export";
 import Menu from "./components/Menu";
 
 export default {
   components: {
     DataDisplay,
     DataSheet,
+    Export,
     Menu,
-  },
-  methods: {
-    closeMenu() {
-      this.$children[0].$children[2].sheet = "";
-    },
   },
 };
 </script>
@@ -40,13 +57,17 @@ export default {
 }
 #side-menu .v-card {
   overflow: hidden;
-  padding: 0 0.4em;
+  padding: 0 0.4em 3.5em 0.4em;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
 .v-input--switch {
   margin: 0;
+}
+.floating-menu {
+  right: 20px;
+  bottom: 1em;
 }
 #data-container {
   position: absolute;
@@ -55,6 +76,7 @@ export default {
   right: 0;
   bottom: 0;
   overflow: auto;
+  padding: 0 0 4em 0;
 }
 .data-wrap {
   position: fixed;
@@ -62,7 +84,6 @@ export default {
   left: 0;
   right: 0;
   bottom: 2.5em;
-  padding: 0.5em 0.5em 2.5em 0.5em;
 }
 #data-container,
 #side-menu {
@@ -86,5 +107,77 @@ html {
 }
 .v-label {
   margin: 0 0.5em 0 0;
+}
+.v-toolbar__content {
+  padding: 0 0.15em;
+}
+
+.api-display {
+  text-align: center;
+  padding: 1em;
+  border-radius: 10px;
+  width: 100%;
+  word-break: break-all;
+}
+.api-display a {
+  padding: 0.5em;
+  text-decoration: none;
+}
+
+.theme--dark .api-display {
+  color: #d6d6d6;
+  background: #2f2f2f;
+}
+.theme--dark .url-param-inital {
+  color: #ffbdbd;
+}
+.theme--dark .url-param-key {
+  color: #b3d6ff;
+}
+.theme--dark .url-param-aspect {
+  color: #90e6ce;
+}
+.theme--dark .url-param-type {
+  color: #cccccc;
+}
+.theme--dark .url-param-value {
+  color: #b8efaf;
+}
+.theme--dark .url-param-sep {
+  color: #f5da77;
+}
+
+.theme--light .api-display {
+  color: #5d5d5d;
+  background: #f3f3f3;
+}
+.theme--light .url-param-inital {
+  color: #902f2f;
+}
+.theme--light .url-param-key {
+  color: #004ba2;
+}
+.theme--light .url-param-aspect {
+  color: #2d564d;
+}
+.theme--light .url-param-type {
+  color: #525252;
+}
+.theme--light .url-param-value {
+  color: #0c5400;
+}
+.theme--light .url-param-sep {
+  color: #796310;
+}
+
+@media screen and (max-width: 590px) {
+  #menu-sheet-wrap {
+    width: 100%;
+  }
+}
+@media screen and (max-width: 315px) {
+  .menu-bar span {
+    font-size: 0.8em;
+  }
 }
 </style>

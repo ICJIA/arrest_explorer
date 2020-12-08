@@ -1,74 +1,62 @@
 <template>
   <v-card>
-    <v-switch label="display as table" v-model="$root.settings.as_table" inset>
-    </v-switch>
+    <v-subheader>Which values would you like to view?</v-subheader>
     <v-select
-      v-if="$root.settings.as_table"
-      label="table format"
-      :items="['tall', 'mixed', 'wide']"
-      v-model="$root.settings.format_table"
-    ></v-select>
-    <v-select
-      v-else
-      label="plot type"
-      :items="$root.settings.plot_types"
-      v-model="$root.settings.plot_type"
-    ></v-select>
-    <v-select
-      label="values"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
       hide-details="true"
+      dense
     ></v-select>
-    <v-switch
+    <v-btn
       v-if="!$root.settings.as_table"
-      label="by year"
-      title="Show values for each year."
-      v-model="$root.settings.by_year"
+      @click="$root.settings.by_year = !$root.settings.by_year"
       inset
-    ></v-switch>
-    <v-row>
-      <v-select
-        label="split by"
-        :items="
-          $root.$options.source.variables.values.splits[$root.settings.value]
-        "
-        v-model="$root.settings.split1"
-        clearable
-        hide-details="true"
-      ></v-select>
-      <v-btn
-        text
-        block
-        v-if="$root.settings.split2"
-        @click="flip_splits"
-        color="primary"
-      >
-        flip splits <v-icon>mdi-shuffle-variant</v-icon>
-      </v-btn>
-      <v-select
-        v-if="
-          $root.settings.split1 &&
-            $root.$options.source.variables[$root.settings.split1].splits[
-              $root.settings.value
-            ] &&
-            $root.$options.source.variables[$root.settings.split1].splits[
-              $root.settings.value
-            ].length
-        "
-        label="and by"
-        :items="
+      block
+      text
+      color="primary"
+      >{{ "View " + ($root.settings.by_year ? "Averages" : "by Year") }}</v-btn
+    >
+    <v-select
+      label="Split values by"
+      :items="
+        $root.$options.source.variables.values.splits[$root.settings.value]
+      "
+      v-model="$root.settings.split1"
+      clearable
+      hide-details="true"
+    ></v-select>
+    <v-select
+      v-if="
+        $root.settings.split1 &&
           $root.$options.source.variables[$root.settings.split1].splits[
             $root.settings.value
-          ]
-        "
-        v-model="$root.settings.split2"
-        clearable
-        hide-details="true"
-      ></v-select>
-    </v-row>
+          ] &&
+          $root.$options.source.variables[$root.settings.split1].splits[
+            $root.settings.value
+          ].length
+      "
+      label="and by"
+      :items="
+        $root.$options.source.variables[$root.settings.split1].splits[
+          $root.settings.value
+        ]
+      "
+      v-model="$root.settings.split2"
+      clearable
+      hide-details="true"
+    ></v-select>
+    <v-btn
+      text
+      block
+      v-if="$root.settings.split2"
+      @click="flip_splits"
+      color="primary"
+    >
+      flip splits <v-icon>mdi-shuffle-variant</v-icon>
+    </v-btn>
+    <v-divider></v-divider>
     <v-range-slider
-      label="year range"
+      label="Year range"
       thumb-label="always"
       v-model="$root.year_window"
       :min="$root.settings.year.range[0]"
@@ -162,6 +150,24 @@
           </v-card-actions>
         </v-card>
       </v-row>
+      <v-divider></v-divider>
+      <v-select
+        label="Category format"
+        :items="['labels', 'indices', 'codes']"
+        v-model="$root.settings.format_category"
+      ></v-select>
+      <v-select
+        v-if="$root.settings.as_table"
+        label="Table format"
+        :items="['tall', 'mixed', 'wide']"
+        v-model="$root.settings.format_table"
+      ></v-select>
+      <v-select
+        v-else
+        label="Plot type"
+        :items="$root.settings.plot_types"
+        v-model="$root.settings.plot_type"
+      ></v-select>
     </v-col>
   </v-card>
 </template>
@@ -259,7 +265,10 @@ export default {
 
 <style scoped>
 .v-input--range-slider {
-  margin: 3em 1em 0 0;
+  margin: 4em 1em 0 0;
+}
+.v-divider {
+  margin: 2em 0 1em 0;
 }
 .criteria-row {
   margin: 0.3em 0;
