@@ -25,8 +25,12 @@ export default {
         },
         tooltip: {
           trigger: "axis",
+          transitionDuration: 0,
+          axisPointer: {
+            type: "shadow",
+          },
         },
-        animationDurationUpdate: 1000,
+        animationDurationUpdate: 700,
         animationEasingUpdate: "quinticInOut",
       },
     };

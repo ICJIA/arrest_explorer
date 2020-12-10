@@ -1,11 +1,10 @@
 <template>
   <v-card>
-    <v-subheader>Which values would you like to view?</v-subheader>
     <v-select
+      label="Which values would you like to view?"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
       hide-details="true"
-      dense
     ></v-select>
     <v-btn
       v-if="!$root.settings.as_table"
@@ -52,11 +51,11 @@
       @click="flip_splits"
       color="primary"
     >
-      flip splits <v-icon>mdi-shuffle-variant</v-icon>
+      Flip Splits <v-icon>mdi-shuffle-variant</v-icon>
     </v-btn>
     <v-divider></v-divider>
     <v-range-slider
-      label="Year range"
+      label="Year Range"
       thumb-label="always"
       v-model="$root.year_window"
       :min="$root.settings.year.range[0]"
@@ -152,19 +151,19 @@
       </v-row>
       <v-divider></v-divider>
       <v-select
-        label="Category format"
+        label="Category Format"
         :items="['labels', 'indices', 'codes']"
         v-model="$root.settings.format_category"
       ></v-select>
       <v-select
         v-if="$root.settings.as_table"
-        label="Table format"
+        label="Table Format"
         :items="['tall', 'mixed', 'wide']"
         v-model="$root.settings.format_table"
       ></v-select>
       <v-select
         v-else
-        label="Plot type"
+        label="Plot Type"
         :items="$root.settings.plot_types"
         v-model="$root.settings.plot_type"
       ></v-select>

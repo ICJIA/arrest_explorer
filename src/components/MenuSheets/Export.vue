@@ -47,14 +47,14 @@
                   <v-col>
                     <v-select
                       :items="['csv', 'json', 'tsv']"
-                      label="file format"
+                      label="File Format"
                       v-model="$root.settings.format_file"
                     ></v-select>
                   </v-col>
                   <v-col v-if="$root.settings.format_file === 'json'">
                     <v-select
                       :items="['raw', 'arrays', 'objects']"
-                      label="JSON format"
+                      label="JSON Format"
                       v-model="$root.settings.format_json"
                     ></v-select> </v-col
                   ><v-col
@@ -65,7 +65,7 @@
                   >
                     <v-select
                       :items="['tall', 'mixed', 'wide']"
-                      label="table format"
+                      label="Table Format"
                       v-model="$root.settings.format_table"
                     ></v-select> </v-col
                   ><v-col>
@@ -75,7 +75,7 @@
                           $root.settings.format_json !== 'raw'
                       "
                       :items="['labels', 'indices', 'codes']"
-                      label="category format"
+                      label="Category Format"
                       v-model="$root.settings.format_category"
                     ></v-select>
                   </v-col>

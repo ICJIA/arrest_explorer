@@ -7,7 +7,7 @@
         </div>
         <div id="side-menu"><DataSheet /></div>
         <v-toolbar
-          elevation="2"
+          elevation="4"
           floating
           dense
           bottom
@@ -19,7 +19,7 @@
             text
             @click="$root.settings.as_table = !$root.settings.as_table"
           >
-            View as {{ $root.settings.as_table ? "plot" : "table" }}
+            View as {{ $root.settings.as_table ? "Plot" : "Table" }}
           </v-btn>
           <v-btn text @click="$root.settings.export_open = true">Export</v-btn>
         </v-toolbar>
@@ -124,6 +124,10 @@ html {
   text-decoration: none;
 }
 
+.theme--dark .primary,
+.theme--dark .primary .v-btn__content {
+  color: #000;
+}
 .theme--dark .api-display {
   color: #d6d6d6;
   background: #2f2f2f;

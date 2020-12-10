@@ -3,7 +3,7 @@
     <v-card-title>Options</v-card-title>
 
     <v-row>
-      <v-col><v-subheader>Dark theme</v-subheader></v-col>
+      <v-col><v-subheader>Dark Theme</v-subheader></v-col>
       <v-col>
         <v-switch
           v-model="$root.settings.theme_dark"
@@ -21,7 +21,7 @@
     </v-row>
 
     <v-row>
-      <v-col><v-subheader>Plot width</v-subheader></v-col>
+      <v-col><v-subheader>Plot Width</v-subheader></v-col>
       <v-col>
         <v-text-field
           label="Pixels or Percentage"
@@ -34,7 +34,7 @@
     </v-row>
 
     <v-row>
-      <v-col><v-subheader>Plot height</v-subheader></v-col>
+      <v-col><v-subheader>Plot Height</v-subheader></v-col>
       <v-col>
         <v-text-field
           label="Pixels or Percentage"
@@ -47,7 +47,7 @@
     </v-row>
 
     <v-row>
-      <v-btn block @click="reset" class="error">Reset options</v-btn>
+      <v-btn block @click="reset" class="error">Reset Options</v-btn>
     </v-row>
   </v-card>
 </template>
@@ -69,7 +69,7 @@ export default {
   methods: {
     reset: function() {
       localStorage.clear();
-      window.location.reload();
+      window.location.replace(window.location.origin);
     },
   },
 };

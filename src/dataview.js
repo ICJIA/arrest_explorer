@@ -16,7 +16,14 @@ const format = /^(?:cs|c$|[jt])/,
   };
 
 function which_format(s) {
-  return { c: "csv", j: "json", t: "tsv" }[s.substr(0, 1)];
+  switch (s.substr(0, 1).toLowerCase()) {
+    case "c":
+      return "csv";
+    case "t":
+      return "tsv";
+    default:
+      return "json";
+  }
 }
 
 function which_value(s) {
@@ -251,7 +258,7 @@ function Dataview(data, levels, options) {
     return vars;
   }.bind(this)();
   this.filter = this.vector_filter();
-  this.view = this.prepare_view();
+  this.prepare_view();
 }
 
 Dataview.prototype = {
@@ -277,7 +284,21 @@ Dataview.prototype = {
             this.filter = this.vector_filter();
         }
     } else this.filter = this.vector_filter();
-    this.view = this.prepare_view();
+    this.prepare_view();
+  },
+  validate_options: function() {
+    if (Object.prototype.hasOwnProperty.call(this.options, "format_category")) {
+      switch (this.options.format_category[0].toLowerCase()) {
+        case "i":
+          this.options.format_category = "index";
+          break;
+        case "c":
+          this.options.format_category = "code";
+          break;
+        default:
+          this.options.format_category = "label";
+      }
+    }
   },
   invert_nest: function(o, sum) {
     var y,
@@ -387,12 +408,21 @@ Dataview.prototype = {
           return { sum, min, max, mean: sum / n, filtered: r };
         };
   },
+  get_variable_label: function(variable, level, type) {
+    return (
+      "" +
+      (Object.prototype.hasOwnProperty.call(this.levels[variable], level)
+        ? this.levels[variable][level][type]
+        : level)
+    );
+  },
   filter_levels: function(o, crit, split) {
-    var r, l, i, c, f, get_l;
+    var r, l, i, c, f;
     r = {
       sum: 0,
       min: Infinity,
       max: -Infinity,
+      display_info: { maxlen: 0, sumlen: 0 },
       labels: [],
       display: [],
       levels: [],
@@ -415,39 +445,26 @@ Dataview.prototype = {
                 r.labels.push(l);
                 r.display.push(d);
               }
+              r.display_info.sumlen += d.length;
+              if (d.length > r.display_info.maxlen)
+                r.display_info.maxlen = d.length;
             }
           : function(c, l, d) {
               r.levels.push(c);
               r.labels.push(l);
               r.display.push(d);
+              r.display_info.sumlen += d.length;
+              if (d.length > r.display_info.maxlen)
+                r.display_info.maxlen = d.length;
             };
-      switch (this.options.format_category) {
-        case "indices":
-          get_l = function(l) {
-            return (
-              "" +
-              (Object.prototype.hasOwnProperty.call(this.levels[split], l)
-                ? this.levels[split][l].index
-                : l)
-            );
-          }.bind(this);
-          break;
-        case "codes":
-          get_l = function(l) {
-            return Object.prototype.hasOwnProperty.call(this.levels[split], l)
-              ? this.levels[split][l].code
-              : l;
-          }.bind(this);
-          break;
-        default:
-          get_l = function(l) {
-            return l;
-          }.bind(this);
-      }
       for (l in o) {
         if (Object.prototype.hasOwnProperty.call(o, l)) {
           c = this.filter(o[l]);
-          c.label = get_l(l);
+          c.label = this.get_variable_label(
+            split,
+            l,
+            this.options.format_category
+          );
           if (!crit || check_object(c, crit)) {
             f(c, l, c.label);
             if (c.sum) r.sum += c.sum;
@@ -502,10 +519,11 @@ Dataview.prototype = {
     }
   },
   prepare_view: function() {
+    this.validate_options();
     var r = { slot: { value: this.options.value } },
       split1,
       split2;
-
+    this.view = r;
     if (
       Object.prototype.hasOwnProperty.call(this.options, "split") &&
       this.options.split.length
