@@ -622,6 +622,7 @@ new Vue({
         ];
 
         d.options.value = s.value;
+        d.options.by_year = s.by_year;
         d.options.format_category = s.format_category;
         d.options.split[0] = s.split1;
         d.options.split[1] = s.split2;
@@ -720,11 +721,7 @@ new Vue({
                     means.push(
                       sd.subgroups[s.split2].length > l &&
                         sd.subgroups[s.split2][l].levels.length > i
-                        ? Math.round(
-                            sd.subgroups[s.split2][l].levels[i].sum /
-                              sd.subgroups[s.split2][l].levels[i].filtered
-                                .length
-                          )
+                        ? sd.subgroups[s.split2][l].levels[i].mean
                         : 0
                     );
                   }
@@ -751,9 +748,7 @@ new Vue({
               } else {
                 means = [];
                 for (i = 0, n = sd.levels.length; i < n; i++)
-                  means.push(
-                    Math.round(sd.levels[i].sum / sd.levels[i].filtered.length)
-                  );
+                  means.push(sd.levels[i].mean);
                 d.series.push({
                   type: s.plot_type,
                   data: means,
@@ -780,7 +775,7 @@ new Vue({
               d.graphic[3].style.text = "Average";
               d.series.push({
                 type: s.plot_type,
-                data: [Math.round(sd.total.sum / sd.total.filtered.length)],
+                data: [sd.total.mean],
               });
             }
           }

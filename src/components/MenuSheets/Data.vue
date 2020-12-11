@@ -7,7 +7,6 @@
       hide-details="true"
     ></v-select>
     <v-btn
-      v-if="!$root.settings.as_table"
       @click="$root.settings.by_year = !$root.settings.by_year"
       inset
       block

@@ -368,7 +368,13 @@ Dataview.prototype = {
             if (min > arr[s[i]]) min = arr[s[i]];
             if (max < arr[s[i]]) max = arr[s[i]];
           }
-          return { sum, min, max, mean: sum / n, filtered: r };
+          return {
+            sum,
+            min,
+            max,
+            mean: Math.round((sum / n) * 1000) / 1000,
+            filtered: r,
+          };
         }
       : rows.length < this.raw.year.length
       ? function(arr) {
@@ -387,7 +393,13 @@ Dataview.prototype = {
             if (min > arr[rows[i]]) min = arr[rows[i]];
             if (max < arr[rows[i]]) max = arr[rows[i]];
           }
-          return { sum, min, max, mean: sum / n, filtered: r };
+          return {
+            sum,
+            min,
+            max,
+            mean: Math.round((sum / n) * 1000) / 1000,
+            filtered: r,
+          };
         }
       : function(arr) {
           for (
@@ -405,7 +417,13 @@ Dataview.prototype = {
             if (min > arr[i]) min = arr[i];
             if (max < arr[i]) max = arr[i];
           }
-          return { sum, min, max, mean: sum / n, filtered: r };
+          return {
+            sum,
+            min,
+            max,
+            mean: Math.round((sum / n) * 1000) / 1000,
+            filtered: r,
+          };
         };
   },
   get_variable_label: function(variable, level, type) {
@@ -474,7 +492,7 @@ Dataview.prototype = {
         }
       }
     }
-    r.mean = r.sum / r.labels.length;
+    r.mean = Math.round((r.sum / r.labels.length) * 1000) / 1000;
     return r;
   },
   filter_sublevels: function(split, h, within) {
@@ -514,7 +532,8 @@ Dataview.prototype = {
           if (r.min > c.sum) r.min = c.sum;
           if (r.max < c.sum) r.max = c.sum;
         }
-        if (r.labels.length) r.mean = r.sum / r.labels.length;
+        if (r.labels.length)
+          r.mean = Math.round((r.sum / r.labels.length) * 1000) / 1000;
       }
     }
   },
@@ -581,7 +600,7 @@ Dataview.prototype = {
     return r;
   },
   reformat: function(format, to_object) {
-    function init_getter(v, fun, rep, s2) {
+    function init_getter(v, fun, rep, by_year, s2) {
       const write = to_object
           ? function(p, n) {
               row[n] = p;
@@ -591,22 +610,28 @@ Dataview.prototype = {
             },
         getter = {
           rep: function() {
-            if (this.value)
-              write(this.value.filtered[this.row], header[this.adj]);
-            if (this.rep === 1) {
-              this.row++;
-            } else if (++this.repped >= this.rep) {
-              this.repped = 0;
-              this.row++;
+            if (this.value) {
+              write(
+                this.by_year ? this.value.filtered[this.row] : this.value.mean,
+                header[this.adj]
+              );
+              if (this.rep === 1) {
+                this.row++;
+              } else if (++this.repped >= this.rep) {
+                this.repped = 0;
+                this.row++;
+              }
             }
           },
           down: function() {
             if (this.value.length > this.group) {
-              write(this.value[this.group].label, header[1]);
+              write(this.value[this.group].label, header[this.adj]);
               if (!this.anys2)
                 write(
                   this.value[this.group].filtered.length > this.row
-                    ? this.value[this.group].filtered[this.row]
+                    ? this.by_year
+                      ? this.value[this.group].filtered[this.row]
+                      : this.value[this.group].mean
                     : 0,
                   header[nc]
                 );
@@ -627,11 +652,18 @@ Dataview.prototype = {
               this.value.length > this.group &&
               this.value[this.group].labels.length > this.level
             ) {
-              write(this.value[this.group].display[this.level], header[2]);
+              write(
+                this.value[this.group].display[this.level],
+                header[this.adj]
+              );
               write(
                 this.value[this.group].levels[this.level].filtered.length >
                   this.row
-                  ? this.value[this.group].levels[this.level].filtered[this.row]
+                  ? this.by_year
+                    ? this.value[this.group].levels[this.level].filtered[
+                        this.row
+                      ]
+                    : this.value[this.group].levels[this.level].mean
                   : 0,
                 header[nc]
               );
@@ -648,7 +680,9 @@ Dataview.prototype = {
             for (var i = 0, n = this.groups; i < n; i++) {
               write(
                 this.value[i].filtered.length > this.row
-                  ? this.value[i].filtered[this.row]
+                  ? this.by_year
+                    ? this.value[i].filtered[this.row]
+                    : this.value[i].mean
                   : 0,
                 header[i + this.adj]
               );
@@ -665,7 +699,9 @@ Dataview.prototype = {
               write(
                 this.value[this.group].levels.length > i &&
                   this.value[this.group].levels[i].filtered.length > this.row
-                  ? this.value[this.group].levels[i].filtered[this.row]
+                  ? this.by_year
+                    ? this.value[this.group].levels[i].filtered[this.row]
+                    : this.value[this.group].levels[i].mean
                   : 0,
                 header[i + this.adj]
               );
@@ -682,9 +718,11 @@ Dataview.prototype = {
                   this.value.length > j &&
                     this.value[j].levels.length > i &&
                     this.value[j].levels[i].filtered.length > i
-                    ? this.value[j].levels[i].filtered[this.row]
+                    ? this.by_year
+                      ? this.value[j].levels[i].filtered[this.row]
+                      : this.value[j].levels[i].mean
                     : 0,
-                  header[1 + j + i * g]
+                  header[this.adj + j + i * g]
                 );
               }
             }
@@ -709,6 +747,7 @@ Dataview.prototype = {
         },
         s2: is_split2,
         anys2: s2,
+        by_year: by_year,
         value: v.data,
         rep: rep || 1,
         repped: 0,
@@ -721,28 +760,33 @@ Dataview.prototype = {
           v.name === "year"
             ? 0
             : v.name === "total"
-            ? 1
+            ? Number(by_year)
             : is_split2
-            ? 1 + (format === "mixed" ? 1 : n1)
-            : 1,
+            ? by_year + (format !== "wide")
+            : Number(by_year),
         n: nr,
         get: getter[fun],
       };
     }
+
+    if (!Object.prototype.hasOwnProperty.call(this.options, "by_year"))
+      this.options.by_year = true;
     var j,
       i,
       s1 = Object.prototype.hasOwnProperty.call(this.view.slot, "split1"),
       s2 = Object.prototype.hasOwnProperty.call(this.view.slot, "split2"),
       matrix = [],
       row,
-      header = ["year"],
+      header = [],
       n1 = s1 ? this.view.slot.split1.data.length : 1,
       n2 = s2 ? this.view.slot.split2.data[0].labels.length : 1,
       rep =
         format === "wide" || (format === "mixed" && !s2)
           ? 1
           : n1 * (format === "tall" ? n2 : 1),
-      nr = this.view.slot.year.data.filtered.length * rep,
+      nr = this.options.by_year
+        ? this.view.slot.year.data.filtered.length * rep
+        : rep,
       nc,
       s1f =
         format === "wide" || (format === "mixed" && !s2) ? "across" : "down",
@@ -754,20 +798,34 @@ Dataview.prototype = {
           : "down_s2",
       // initialize row mappers
       map = {
-        year: init_getter(this.view.slot.year, "rep", rep),
-        total: init_getter(this.view.slot.total, "rep", rep),
+        year: init_getter(
+          this.view.slot.year,
+          "rep",
+          rep,
+          this.options.by_year
+        ),
+        total: init_getter(
+          this.view.slot.total,
+          "rep",
+          rep,
+          this.options.by_year
+        ),
         split1: s1
           ? init_getter(
               this.view.slot.split1,
               s1f,
               format === "tall" && s2 ? n2 : 1,
+              this.options.by_year,
               s2
             )
           : null,
-        split2: s2 ? init_getter(this.view.slot.split2, s2f) : null,
+        split2: s2
+          ? init_getter(this.view.slot.split2, s2f, 1, this.options.by_year)
+          : null,
       };
 
     // push to header row
+    if (this.options.by_year) header.push("Year");
     if (s1) {
       if (s1f === "across") {
         if (!s2)
@@ -807,7 +865,7 @@ Dataview.prototype = {
     // write rows
     for (i = 0; i < nr; i++) {
       matrix.push((row = to_object ? {} : []));
-      map.year.get();
+      if (this.options.by_year) map.year.get();
       if (s2f !== "across_full") map[s1 ? "split1" : "total"].get();
       if (s2) map.split2.get();
     }
