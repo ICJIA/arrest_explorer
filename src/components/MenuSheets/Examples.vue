@@ -47,7 +47,8 @@ export default {
           base_url: window.location.origin,
           url: this.$root.display_query(
             {},
-            { by_year: false, split: ["gender"], plot_type: "bar" }
+            { by_year: false, split: ["gender"], plot_type: "bar" },
+            true
           ),
         },
         {
@@ -70,7 +71,8 @@ export default {
                   display_value: "25000",
                 },
               ],
-            }
+            },
+            true
           ),
         },
       ],

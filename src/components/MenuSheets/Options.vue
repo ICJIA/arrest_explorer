@@ -8,7 +8,7 @@
         <v-switch
           v-model="$root.settings.theme_dark"
           inset
-          hide-details="true"
+          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -28,7 +28,7 @@
           :rules="valid_dim"
           v-model="$root.settings.plot_area[1]"
           dense
-          hide-details="true"
+          hide-details
         ></v-text-field>
       </v-col>
     </v-row>
@@ -41,7 +41,7 @@
           :rules="valid_dim"
           v-model="$root.settings.plot_area[0]"
           dense
-          hide-details="true"
+          hide-details
         ></v-text-field>
       </v-col>
     </v-row>

@@ -37,7 +37,9 @@
         </div>
       </v-col>
       <v-col class="menu-bar-offset">
-        <v-btn @click="toggleDataMenu()" :active="data_menu_open">Data</v-btn>
+        <v-btn @click="toggleDataMenu()" :active="$root.settings.data_menu_open"
+          >Data</v-btn
+        >
       </v-col>
     </v-row>
   </div>
@@ -68,7 +70,6 @@ export default {
     return {
       update_countdown: 0,
       menu_wrap: null,
-      data_menu_open: false,
       sheets: [
         {
           name: "About",
@@ -91,20 +92,20 @@ export default {
     },
     toggleDataMenu: function() {
       var w = document.body.getBoundingClientRect().width;
-      if (this.data_menu_open) {
+      if (this.$root.settings.data_menu_open) {
         this.data_container.style.right = "0px";
-        this.data_menu.style.right = "-300px";
-        this.data_menu.style.width = "300px";
-        this.data_menu_open = false;
+        this.data_menu.style.right = "-320px";
+        this.data_menu.style.width = "320px";
+        this.$root.settings.data_menu_open = false;
       } else {
         this.data_menu.style.right = "0px";
         if (w < 600) {
           this.data_menu.style.width = "100%";
         } else {
-          this.data_container.style.right = "300px";
-          this.data_menu.style.width = "300px";
+          this.data_container.style.right = "320px";
+          this.data_menu.style.width = "320px";
         }
-        this.data_menu_open = true;
+        this.$root.settings.data_menu_open = true;
       }
       if (!this.$root.settings.as_table && this.$root.$options.plot.instance) {
         setTimeout(this.$root.$options.plot.instance.resize, 400);
@@ -172,7 +173,7 @@ export default {
   height: 100%;
 }
 .menu-bar-offset {
-  max-width: 300px;
+  max-width: 320px;
 }
 .menu-bar-offset button.v-btn {
   width: 100%;
@@ -186,7 +187,7 @@ button[active="true"] {
   max-height: 100%;
   overflow-y: auto;
   left: 0;
-  right: 300px;
+  right: 320px;
   bottom: -500px;
   padding: 0 0 2.5em 0;
   transition: bottom 0.3s cubic-bezier(0, 1.4, 0.01, 0.91);
@@ -212,7 +213,8 @@ button[active="true"] {
 .theme--light #side-menu .v-card {
   background: #f9f9f9;
 }
-.theme--dark .menu-bar {
+.theme--dark .menu-bar,
+.theme--dark .sort-table thead {
   background: #272727;
 }
 .theme--light .menu-bar {

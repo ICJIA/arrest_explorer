@@ -8,6 +8,7 @@ import Dataview from "./dataview.js";
 Vue.config.productionTip = false;
 
 const store_options = [
+    // settings to store on change
     "value",
     "by_year",
     "split1",
@@ -25,6 +26,7 @@ const store_options = [
     "format_image",
   ],
   update_after = [
+    // settings to queue an update on change
     "as_table",
     "format_table",
     "format_category",
@@ -58,6 +60,7 @@ var settings = {
     split1: "",
     split2: "",
     sheet: "",
+    data_menu_open: false,
     as_table: false,
     theme_dark: true,
     format_file: "csv",
@@ -77,6 +80,9 @@ var settings = {
     value: "",
   },
   watch = {
+    // special watchers here, with other settings in
+    // `store_options` getting stored on change, and those in
+    // `update_after` triggering the `queue_update` function
     "settings.year": [
       {
         handler: function() {
@@ -157,9 +163,22 @@ new Vue({
     options: {
       value: settings.value,
       split: [settings.split1, settings.split2],
-      county: [{ type: ">", aspect: "mean", display_value: 8000, value: 8000 }],
+      county: [
+        {
+          enabled: true,
+          type: "=",
+          aspect: "label",
+          value: [
+            "Cook Chicago",
+            "Cook County Suburbs",
+            "Dupage",
+            "Kane",
+            "Lake",
+            "Madison",
+          ],
+        },
+      ],
     },
-    table: { header: [], rows: [] },
     title: [{ left: "center" }],
     graphic: [],
     legend: {
@@ -190,7 +209,6 @@ new Vue({
     yAxis: [{ type: "value", gridIndex: 0, scale: true }],
     series: [],
     grid: [],
-    rows: [],
   },
   data: {
     settings,
@@ -240,8 +258,8 @@ new Vue({
         ) {
           s[k] =
             typeof s[k] === "boolean"
-              ? params[k].display_value === "true"
-              : params[k].display_value;
+              ? params[k].value === "true"
+              : params[k].value;
         } else {
           if (
             Object.prototype.hasOwnProperty.call(d, k) &&
@@ -254,6 +272,7 @@ new Vue({
           }
         }
       }
+      window.history.replaceState("", "", window.location.origin);
     }
     this.$options.display.options.year = [
       { type: ">=", value: this.year_window[0] },
@@ -288,7 +307,7 @@ new Vue({
     },
   },
   methods: {
-    display_query: function(ex, d) {
+    display_query: function(ex, d, all) {
       d = d || this.$options.display.options;
       ex = ex || {};
       var parts = [],
@@ -306,7 +325,7 @@ new Vue({
                   value: d[k][0] + (d[k][1] ? "," + d[k][1] : ""),
                 });
                 string +=
-                  (string ? "&" : "/?") +
+                  (string ? "&" : "?") +
                   k +
                   "=" +
                   d[k][0] +
@@ -316,11 +335,18 @@ new Vue({
               if (typeof d[k] === "object") {
                 for (i = d[k].length; i--; ) {
                   if (
-                    k !== "year" ||
-                    d[k][i].value !==
-                      this.$root.settings.year.range[
-                        d[k][i].type === ">=" ? 0 : 1
-                      ]
+                    (!Object.prototype.hasOwnProperty.call(
+                      this.$root.$options.source.variables,
+                      k
+                    ) ||
+                      all ||
+                      k === this.$root.settings.split1 ||
+                      k === this.$root.settings.split2) &&
+                    (k !== "year" ||
+                      d[k][i].value !==
+                        this.$root.settings.year.range[
+                          d[k][i].type === ">=" ? 0 : 1
+                        ])
                   ) {
                     parts.push({
                       slot: k,
@@ -410,14 +436,14 @@ new Vue({
               )
             : "20",
         },
-        wheight = this.$el.getBoundingClientRect().height;
-      if (!height) height = wheight > 700 ? 83 : wheight > 500 ? 80 : 74;
+        dim = this.$el.getBoundingClientRect();
+      if (!height) height = dim.height > 700 ? 83 : dim.height > 500 ? 80 : 74;
       if (
         !this.settings.by_year &&
         this.settings.split1 &&
         this.$options.source.view[this.settings.split1].display_info.sumlen *
           12 >
-          this.$el.getBoundingClientRect().width - 450
+          dim.width - 450
       ) {
         r.bottom =
           Math.min(
@@ -441,27 +467,12 @@ new Vue({
           pos = 1,
           step = 50,
           means,
+          part,
           i,
           n,
           l,
           nl,
           sd;
-        d.legend.data = [];
-        d.legend.selected = {};
-        d.series = [];
-        d.grid = [];
-        d.title = [{ left: "center", top: "6%" }];
-        d.yAxis = [{ type: "value", scale: true }];
-        d.xAxis = [
-          {
-            type: "category",
-            splitLine: false,
-            axisLabel: {
-              rotate: 0,
-              formatter: d.legend.formatter,
-            },
-          },
-        ];
         // validate splits
         if (s.split1) {
           if (
@@ -490,137 +501,6 @@ new Vue({
         }
         if (s.split1) f.split1 = this.format_name(s.split1);
         if (s.split2) f.split2 = this.format_name(s.split2);
-        d.graphic = [
-          {
-            type: "text",
-            id: "title-label",
-            right: "center",
-            top: "3",
-            z: 100,
-            onclick: function() {
-              this.settings.by_year = !this.settings.by_year;
-            }.bind(this),
-            scale: [2, 2],
-            style: {
-              text: (s.by_year ? "" : "Average ") + f.value,
-              font: "20px 'Lucida Sans', sans-serif",
-              fill: this.color,
-            },
-          },
-          {
-            type: "text",
-            id: "subtitle-label",
-            right: "center",
-            top: s.by_year && s.split2 ? "45" : "55",
-            z: 100,
-            cursor: "default",
-            style: {
-              text: "",
-              font: "13px 'Lucida Sans', sans-serif",
-              fill: this.color + "E0",
-            },
-          },
-          {
-            type: "text",
-            id: "y-axis-label",
-            z: 100,
-            left: "5",
-            top: "middle",
-            onclick: function(e) {
-              var o = this.plot_part_menu;
-              o.x = e.offsetX;
-              o.y = e.offsetY;
-              o.options = this.$options.source.variables.values.values;
-              o.part = "value";
-              this.plot_part_menu.value = this.settings.value;
-              setTimeout(
-                function() {
-                  this.open = true;
-                }.bind(o),
-                0
-              );
-            }.bind(this),
-            rotation: 1.58,
-            style: {
-              text: f.value,
-              font: "20px 'Lucida Sans', sans-serif",
-              fill: this.color,
-            },
-          },
-          {
-            type: "text",
-            id: "x-axis-label",
-            z: 100,
-            left: "center",
-            bottom: "5",
-            onclick: function(e) {
-              var o = this.plot_part_menu;
-              o.x = e.offsetX;
-              o.y = e.offsetY;
-              if (this.settings.by_year) {
-                o.options = this.$options.source.variables.values.splits[
-                  this.settings.value
-                ];
-              } else {
-                o.options = [
-                  "year",
-                  ...this.$options.source.variables.values.splits[
-                    this.settings.value
-                  ],
-                ];
-              }
-              o.part = "split1";
-              this.plot_part_menu.value = this.settings.split1;
-              setTimeout(
-                function() {
-                  this.open = true;
-                }.bind(o),
-                0
-              );
-            }.bind(this),
-            style: {
-              text: s.by_year ? "Year" : f.split1,
-              font: "20px 'Lucida Sans', sans-serif",
-              fill: this.color,
-            },
-          },
-          {
-            type: "text",
-            id: "legend-label",
-            right: "10",
-            top: "70",
-            onclick: function(e) {
-              var o = this.plot_part_menu;
-              o.x = e.offsetX;
-              o.y = e.offsetY;
-              o.options = this.settings.split2
-                ? this.$options.source.variables[this.settings.split1].splits[
-                    this.settings.value
-                  ]
-                : this.$options.source.variables.values.splits[
-                    this.settings.value
-                  ];
-              o.part = this.settings.split2 ? "split2" : "split1_by_year";
-              this.plot_part_menu.value = this.settings[
-                this.settings.split2 ? "split2" : "split1"
-              ];
-              setTimeout(
-                function() {
-                  this.open = true;
-                }.bind(o),
-                0
-              );
-            }.bind(this),
-            style: {
-              text:
-                s.by_year || f.split2 ? (f.split2 ? f.split2 : f.split1) : "",
-              font: "16px 'Lucida Sans', sans-serif",
-              fill: this.color,
-              textAlign: "left",
-            },
-          },
-        ];
-
         d.options.value = s.value;
         d.options.by_year = s.by_year;
         d.options.format_category = s.format_category;
@@ -628,9 +508,157 @@ new Vue({
         d.options.split[1] = s.split2;
         this.$options.source.update(d.options);
         sd = this.$options.source.prepare_view();
+        if (!Object.prototype.hasOwnProperty.call(sd, s.split1)) s.split1 = "";
+        if (!Object.prototype.hasOwnProperty.call(sd, s.split2)) s.split2 = "";
         if (s.as_table) {
           this.table = this.$options.source.reformat(s.format_table, true);
         } else {
+          d.legend.data = [];
+          d.legend.selected = {};
+          d.series = [];
+          d.grid = [];
+          d.title = [{ left: "center", top: "6%" }];
+          d.yAxis = [{ type: "value", scale: true }];
+          d.xAxis = [
+            {
+              type: "category",
+              splitLine: false,
+              axisLabel: {
+                rotate: 0,
+                formatter: d.legend.formatter,
+              },
+            },
+          ];
+          d.graphic = [
+            {
+              type: "text",
+              id: "title-label",
+              right: "center",
+              top: "3",
+              z: 100,
+              onclick: function() {
+                this.settings.by_year = !this.settings.by_year;
+              }.bind(this),
+              scale: [2, 2],
+              style: {
+                text: (s.by_year ? "" : "Average ") + f.value,
+                font: "20px 'Lucida Sans', sans-serif",
+                fill: this.color,
+              },
+            },
+            {
+              type: "text",
+              id: "subtitle-label",
+              right: "center",
+              top: s.by_year && s.split2 ? "45" : "55",
+              z: 100,
+              cursor: "default",
+              style: {
+                text: "",
+                font: "13px 'Lucida Sans', sans-serif",
+                fill: this.color + "E0",
+              },
+            },
+            {
+              type: "text",
+              id: "y-axis-label",
+              z: 100,
+              left: "5",
+              top: "middle",
+              onclick: function(e) {
+                var o = this.plot_part_menu;
+                o.x = e.offsetX;
+                o.y = e.offsetY;
+                o.options = this.$options.source.variables.values.values;
+                o.part = "value";
+                this.plot_part_menu.value = this.settings.value;
+                setTimeout(
+                  function() {
+                    this.open = true;
+                  }.bind(o),
+                  0
+                );
+              }.bind(this),
+              rotation: 1.58,
+              style: {
+                text: f.value,
+                font: "20px 'Lucida Sans', sans-serif",
+                fill: this.color,
+              },
+            },
+            {
+              type: "text",
+              id: "x-axis-label",
+              z: 100,
+              left: "center",
+              bottom: "5",
+              onclick: function(e) {
+                var o = this.plot_part_menu;
+                o.x = e.offsetX;
+                o.y = e.offsetY;
+                if (this.settings.by_year) {
+                  o.options = this.$options.source.variables.values.splits[
+                    this.settings.value
+                  ];
+                } else {
+                  o.options = [
+                    "year",
+                    ...this.$options.source.variables.values.splits[
+                      this.settings.value
+                    ],
+                  ];
+                }
+                o.part = "split1";
+                this.plot_part_menu.value = this.settings.split1;
+                setTimeout(
+                  function() {
+                    this.open = true;
+                  }.bind(o),
+                  0
+                );
+              }.bind(this),
+              style: {
+                text: s.by_year ? "Year" : f.split1,
+                font: "20px 'Lucida Sans', sans-serif",
+                fill: this.color,
+              },
+            },
+            {
+              type: "text",
+              id: "legend-label",
+              right: "10",
+              top: "70",
+              onclick: function(e) {
+                var o = this.plot_part_menu;
+                o.x = e.offsetX;
+                o.y = e.offsetY;
+                o.options = this.settings.split2
+                  ? this.$options.source.variables[this.settings.split1].splits[
+                      this.settings.value
+                    ]
+                  : this.$options.source.variables.values.splits[
+                      this.settings.value
+                    ];
+                o.part = this.settings.split2 ? "split2" : "split1_by_year";
+                this.plot_part_menu.value = this.settings[
+                  this.settings.split2 ? "split2" : "split1"
+                ];
+                setTimeout(
+                  function() {
+                    this.open = true;
+                  }.bind(o),
+                  0
+                );
+              }.bind(this),
+              style: {
+                text:
+                  s.by_year || f.split2 ? (f.split2 ? f.split2 : f.split1) : "",
+                font: "16px 'Lucida Sans', sans-serif",
+                fill: this.color,
+                textAlign: "left",
+              },
+            },
+          ];
           if (s.by_year) {
             d.graphic[0].style.text = f.value + " by Year";
             d.xAxis[0].data = sd.year.filtered;
@@ -781,43 +809,56 @@ new Vue({
           }
           if (s.split1) {
             if (Object.prototype.hasOwnProperty.call(d.options, s.split1)) {
-              if (d.graphic[1].style.text) d.graphic[1].style.text += "; ";
-              d.graphic[1].style.text += f.split1 + " ";
-              for (i = d.options[s.split1].length; i--; ) {
-                d.graphic[1].style.text +=
-                  "(" +
-                  d.options[s.split1][i].aspect +
-                  ") " +
-                  d.options[s.split1][i].type +
-                  " " +
-                  d.options[s.split1][i].display_value +
-                  (i ? " and " : "");
+              for (part = "", i = d.options[s.split1].length; i--; )
+                if (
+                  d.options[s.split1][i].aspect !== "label" &&
+                  d.options[s.split1][i].enabled
+                ) {
+                  part +=
+                    (part ? " and " : "") +
+                    "(" +
+                    d.options[s.split1][i].aspect +
+                    ") " +
+                    d.options[s.split1][i].type +
+                    " " +
+                    d.options[s.split1][i].display_value;
+                }
+              if (part) {
+                if (d.graphic[1].style.text) d.graphic[1].style.text += " & ";
+                d.graphic[1].style.text += f.split1 + " " + part;
               }
             }
             if (s.split2) {
               if (Object.prototype.hasOwnProperty.call(d.options, s.split2)) {
-                if (d.graphic[1].style.text) d.graphic[1].style.text += "; ";
-                d.graphic[1].style.text += f.split2 + " ";
-                for (i = d.options[s.split2].length; i--; ) {
-                  d.graphic[1].style.text +=
-                    "(" +
-                    d.options[s.split2][i].aspect +
-                    ") " +
-                    d.options[s.split2][i].type +
-                    " " +
-                    d.options[s.split2][i].display_value +
-                    (i ? " and " : "");
+                for (part = "", i = d.options[s.split2].length; i--; )
+                  if (
+                    d.options[s.split2][i].aspect !== "label" &&
+                    d.options[s.split2][i].enabled
+                  ) {
+                    part +=
+                      (part ? " and " : "") +
+                      "(" +
+                      d.options[s.split2][i].aspect +
+                      ") " +
+                      d.options[s.split2][i].type +
+                      " " +
+                      d.options[s.split2][i].display_value;
+                  }
+                if (part) {
+                  if (d.graphic[1].style.text) d.graphic[1].style.text += " & ";
+                  d.graphic[1].style.text += f.split2 + " " + part;
                 }
               }
             }
           }
           if (
             d.graphic[0].style.text.length * 12 * d.graphic[0].scale[0] >
-            width
+            width - (width > 590) * 250
           ) {
             scale = Math.max(
               0.6,
-              width / (d.graphic[0].style.text.length * 12)
+              (width - (width > 590) * 250) /
+                (d.graphic[0].style.text.length * 12)
             );
             d.graphic[0].scale = [scale, scale];
             d.graphic[1].top = scale * 20 + 10;

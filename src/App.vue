@@ -49,10 +49,10 @@ export default {
 <style scoped>
 #side-menu {
   position: absolute;
-  width: 300px;
+  width: 320px;
   height: 100%;
   top: 0;
-  right: -300px;
+  right: -320px;
   bottom: 2.5em;
 }
 #side-menu .v-card {
@@ -66,7 +66,7 @@ export default {
   margin: 0;
 }
 .floating-menu {
-  right: 20px;
+  right: 27px;
   bottom: 1em;
 }
 #data-container {
@@ -127,6 +127,15 @@ html {
 .theme--dark .primary,
 .theme--dark .primary .v-btn__content {
   color: #000;
+}
+.theme--dark .v-select__selection--disabled {
+  color: #ccc !important;
+}
+.theme--dark.v-btn.v-btn--disabled {
+  color: #cacaca !important;
+}
+.theme--light .v-select__selection--disabled {
+  color: #565656 !important;
 }
 .theme--dark .api-display {
   color: #d6d6d6;

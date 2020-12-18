@@ -4,7 +4,7 @@
       label="Which values would you like to view?"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
-      hide-details="true"
+      hide-details
     ></v-select>
     <v-btn
       @click="$root.settings.by_year = !$root.settings.by_year"
@@ -21,7 +21,7 @@
       "
       v-model="$root.settings.split1"
       clearable
-      hide-details="true"
+      hide-details
     ></v-select>
     <v-select
       v-if="
@@ -41,7 +41,7 @@
       "
       v-model="$root.settings.split2"
       clearable
-      hide-details="true"
+      hide-details
     ></v-select>
     <v-btn
       text
@@ -61,11 +61,60 @@
       :max="$root.settings.year.range[1]"
       inverse-label
     ></v-range-slider>
-
+    <v-row v-if="$root.settings.by_year || sort.length > 1">
+      <v-subheader class="sort-header">Sort</v-subheader>
+      <v-card class="sort-container" elevation="4" outlined>
+        <table class="sort-table">
+          <thead>
+            <tr>
+              <td></td>
+              <td>aspect</td>
+              <td>increasing</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="sorter in sort"
+              :key="sorter.name"
+              :class="
+                sorter.name === 'year' && !$root.settings.by_year ? 'hide' : ''
+              "
+            >
+              <td>{{ sorter.name }}</td>
+              <td>
+                <v-select
+                  aria-label="aspect"
+                  :disabled="sorter.name === 'year'"
+                  :items="['label', 'max', 'min', 'sum', 'mean']"
+                  v-model="sorter.specs.aspect"
+                  @change="refilter"
+                  dense
+                  hide-details
+                ></v-select>
+              </td>
+              <td>
+                <v-switch
+                  aria-label="increasing"
+                  v-model="sorter.specs.increasing"
+                  @change="refilter"
+                  hide-details
+                ></v-switch>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </v-card>
+    </v-row>
     <v-menu offset-y>
       <template v-slot:activator="{ on, attrs }">
-        <v-btn block v-bind="attrs" v-on="on" color="primary">
-          Add Filter
+        <v-btn
+          :disabled="!filterable"
+          block
+          v-bind="attrs"
+          v-on="on"
+          color="primary"
+        >
+          {{ filterable ? "Add Filter" : "Add splits to filter" }}
         </v-btn>
       </template>
       <v-list>
@@ -79,7 +128,6 @@
         </v-list-item-group>
       </v-list>
     </v-menu>
-
     <v-col class="criteria-container">
       <v-row
         class="criteria-row"
@@ -87,7 +135,7 @@
         :key="index"
       >
         <v-card elevation="4" outlined>
-          <v-app-bar flat height="50">
+          <v-app-bar flat height="35" class="criteria-header">
             <v-card-title v-text="criterion.name"></v-card-title>
             <v-spacer></v-spacer>
             <v-btn @click="remove_variable(criterion.name)" icon color="error"
@@ -101,28 +149,54 @@
             v-for="condition in criterion.conditions"
             :key="condition.aspect + condition.type + condition.value"
           >
+            <v-checkbox
+              v-model="condition.enabled"
+              hide-details
+              @change="refilter"
+            ></v-checkbox>
             <v-select
               label="aspect"
               :items="['label', 'max', 'min', 'sum', 'mean']"
               v-model="condition.aspect"
               @change="refilter"
               dense
-              hide-details="true"
+              hide-details
             ></v-select>
             <v-select
-              label="operator"
-              :items="['>', '<', '=', '!=']"
+              label="type"
+              :items="condition.aspect === 'label' ? ['=', '!='] : ['>', '<']"
               v-model="condition.type"
               @change="refilter"
               dense
-              hide-details="true"
+              hide-details
             ></v-select>
+            <v-select
+              v-if="
+                condition.aspect === 'label' &&
+                  (condition.type === '=' || condition.type === '!=')
+              "
+              label="values"
+              :items="$root.$options.source.variables[criterion.name].levels"
+              v-model="condition.display_value"
+              @blur="refilter"
+              dense
+              hide-details
+              multiple
+              clearable
+            >
+              <template v-slot:selection="{ index }">
+                <span v-if="index === 0">{{
+                  condition.display_value.length
+                }}</span>
+              </template>
+            </v-select>
             <v-text-field
+              v-else
               label="value"
               v-model="condition.display_value"
               @change="refilter"
               dense
-              hide-details="true"
+              hide-details
             ></v-text-field>
             <v-btn
               class="condition-remove"
@@ -173,23 +247,37 @@
 <script>
 function get_criteria() {
   var o = this.$root.$options.display.options,
-    s = this.$root.settings,
-    k,
-    i;
-  this.criteria = [];
+    s = this.$root.settings;
   this.variables = this.$root.$options.source.variables.values.splits[
     this.$root.settings.value
   ];
-  this.available_filters = [s.split1, s.split2];
-  for (k in o) {
-    if (
-      k !== "year" &&
-      Object.prototype.hasOwnProperty.call(o, k) &&
-      (s.split1 == k || s.split2 == k)
-    ) {
-      this.criteria.push({ name: k, conditions: o[k] });
-      if ((i = this.available_filters.indexOf(k)) !== -1)
-        this.available_filters.splice(i, 1);
+  this.available_filters = [];
+  this.filterable = false;
+  this.criteria = [];
+  if (!Object.prototype.hasOwnProperty.call(o, "sort")) o.sort = {};
+  if (!Object.prototype.hasOwnProperty.call(o.sort, "year"))
+    o.sort.year = { aspect: "label", increasing: true };
+  this.sort = [{ name: "year", specs: o.sort.year }];
+  if (s.split1) {
+    if (Object.prototype.hasOwnProperty.call(o, s.split1)) {
+      this.criteria.push({ name: s.split1, conditions: o[s.split1] });
+    } else {
+      this.filterable = true;
+      this.available_filters.push(s.split1);
+    }
+    if (!Object.prototype.hasOwnProperty.call(o.sort, s.split1))
+      o.sort[s.split1] = { aspect: "label", increasing: true };
+    this.sort.push({ name: s.split1, specs: o.sort[s.split1] });
+    if (s.split2) {
+      if (Object.prototype.hasOwnProperty.call(o, s.split2)) {
+        this.criteria.push({ name: s.split2, conditions: o[s.split2] });
+      } else {
+        this.filterable = true;
+        this.available_filters.push(s.split2);
+      }
+      if (!Object.prototype.hasOwnProperty.call(o.sort, s.split2))
+        o.sort[s.split2] = { aspect: "label", increasing: true };
+      this.sort.push({ name: s.split2, specs: o.sort[s.split2] });
     }
   }
 }
@@ -197,7 +285,9 @@ function get_criteria() {
 export default {
   data: function() {
     return {
+      filterable: false,
       criteria: [],
+      sort: [],
       available_filters: [],
       variables: [],
     };
@@ -211,21 +301,26 @@ export default {
     add_filter: function(v) {
       var d = this.$root.$options.display.options;
       if (!Object.prototype.hasOwnProperty.call(d, v)) {
-        d[v] = [{ aspect: "mean", type: ">=", display_value: 0, value: 0 }];
+        d[v] = [
+          {
+            enabled: false,
+            aspect: "mean",
+            type: ">=",
+            display_value: 0,
+            value: 0,
+          },
+        ];
         this.criteria.push({ name: v, conditions: d[v] });
+        this.available_filters.splice(this.available_filters.indexOf(v), 1);
+        this.filterable = this.available_filters.length;
         this.$root.queue_update();
       }
     },
     remove_variable: function(v) {
-      var d = this.$root.$options.display.options,
-        i;
+      var d = this.$root.$options.display.options;
       if (Object.prototype.hasOwnProperty.call(d, v)) {
         delete d[v];
-        for (i = this.criteria.length; i--; )
-          if (this.criteria[i].name === v) {
-            this.criteria.splice(i, 1);
-            break;
-          }
+        get_criteria.bind(this)();
         this.$root.queue_update();
       }
     },
@@ -258,30 +353,77 @@ export default {
     "$root.settings.split1": get_criteria,
     "$root.settings.split2": get_criteria,
   },
+  mounted() {
+    get_criteria.bind(this)();
+  },
 };
 </script>
 
 <style scoped>
 .v-input--range-slider {
-  margin: 4em 1em 0 0;
+  margin: 2.5em 1em 0 0;
+  height: 40px;
+}
+.sort-header {
+  height: 20px;
+  padding: 0;
+}
+.sort-container {
+  margin: 0 0 1em 0;
+}
+.sort-table {
+  border-spacing: 0;
+  font-size: 0.8em;
+  text-align: left;
+  padding: 0 0 0.5em 0;
+}
+.sort-table .hide {
+  display: none;
+}
+.sort-table thead td {
+  padding: 0.4em 0.5em;
+}
+.sort-table td {
+  padding: 0.1em 0.5em;
+}
+.v-input--switch {
+  width: 65px;
+  margin: auto;
+}
+.sort-table .v-input {
+  margin: 0;
 }
 .v-divider {
-  margin: 2em 0 1em 0;
+  margin: 1em 0 0.5em 0;
+}
+.criteria-header {
+  padding: 0 0.5em;
 }
 .criteria-row {
   margin: 0.3em 0;
-  padding: 0 0.2em;
+  padding: 0;
 }
 .v-card__title {
   padding: 0;
+  font-weight: normal;
 }
 .conditions div {
-  width: 24%;
+  width: 18%;
   padding: 0.6em 0 0 0.3em;
   display: inline-block;
 }
-.conditions .v-input:first-of-type {
-  width: 30%;
+.conditions .v-input:nth-child(1) {
+  width: 12%;
+  margin: 0 -6px 0 4px;
+}
+.conditions .v-input:nth-child(2) {
+  width: 19%;
+}
+.conditions .v-input:nth-child(3) {
+  width: 9%;
+}
+.v-input--checkbox {
+  margin: 0;
 }
 .add-condition {
   margin: auto;

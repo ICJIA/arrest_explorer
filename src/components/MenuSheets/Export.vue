@@ -22,6 +22,7 @@
                       label="Image Format"
                       class="image-format"
                       v-model="$root.settings.format_image"
+                      hide-details
                     ></v-select>
                   </v-col>
                   <v-col v-if="$root.settings.format_image !== 'svg'">
@@ -30,12 +31,14 @@
                         label="Width"
                         :rules="valid_dim"
                         v-model="$root.settings.image_dim[0]"
+                        hide-details
                       ></v-text-field>
                       <v-icon slot="append">mdi-close</v-icon>
                       <v-text-field
                         label="Height"
                         :rules="valid_dim"
                         v-model="$root.settings.image_dim[1]"
+                        hide-details
                       ></v-text-field>
                     </v-row>
                   </v-col>
@@ -49,6 +52,7 @@
                       :items="['csv', 'json', 'tsv']"
                       label="File Format"
                       v-model="$root.settings.format_file"
+                      hide-details
                     ></v-select>
                   </v-col>
                   <v-col v-if="$root.settings.format_file === 'json'">
@@ -56,6 +60,7 @@
                       :items="['raw', 'arrays', 'objects']"
                       label="JSON Format"
                       v-model="$root.settings.format_json"
+                      hide-details
                     ></v-select> </v-col
                   ><v-col
                     v-if="
@@ -67,6 +72,7 @@
                       :items="['tall', 'mixed', 'wide']"
                       label="Table Format"
                       v-model="$root.settings.format_table"
+                      hide-details
                     ></v-select> </v-col
                   ><v-col>
                     <v-select
@@ -77,36 +83,39 @@
                       :items="['labels', 'indices', 'codes']"
                       label="Category Format"
                       v-model="$root.settings.format_category"
+                      hide-details
                     ></v-select>
                   </v-col>
                 </v-row>
               </v-col>
             </v-row>
-            <h3>Download through the API:</h3>
-            <div class="api-display">
-              <a :href="api_url.string" target="_blank">
-                <span class="url-base">{{ $root.settings.base_url }}</span>
-                <span v-if="api_url.parts.length" class="url-param-inital"
-                  >?</span
-                >
-                <span
-                  v-for="(part, index) in api_url.parts"
-                  :key="part.slot + part.type"
-                >
-                  <span class="url-param-key">{{ part.slot }}</span>
-                  <span v-if="part.aspect" class="url-param-aspect">{{
-                    "[" + part.aspect + "]"
-                  }}</span>
-                  <span class="url-param-type">{{ part.type }}</span>
-                  <span class="url-param-value">{{ part.value }}</span>
-                  <span
-                    v-if="index !== api_url.parts.length - 1"
-                    class="url-param-sep"
-                    >&</span
+            <v-row v-for="url in urls" :key="url.base">
+              <h3>{{ url.header }}</h3>
+              <div class="api-display">
+                <a :href="url.base + query.string" target="_blank">
+                  <span class="url-base">{{ url.base }}</span>
+                  <span v-if="query.parts.length" class="url-param-inital"
+                    >?</span
                   >
-                </span>
-              </a>
-            </div>
+                  <span
+                    v-for="(part, index) in query.parts"
+                    :key="part.slot + part.type"
+                  >
+                    <span class="url-param-key">{{ part.slot }}</span>
+                    <span v-if="part.aspect" class="url-param-aspect">{{
+                      "[" + part.aspect + "]"
+                    }}</span>
+                    <span class="url-param-type">{{ part.type }}</span>
+                    <span class="url-param-value">{{ part.value }}</span>
+                    <span
+                      v-if="index !== query.parts.length - 1"
+                      class="url-param-sep"
+                      >&</span
+                    >
+                  </span>
+                </a>
+              </div>
+            </v-row>
           </v-col>
         </v-card-text>
         <v-card-actions>
@@ -140,9 +149,10 @@ function save(uri, name) {
 
 const defaults = {
   value: "arrests",
-  format: "csv",
-  table_format: "mixed",
-  category_format: "labels",
+  by_year: true,
+  format_file: "csv",
+  format_table: "mixed",
+  format_category: "labels",
 };
 
 export default {
@@ -156,7 +166,17 @@ export default {
           );
         },
       ],
-      api_url: { parts: [], string: "" },
+      urls: [
+        {
+          header: "Link to this plot:",
+          base: window.location.origin + "/",
+        },
+        {
+          header: "Download through the API:",
+          base: this.$root.settings.base_url,
+        },
+      ],
+      query: { parts: [], string: "" },
     };
   },
   methods: {
@@ -253,13 +273,22 @@ export default {
   },
   watch: {
     "$root.settings.export_open": function() {
-      this.api_url = this.$root.display_query(defaults);
+      this.query = this.$root.display_query(defaults);
     },
   },
 };
 </script>
 
 <style scoped>
+.row {
+  margin: 0 0 1em 0;
+}
+.row:last-of-type {
+  margin: 0;
+}
+.v-dialog > .v-card > .v-card__text {
+  padding: 0 1.5em;
+}
 .block-row > .col:first-of-type {
   margin: 0 1em 0 0;
 }
