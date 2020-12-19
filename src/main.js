@@ -216,8 +216,9 @@ new Vue({
     plot_part_menu,
   },
   watch,
-  mounted() {
-    var k, i, v;
+  created() {
+    var k, l, i, v;
+    if (screen.height < 700) settings.plot_area[0] = "80%";
     for (i = store_options.length; i--; ) {
       if (
         Object.prototype.hasOwnProperty.call(this.settings, store_options[i])
@@ -243,32 +244,68 @@ new Vue({
         }
       }
     }
+    if (Object.prototype.hasOwnProperty.call(localStorage, "display_options"))
+      this.$options.display.options = JSON.parse(
+        localStorage.getItem("display_options")
+      );
     if (window.location.search) {
       var params = data.parse_query(window.location.search),
         s = this.settings,
         d = this.$options.display.options;
       for (k in params) {
-        if (k === "split" && params[k].value.length) {
-          s.split1 = d.split[0] = params[k].value[0];
-          if (params[k].value.length > 1)
-            s.split2 = s.split[1] = params[k].value[1];
-        } else if (
-          Object.prototype.hasOwnProperty.call(s, k) &&
-          params[k].type === "="
+        if (
+          Object.prototype.hasOwnProperty.call(params, k) &&
+          params[k].type &&
+          params[k].value
         ) {
-          s[k] =
-            typeof s[k] === "boolean"
-              ? params[k].value === "true"
-              : params[k].value;
-        } else {
-          if (
-            Object.prototype.hasOwnProperty.call(d, k) &&
-            k !== "split" &&
-            d[k].push
+          if (k === "split" && params[k].value.length) {
+            s.split1 = d.split[0] = params[k].value[0];
+            store_option("split1", s.split1);
+            if (params[k].value.length > 1) {
+              s.split2 = d.split[1] = params[k].value[1];
+            } else s.split2 = "";
+          } else if (
+            params[k].type === "=" &&
+            Object.prototype.hasOwnProperty.call(s, k)
           ) {
-            d[k].push(params[k]);
+            s[k] =
+              typeof s[k] === "boolean"
+                ? params[k].value === "true"
+                : params[k].value;
+            store_option(k, s[k]);
           } else {
-            d[k] = k === "sort" ? params[k].value : [params[k]];
+            if (k === "sort") {
+              if (
+                typeof params[k].value === "object" &&
+                !params[k].value.length
+              ) {
+                if (!Object.prototype.hasOwnProperty.call(d, "sort")) {
+                  d.sort = params[k].value;
+                } else {
+                  for (l in params[k].value)
+                    if (
+                      Object.prototype.hasOwnProperty.call(params[k].value, l)
+                    )
+                      d.sort[l] = params[k].value[l];
+                }
+              }
+            } else if (
+              k !== "split" &&
+              Object.prototype.hasOwnProperty.call(d, k) &&
+              d[k].push
+            ) {
+              for (i = d[k].length, v = true; i--; )
+                if (
+                  d[k][i].aspect === params[k].aspect &&
+                  d[k][i].type === params[k].type
+                ) {
+                  v = false;
+                  break;
+                }
+              if (v) d[k].push(params[k]);
+            } else {
+              d[k] = [params[k]];
+            }
           }
         }
       }
@@ -313,6 +350,7 @@ new Vue({
       var parts = [],
         string = "",
         k,
+        l,
         i;
       for (k in d)
         if (Object.prototype.hasOwnProperty.call(d, k)) {
@@ -333,38 +371,62 @@ new Vue({
               }
             } else {
               if (typeof d[k] === "object") {
-                for (i = d[k].length; i--; ) {
-                  if (
-                    (!Object.prototype.hasOwnProperty.call(
-                      this.$root.$options.source.variables,
-                      k
-                    ) ||
-                      all ||
-                      k === this.$root.settings.split1 ||
-                      k === this.$root.settings.split2) &&
-                    (k !== "year" ||
-                      d[k][i].value !==
-                        this.$root.settings.year.range[
-                          d[k][i].type === ">=" ? 0 : 1
-                        ])
-                  ) {
-                    parts.push({
-                      slot: k,
-                      aspect: d[k][i].aspect,
-                      type: d[k][i].type,
-                      value: d[k][i].display_value,
-                    });
-                    string +=
-                      (string ? "&" : "/?") +
-                      k +
-                      (d[k][i].aspect ? "[" + d[k][i].aspect + "]" : "") +
-                      d[k][i].type +
-                      d[k][i].display_value;
+                if (k === "sort") {
+                  i = parts.length;
+                  parts.push({
+                    slot: k,
+                    aspect: null,
+                    type: "=",
+                    value: "",
+                  });
+                  for (l in d[k])
+                    if (Object.prototype.hasOwnProperty.call(d[k], l)) {
+                      if (!d[k][l].increasing || d[k][l].aspect !== "label")
+                        parts[i].value +=
+                          (parts[i].value ? "," : "") +
+                          (d[k][l].increasing ? "-" : "") +
+                          l +
+                          (d[k][l].aspect === "label"
+                            ? ""
+                            : "[" + d[k][l].aspect + "]");
+                    }
+                  if (parts[i].value) {
+                    string += (string ? "&" : "?") + "sort=" + parts[i].value;
+                  } else parts.splice(i, 1);
+                } else {
+                  for (i = d[k].length; i--; ) {
+                    if (
+                      (!Object.prototype.hasOwnProperty.call(
+                        this.$root.$options.source.variables,
+                        k
+                      ) ||
+                        all ||
+                        k === this.$root.settings.split1 ||
+                        k === this.$root.settings.split2) &&
+                      (k !== "year" ||
+                        d[k][i].value !==
+                          this.$root.settings.year.range[
+                            d[k][i].type === ">=" ? 0 : 1
+                          ])
+                    ) {
+                      parts.push({
+                        slot: k,
+                        aspect: d[k][i].aspect,
+                        type: d[k][i].type,
+                        value: d[k][i].display_value,
+                      });
+                      string +=
+                        (string ? "&" : "?") +
+                        k +
+                        (d[k][i].aspect ? "[" + d[k][i].aspect + "]" : "") +
+                        d[k][i].type +
+                        d[k][i].display_value;
+                    }
                   }
                 }
               } else {
                 parts.push({ slot: k, type: "=", value: d[k] });
-                string += (string ? "&" : "/?") + k + "=" + d[k];
+                string += (string ? "&" : "?") + k + "=" + d[k];
               }
             }
           }
@@ -382,7 +444,7 @@ new Vue({
       return r;
     },
     to_area: function(s) {
-      return s.replace(/[^0-9%pxrem]+/, "").replace(/(?<=[0-9])$/, "px");
+      return s.replace(/[^0-9%pxrem]+/, "").replace(/[^%0-9]+$/, "px");
     },
     queue_update,
     draw_plot: function() {
@@ -506,6 +568,7 @@ new Vue({
         d.options.format_category = s.format_category;
         d.options.split[0] = s.split1;
         d.options.split[1] = s.split2;
+        store_option("display_options", d.options);
         this.$options.source.update(d.options);
         sd = this.$options.source.prepare_view();
         if (!Object.prototype.hasOwnProperty.call(sd, s.split1)) s.split1 = "";

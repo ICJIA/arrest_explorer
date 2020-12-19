@@ -31,7 +31,9 @@ function which_format(s) {
 }
 
 function which_value(s) {
-  return /^[op]|ee|^criminal$/.test(s)
+  return /per/.test(s)
+    ? "arrests_per_arrestee"
+    : /^[op]|ee|^criminal$/.test(s)
     ? "arrestees"
     : /c/.test(s)
     ? "arrest_charges"
@@ -72,24 +74,36 @@ function conditions(o) {
 }
 
 function add_level_spec(o, s) {
-  var level = s.replace(not, "").replace(aspect.name, "");
-  if (!Object.prototype.hasOwnProperty.call(o, "format")) {
-    o.format = integer.test(level)
-      ? "index"
-      : level.length === 1 || digit.test(level)
-      ? "code"
-      : upper.test(level)
-      ? "display"
-      : "label";
-  } else if (o.format === "index" && letter.test(level)) o.format = "code";
-  o.value[level] = {
-    aspect: aspect.has.test(s) ? s.replace(aspect.aspect, "") : "label",
-    increasing: not.test(s),
-  };
+  if (!Object.prototype.hasOwnProperty.call(o, "value")) o.value = {};
+  for (
+    var level, format, lvs = s.split ? s.split(seps) : s, i = lvs.length;
+    i--;
+
+  ) {
+    level = lvs[i].replace(not, "").replace(aspect.name, "");
+    if (level) {
+      if (!format) {
+        format = integer.test(level)
+          ? "index"
+          : level.length === 1 || digit.test(level)
+          ? "code"
+          : upper.test(level)
+          ? "display"
+          : "label";
+      } else if (format === "index" && letter.test(level)) format = "code";
+      o.value[level] = {
+        aspect: aspect.has.test(lvs[i])
+          ? lvs[i].replace(aspect.aspect, "")
+          : "label",
+        increasing: not.test(lvs[i]),
+      };
+    }
+  }
+  o.format = format;
 }
 
 function attach_criteria(arr) {
-  for (var i = arr.length, v = [], vi; i--; ) {
+  for (var i = arr.length; i--; ) {
     if (!Object.prototype.hasOwnProperty.call(arr[i], "display_value")) {
       arr[i].display_value = arr[i].value;
       arr[i].enabled = true;
@@ -98,17 +112,7 @@ function attach_criteria(arr) {
       equality.test(arr[i].type) &&
       (typeof arr[i].display_value === "string" || arr[i].display_value.length)
     ) {
-      arr[i].value = {};
-      for (
-        v = arr[i].display_value.length
-          ? arr[i].display_value
-          : arr[i].display_value.split(seps),
-          vi = v.length;
-        vi--;
-
-      ) {
-        add_level_spec(arr[i], v[vi]);
-      }
+      add_level_spec(arr[i], arr[i].display_value);
     } else
       arr[i].value = number.test(arr[i].display_value)
         ? Number(arr[i].display_value)
@@ -211,6 +215,7 @@ function Dataview(data, levels, options, variables) {
         this.dim.nrow = vars.year.length;
       } else if (
         val !== "levels" &&
+        val !== "version" &&
         Object.prototype.hasOwnProperty.call(data, val)
       ) {
         ckt = false;
@@ -1059,9 +1064,7 @@ Dataview.prototype = {
         .replace(/^\?+/, "")
         .split(/&+/g),
       arg = [],
-      lvs = [],
       i = arr.length,
-      l = 0,
       par = {};
     for (; i--; ) {
       arg = arr[i]
@@ -1085,7 +1088,7 @@ Dataview.prototype = {
             : arg[0] === "format"
             ? which_format(arg[2])
             : arg[2].replace(space, " ");
-        if (!arg[2]) arg[2] = "";
+        if (!arg[2]) continue;
         if (number.test(arg[2])) {
           arg[2] = Number(arg[2]);
         } else arg[2] = arg[2].replace(quotes, "");
@@ -1098,14 +1101,21 @@ Dataview.prototype = {
           par[arg[0]].push({
             type: arg[1],
             value: arg[2],
+            aspect: arg[3],
           });
-          if (arg.length > 3)
-            par[arg[0]][par[arg[0]].length - 1].aspect = arg[3];
-        } else
+        } else if (arg[0] === "sort") {
+          par.sort = {
+            type: "=",
+            value: {},
+          };
+          add_level_spec(par.sort, arg[2]);
+        } else {
           par[arg[0]] = {
             type: arg[1],
             value: arg[2],
+            aspect: arg[3],
           };
+        }
         if (
           typeof par[arg[0]].value === "string" &&
           !Object.prototype.hasOwnProperty.call(defaults, arg[0]) &&
@@ -1117,9 +1127,7 @@ Dataview.prototype = {
             if (arg[0] === "split") {
               par[arg[0]].value = arg[2].split(seps);
             } else {
-              lvs = arg[2].split(seps);
-              for (l = lvs.length; l--; )
-                if (lvs[l] !== "") add_level_spec(par[arg[0]], lvs[l]);
+              add_level_spec(par[arg[0]], arg[2]);
             }
           } else if (arg[0] === "split") {
             par[arg[0]].value = [arg[2]];
@@ -1134,10 +1142,10 @@ Dataview.prototype = {
       par.value = { type: "=", value: "arrests" };
     }
     if (
-      !Object.prototype.hasOwnProperty.call(par, "format") ||
-      !par.format.value
+      !Object.prototype.hasOwnProperty.call(par, "format_file") ||
+      !par.format_file.value
     )
-      par.format = { type: "=", value: "csv" };
+      par.format_file = { type: "=", value: "csv" };
     return par;
   },
 };

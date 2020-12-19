@@ -3,7 +3,15 @@
 </template>
 
 <script>
-import echarts from "echarts";
+import echarts from "echarts/lib/echarts";
+import "echarts/lib/component/tooltip";
+import "echarts/lib/component/title";
+import "echarts/lib/component/legend";
+import "echarts/lib/component/graphic";
+import "echarts/lib/chart/line";
+import "echarts/lib/chart/bar";
+import "echarts/lib/chart/scatter";
+import "zrender/lib/svg/svg";
 import theme_dark from "../assets/theme-dark.json";
 import theme_light from "../assets/theme-light.json";
 

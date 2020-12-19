@@ -59,6 +59,8 @@
       v-model="$root.year_window"
       :min="$root.settings.year.range[0]"
       :max="$root.settings.year.range[1]"
+      :aria-valuetext="$root.year_window[0] + ' to ' + $root.year_window[1]"
+      :aria-valuenow="$root.year_window[0]"
       inverse-label
     ></v-range-slider>
     <v-row v-if="$root.settings.by_year || sort.length > 1">
@@ -119,11 +121,12 @@
       </template>
       <v-list>
         <v-list-item-group>
-          <v-list-item v-for="(item, i) in available_filters" :key="i">
-            <v-list-item-title
-              v-text="item"
-              @click="add_filter(item, i)"
-            ></v-list-item-title>
+          <v-list-item
+            v-for="(item, i) in available_filters"
+            :key="i"
+            @click="add_filter(item, i)"
+          >
+            <v-list-item-title v-text="item"></v-list-item-title>
           </v-list-item>
         </v-list-item-group>
       </v-list>
@@ -382,6 +385,12 @@ export default {
 }
 .sort-table thead td {
   padding: 0.4em 0.5em;
+}
+.sort-table td:first-of-type {
+  max-width: 103px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .sort-table td {
   padding: 0.1em 0.5em;

@@ -23,26 +23,28 @@
     <v-row>
       <v-col><v-subheader>Plot Width</v-subheader></v-col>
       <v-col>
-        <v-text-field
+        <v-combobox
+          :items="['100%', '90%', '85%', '70%', '55%']"
           label="Pixels or Percentage"
           :rules="valid_dim"
           v-model="$root.settings.plot_area[1]"
           dense
           hide-details
-        ></v-text-field>
+        ></v-combobox>
       </v-col>
     </v-row>
 
     <v-row>
       <v-col><v-subheader>Plot Height</v-subheader></v-col>
       <v-col>
-        <v-text-field
+        <v-combobox
+          :items="['100%', '90%', '85%', '70%', '55%']"
           label="Pixels or Percentage"
           :rules="valid_dim"
           v-model="$root.settings.plot_area[0]"
           dense
           hide-details
-        ></v-text-field>
+        ></v-combobox>
       </v-col>
     </v-row>
 

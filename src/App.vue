@@ -12,16 +12,19 @@
           dense
           bottom
           absolute
-          rounded
           class="floating-menu"
         >
-          <v-btn
-            text
-            @click="$root.settings.as_table = !$root.settings.as_table"
-          >
-            View as {{ $root.settings.as_table ? "Plot" : "Table" }}
-          </v-btn>
-          <v-btn text @click="$root.settings.export_open = true">Export</v-btn>
+          <v-btn-toggle rounded>
+            <v-btn
+              text
+              @click="$root.settings.as_table = !$root.settings.as_table"
+            >
+              {{ $root.settings.as_table ? "Plot" : "Table" }}
+            </v-btn>
+            <v-btn text @click="$root.settings.export_open = true"
+              >Export</v-btn
+            >
+          </v-btn-toggle>
         </v-toolbar>
       </v-row>
       <v-row no-gutters><Menu /></v-row>
@@ -68,6 +71,13 @@ export default {
 .floating-menu {
   right: 27px;
   bottom: 1em;
+  border-radius: 25px;
+}
+.v-btn-toggle > .v-btn.v-btn--active {
+  opacity: 0.8;
+}
+.v-btn--active::before {
+  opacity: 0;
 }
 #data-container {
   position: absolute;
@@ -109,9 +119,8 @@ html {
   margin: 0 0.5em 0 0;
 }
 .v-toolbar__content {
-  padding: 0 0.15em;
+  padding: 0;
 }
-
 .api-display {
   text-align: center;
   padding: 1em;
@@ -186,6 +195,9 @@ html {
 @media screen and (max-width: 590px) {
   #menu-sheet-wrap {
     width: 100%;
+  }
+  .v-toolbar__content {
+    height: 20px;
   }
 }
 @media screen and (max-width: 315px) {

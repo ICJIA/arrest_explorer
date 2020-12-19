@@ -27,19 +27,21 @@
                   </v-col>
                   <v-col v-if="$root.settings.format_image !== 'svg'">
                     <v-row class="input-row">
-                      <v-text-field
+                      <v-combobox
                         label="Width"
+                        :items="['500%', '4096', '2048', '1920', '100%']"
                         :rules="valid_dim"
                         v-model="$root.settings.image_dim[0]"
                         hide-details
-                      ></v-text-field>
+                      ></v-combobox>
                       <v-icon slot="append">mdi-close</v-icon>
-                      <v-text-field
+                      <v-combobox
                         label="Height"
+                        :items="['500%', '2160', '1440', '1080', '100%']"
                         :rules="valid_dim"
                         v-model="$root.settings.image_dim[1]"
                         hide-details
-                      ></v-text-field>
+                      ></v-combobox>
                     </v-row>
                   </v-col>
                 </v-row>
@@ -99,7 +101,7 @@
                   >
                   <span
                     v-for="(part, index) in query.parts"
-                    :key="part.slot + part.type"
+                    :key="part.slot + part.type + part.value"
                   >
                     <span class="url-param-key">{{ part.slot }}</span>
                     <span v-if="part.aspect" class="url-param-aspect">{{
@@ -146,14 +148,6 @@ function save(uri, name) {
     document.body.removeChild(e);
   }, 0);
 }
-
-const defaults = {
-  value: "arrests",
-  by_year: true,
-  format_file: "csv",
-  format_table: "mixed",
-  format_category: "labels",
-};
 
 export default {
   data: function() {
@@ -273,7 +267,7 @@ export default {
   },
   watch: {
     "$root.settings.export_open": function() {
-      this.query = this.$root.display_query(defaults);
+      this.query = this.$root.display_query();
     },
   },
 };
@@ -290,7 +284,7 @@ export default {
   padding: 0 1.5em;
 }
 .block-row > .col:first-of-type {
-  margin: 0 1em 0 0;
+  margin: 0 1em 0.5em 0;
 }
 .input-row > .v-input {
   width: 24%;
