@@ -9,8 +9,9 @@ const format = /^(?:cs|c$|[jt])/,
   not = /^[!-]/,
   number = /^[+-]?\d*(?:e[+-]?|\.)?\d*$/,
   integer = /^\d+$/,
-  letter = /\w/,
+  letter = /[A-Za-z]/,
   digit = /\d/,
+  whitespace = /\s/,
   upper = /[^A-Z]/,
   quotes = /%27|%22/g,
   aspect = { has: /\[/, name: /\[.*$/, aspect: /^.*\[|\]/g },
@@ -74,7 +75,12 @@ function conditions(o) {
 }
 
 function add_level_spec(o, s) {
-  if (!Object.prototype.hasOwnProperty.call(o, "value")) o.value = {};
+  if (
+    !Object.prototype.hasOwnProperty.call(o, "value") ||
+    !typeof o.value === "object" ||
+    !o.value.push
+  )
+    o.value = {};
   for (
     var level, format, lvs = s.split ? s.split(seps) : s, i = lvs.length;
     i--;
@@ -85,7 +91,7 @@ function add_level_spec(o, s) {
       if (!format) {
         format = integer.test(level)
           ? "index"
-          : level.length === 1 || digit.test(level)
+          : level.length === 1 || (!whitespace.test(level) && digit.test(level))
           ? "code"
           : upper.test(level)
           ? "display"
@@ -108,10 +114,7 @@ function attach_criteria(arr) {
       arr[i].display_value = arr[i].value;
       arr[i].enabled = true;
     }
-    if (
-      equality.test(arr[i].type) &&
-      (typeof arr[i].display_value === "string" || arr[i].display_value.length)
-    ) {
+    if (equality.test(arr[i].type) && arr[i].display_value.length) {
       add_level_spec(arr[i], arr[i].display_value);
     } else
       arr[i].value = number.test(arr[i].display_value)
@@ -663,12 +666,22 @@ Dataview.prototype = {
   },
   filter_sublevels: function(split, h, within) {
     var l, o, c, r, i, n, il, nl, g;
-    if (!Object.prototype.hasOwnProperty.call(h, split))
+    if (!Object.prototype.hasOwnProperty.call(h, split)) {
       h[split] = this.filter_levels(
         this.raw[this.options.value][split].total,
         this.options[split],
         split
       );
+      if (!h[split].levels.length) {
+        for (i = this.options[split].length; i--; )
+          this.options[split][i].enabled = false;
+        h[split] = this.filter_levels(
+          this.raw[this.options.value][split].total,
+          void 0,
+          split
+        );
+      }
+    }
     if (!Object.prototype.hasOwnProperty.call(h[within], "subgroups"))
       h[within].subgroups = {};
     h[within].subgroups[split] = [];
@@ -768,9 +781,7 @@ Dataview.prototype = {
           );
         }
         this.filter_sublevels(split2, r, split1);
-        if (r[split2].levels.length) {
-          r.slot.split2 = { name: split2, data: r[split1].subgroups[split2] };
-        } else delete r[split2];
+        r.slot.split2 = { name: split2, data: r[split1].subgroups[split2] };
       }
     }
     return r;

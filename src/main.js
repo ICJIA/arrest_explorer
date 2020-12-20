@@ -218,7 +218,7 @@ new Vue({
   watch,
   created() {
     var k, l, i, v;
-    if (screen.height < 700) settings.plot_area[0] = "80%";
+    if (screen.height < 700) settings.plot_area[0] = "70%";
     for (i = store_options.length; i--; ) {
       if (
         Object.prototype.hasOwnProperty.call(this.settings, store_options[i])
@@ -572,7 +572,16 @@ new Vue({
         this.$options.source.update(d.options);
         sd = this.$options.source.prepare_view();
         if (!Object.prototype.hasOwnProperty.call(sd, s.split1)) s.split1 = "";
-        if (!Object.prototype.hasOwnProperty.call(sd, s.split2)) s.split2 = "";
+        if (
+          !s.split1 ||
+          (!Object.prototype.hasOwnProperty.call(sd, s.split2) &&
+            (!Object.prototype.hasOwnProperty.call(sd[s.split1], "subgroups") ||
+              !Object.prototype.hasOwnProperty.call(
+                sd[s.split1].subgroups,
+                s.split2
+              )))
+        )
+          s.split2 = "";
         if (s.as_table) {
           this.table = this.$options.source.reformat(s.format_table, true);
         } else {

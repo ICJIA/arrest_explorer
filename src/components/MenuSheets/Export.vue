@@ -178,6 +178,20 @@ export default {
       localStorage.clear();
       window.location.reload();
     },
+    make_name: function(format, data_out) {
+      var s = this.$root.settings,
+        n =
+          "arrest_explorer-" +
+          this.$root.$options.source.raw.version.replace(/\//g, "") +
+          "-" +
+          s.value;
+      if (s.split1) n += "-" + s.split1;
+      if (s.split2) n += "-" + s.split1;
+      if (data_out) n += "-" + s.format_table;
+      if (!s.by_year) n += "-averages";
+      n += "." + format;
+      return n;
+    },
     download_data: function() {
       this.$root.update_data();
       var s = this.$root.settings,
@@ -209,7 +223,7 @@ export default {
               : "text/" +
                 (s.format_file === "tsv" ? "tab-separated-values" : "csv"),
         }),
-        "arrest_explorer_export." + s.format_file
+        this.make_name(s.format_file, true)
       );
     },
     save_image: function() {
@@ -259,8 +273,8 @@ export default {
           i.onload = function() {
             cx.drawImage(i, 0, 0, c.width, c.height);
             data = c.toDataURL("image/" + type);
-            save(data, "arrest_explorer_image." + type);
-          };
+            save(data, this.make_name(type));
+          }.bind(this);
         }
       }
     },
