@@ -24,6 +24,9 @@ const store_options = [
     "format_table",
     "format_category",
     "format_image",
+    "animation_time",
+    "animation_type",
+    "intro",
   ],
   update_after = [
     // settings to queue an update on change
@@ -51,6 +54,8 @@ var settings = {
     },
     active: false,
     export_open: false,
+    category_formats: ["labels", "indices", "codes"],
+    table_formats: ["tall", "mixed", "wide"],
     plot_types: ["line", "bar", "scatter"],
     svg: false,
     plot_type: "line",
@@ -70,6 +75,9 @@ var settings = {
     format_image: "svg",
     plot_area: ["85%", "100%"],
     image_dim: ["100%", "100%"],
+    animation_time: 700,
+    animation_type: "elasticOut",
+    intro: true,
   },
   plot_part_menu = {
     open: false,
@@ -108,10 +116,12 @@ var settings = {
     ],
     "settings.svg": [
       function() {
-        this.$options.plot.initOptions.renderer = this.settings.svg
-          ? "svg"
-          : "canvas";
-        if (!this.settings.as_table) this.draw_plot();
+        if (this.$options.plot && this.$options.plot.initOptions) {
+          this.$options.plot.initOptions.renderer = this.settings.svg
+            ? "svg"
+            : "canvas";
+          if (!this.settings.as_table) this.draw_plot();
+        }
       },
     ],
     "settings.plot_area": [
@@ -130,8 +140,24 @@ var settings = {
           });
       },
     ],
-  },
-  data = new Dataview(rawdata, levels);
+    "settings.animation_time": [
+      function() {
+        if (this.$options.plot && this.$options.plot.initOptions) {
+          this.settings.animation_time = Number(this.settings.animation_time);
+          this.$options.plot.options.animationDurationUpdate = this.$options.plot.options.animationDuration = this.settings.animation_time;
+          if (!this.settings.as_table) this.draw_plot();
+        }
+      },
+    ],
+    "settings.animation_type": [
+      function() {
+        if (this.$options.plot && this.$options.plot.initOptions) {
+          this.$options.plot.options.animationEasingUpdate = this.$options.plot.options.animationEasing = this.settings.animation_type;
+          if (!this.settings.as_table) this.draw_plot();
+        }
+      },
+    ],
+  };
 
 // initialize settings and watchers
 (function() {
@@ -148,17 +174,11 @@ var settings = {
         deep: "object" === typeof settings[store_options[i]],
       });
   }
-  for (i = data.raw.year.length; i--; ) {
-    if (settings.year.range[0] > data.raw.year[i])
-      settings.year.range[0] = data.raw.year[i];
-    if (settings.year.range[1] < data.raw.year[i])
-      settings.year.range[1] = data.raw.year[i];
-  }
 })();
 
 new Vue({
   vuetify,
-  source: data,
+  source: new Dataview(rawdata, levels),
   display: {
     options: {
       value: settings.value,
@@ -169,12 +189,12 @@ new Vue({
           type: "=",
           aspect: "label",
           value: [
-            "Cook Chicago",
-            "Cook County Suburbs",
-            "Dupage",
-            "Kane",
-            "Lake",
-            "Madison",
+            "cook chicago",
+            "cook county suburbs",
+            "dupage",
+            "kane",
+            "lake",
+            "madison",
           ],
         },
       ],
@@ -197,7 +217,7 @@ new Vue({
       {
         type: "category",
         gridIndex: 0,
-        data: data.raw.year,
+        data: rawdata.year,
         axisLabel: {
           rotate: 0,
           formatter: function(l) {
@@ -248,73 +268,66 @@ new Vue({
       this.$options.display.options = JSON.parse(
         localStorage.getItem("display_options")
       );
-    if (window.location.search) {
-      var params = data.parse_query(window.location.search),
-        s = this.settings,
-        d = this.$options.display.options;
-      for (k in params) {
-        if (
-          Object.prototype.hasOwnProperty.call(params, k) &&
-          params[k].type &&
-          params[k].value
-        ) {
-          if (k === "split" && params[k].value.length) {
-            s.split1 = d.split[0] = params[k].value[0];
-            store_option("split1", s.split1);
-            if (params[k].value.length > 1) {
-              s.split2 = d.split[1] = params[k].value[1];
-            } else s.split2 = "";
-          } else if (
-            params[k].type === "=" &&
-            Object.prototype.hasOwnProperty.call(s, k)
-          ) {
-            s[k] =
-              typeof s[k] === "boolean"
-                ? params[k].value === "true"
-                : params[k].value;
-            store_option(k, s[k]);
-          } else {
-            if (k === "sort") {
-              if (
-                typeof params[k].value === "object" &&
-                !params[k].value.length
-              ) {
-                if (!Object.prototype.hasOwnProperty.call(d, "sort")) {
-                  d.sort = params[k].value;
-                } else {
-                  for (l in params[k].value)
-                    if (
-                      Object.prototype.hasOwnProperty.call(params[k].value, l)
-                    )
-                      d.sort[l] = params[k].value[l];
-                }
-              }
-            } else if (
-              k !== "split" &&
-              Object.prototype.hasOwnProperty.call(d, k) &&
-              d[k].push
-            ) {
-              for (i = d[k].length, v = true; i--; )
-                if (
-                  d[k][i].aspect === params[k].aspect &&
-                  d[k][i].type === params[k].type
-                ) {
-                  v = false;
-                  break;
-                }
-              if (v) d[k].push(params[k]);
-            } else {
-              d[k] = [params[k]];
-            }
-          }
-        }
-      }
-      window.history.replaceState("", "", window.location.origin);
-    }
     this.$options.display.options.year = [
       { type: ">=", value: this.year_window[0] },
       { type: "<=", value: this.year_window[1] },
     ];
+    if (window.location.search) {
+      var params = this.$options.source.parse_query(window.location.search),
+        s = this.settings,
+        d = this.$options.display.options,
+        parse_param = function(k, p) {
+          if (p.type && p.value) {
+            if (k === "split" && p.value.length) {
+              s.split1 = d.split[0] = p.value[0];
+              store_option("split1", s.split1);
+              if (p.value.length > 1) {
+                s.split2 = d.split[1] = p.value[1];
+              } else s.split2 = "";
+            } else if (
+              p.type === "=" &&
+              Object.prototype.hasOwnProperty.call(s, k)
+            ) {
+              s[k] = typeof s[k] === "boolean" ? p.value === "true" : p.value;
+              store_option(k, s[k]);
+            } else {
+              if (k === "sort") {
+                if (typeof p.value === "object" && !p.value.length) {
+                  if (!Object.prototype.hasOwnProperty.call(d, "sort")) {
+                    d.sort = p.value;
+                  } else {
+                    for (l in p.value)
+                      if (Object.prototype.hasOwnProperty.call(p.value, l))
+                        d.sort[l] = p.value[l];
+                  }
+                }
+              } else if (
+                k !== "split" &&
+                Object.prototype.hasOwnProperty.call(d, k) &&
+                d[k].push
+              ) {
+                for (var i = d[k].length, v = true; i--; )
+                  if (d[k][i].aspect === p.aspect && d[k][i].type === p.type) {
+                    d[k][i].value = p.value;
+                    v = false;
+                    break;
+                  }
+                if (v) d[k].push(p);
+              } else {
+                d[k] = [p];
+              }
+            }
+          }
+        };
+      for (k in params) {
+        if (Object.prototype.hasOwnProperty.call(params, k)) {
+          if (params[k].length) {
+            for (i = params[k].length; i--; ) parse_param(k, params[k][i]);
+          } else parse_param(k, params[k]);
+        }
+      }
+      window.history.replaceState("", "", window.location.origin);
+    }
     setTimeout(
       function() {
         this.settings.active = true;
@@ -323,20 +336,33 @@ new Vue({
       0
     );
   },
+  mounted() {
+    for (var i = this.$root.$options.display.options.year.length; i--; ) {
+      if (this.$root.$options.display.options.year[i].type === ">=") {
+        this.year_window[0] = this.$root.$options.display.options.year[i].value;
+      } else if (this.$root.$options.display.options.year[i].type === "<=")
+        this.year_window[1] = this.$root.$options.display.options.year[i].value;
+    }
+  },
   computed: {
     year_window: {
       get: function() {
         var o = this.settings.year.window[0],
           r = this.settings.year.range,
           span = r[1] - r[0];
-        return [(o.start / 100) * span + r[0], (o.end / 100) * span + r[0]];
+        o.start, o.end;
+        return isFinite(span)
+          ? [(o.start / 100) * span + r[0], (o.end / 100) * span + r[0]]
+          : [2000, 3000];
       },
       set: function(v) {
         var o = this.settings.year.window[0],
           r = this.settings.year.range,
           span = r[1] - r[0];
-        o.start = ((v[0] - r[0]) / span) * 100;
-        o.end = ((v[1] - r[0]) / span) * 100;
+        if (isFinite(span)) {
+          o.start = ((v[0] - r[0]) / span) * 100;
+          o.end = ((v[1] - r[0]) / span) * 100;
+        }
       },
     },
     color: function() {
@@ -346,14 +372,49 @@ new Vue({
   methods: {
     display_query: function(ex, d, all) {
       d = d || this.$options.display.options;
-      ex = ex || {};
-      var parts = [],
-        string = "",
+      var api = !all && ex,
+        parts = api
+          ? []
+          : [
+              {
+                slot: "plot_type",
+                type: "=",
+                value: Object.prototype.hasOwnProperty.call(d, "plot_type")
+                  ? d.plot_type
+                  : this.settings.plot_type,
+              },
+            ],
+        string = api ? "" : "?plot_type=" + parts[0].value,
         k,
         l,
         i;
+      function add_settings_param(n, v) {
+        parts.push({
+          slot: n,
+          type: "=",
+          value: v,
+        });
+        string += (string ? "&" : "?") + n + "=" + v;
+      }
+      if (api) {
+        if (this.settings.format_file !== "csv") {
+          add_settings_param("format_file", this.settings.format_file);
+          if (
+            this.settings.format_file === "json" &&
+            this.settings.format_json !== "arrays"
+          )
+            add_settings_param("format_json", this.settings.format_json);
+        }
+        if (
+          this.settings.format_table !== "mixed" &&
+          (this.settings.format_file !== "json" ||
+            this.settings.format_json !== "raw")
+        )
+          add_settings_param("format_table", this.settings.format_table);
+      }
+      ex = ex || {};
       for (k in d)
-        if (Object.prototype.hasOwnProperty.call(d, k)) {
+        if (Object.prototype.hasOwnProperty.call(d, k) && k !== "plot_type") {
           if (!Object.prototype.hasOwnProperty.call(ex, k) || ex[k] !== d[k]) {
             if (k === "split") {
               if (d[k][0]) {
@@ -396,14 +457,15 @@ new Vue({
                 } else {
                   for (i = d[k].length; i--; ) {
                     if (
-                      (!Object.prototype.hasOwnProperty.call(
+                      k === this.$root.settings.split1 ||
+                      k === this.$root.settings.split2 ||
+                      all ||
+                      !Object.prototype.hasOwnProperty.call(
                         this.$root.$options.source.variables,
                         k
                       ) ||
-                        all ||
-                        k === this.$root.settings.split1 ||
-                        k === this.$root.settings.split2) &&
-                      (k !== "year" ||
+                      (k === "year" &&
+                        d.year[0].value !== 2000 &&
                         d[k][i].value !==
                           this.$root.settings.year.range[
                             d[k][i].type === ">=" ? 0 : 1
@@ -411,16 +473,22 @@ new Vue({
                     ) {
                       parts.push({
                         slot: k,
-                        aspect: d[k][i].aspect,
+                        aspect: k === "year" ? "" : d[k][i].aspect,
                         type: d[k][i].type,
-                        value: d[k][i].display_value,
+                        value: d[k][i].display_value.join
+                          ? d[k][i].display_value.join(",")
+                          : d[k][i].display_value,
                       });
                       string +=
                         (string ? "&" : "?") +
                         k +
-                        (d[k][i].aspect ? "[" + d[k][i].aspect + "]" : "") +
+                        (k !== "year" && d[k][i].aspect
+                          ? "[" + d[k][i].aspect + "]"
+                          : "") +
                         d[k][i].type +
-                        d[k][i].display_value;
+                        (d[k][i].display_value.join
+                          ? d[k][i].display_value.join(",")
+                          : d[k][i].display_value);
                     }
                   }
                 }
@@ -444,7 +512,7 @@ new Vue({
       return r;
     },
     to_area: function(s) {
-      return s.replace(/[^0-9%pxrem]+/, "").replace(/[^%0-9]+$/, "px");
+      return s.replace(/[^0-9%pxrem]+/, "").replace(/(\d)$/, "$1px");
     },
     queue_update,
     draw_plot: function() {
@@ -518,7 +586,7 @@ new Vue({
       } else r.height = height + "%";
       return r;
     },
-    update_data: function() {
+    update_data: async function() {
       if (this.settings.active) {
         this.settings.active = false;
         var s = this.settings,
@@ -545,8 +613,9 @@ new Vue({
             this.$options.source.variables.values.splits[s.value].indexOf(
               s.split1
             ) === -1
-          )
+          ) {
             s.split1 = "";
+          }
         }
         if (s.split2) {
           if (
@@ -570,8 +639,10 @@ new Vue({
         d.options.split[1] = s.split2;
         store_option("display_options", d.options);
         this.$options.source.update(d.options);
-        sd = this.$options.source.prepare_view();
-        if (!Object.prototype.hasOwnProperty.call(sd, s.split1)) s.split1 = "";
+        sd = await this.$options.source.prepare_view();
+        if (!Object.prototype.hasOwnProperty.call(sd, s.split1)) {
+          s.split1 = "";
+        }
         if (
           !s.split1 ||
           (!Object.prototype.hasOwnProperty.call(sd, s.split2) &&
@@ -580,8 +651,9 @@ new Vue({
                 sd[s.split1].subgroups,
                 s.split2
               )))
-        )
+        ) {
           s.split2 = "";
+        }
         if (s.as_table) {
           this.table = this.$options.source.reformat(s.format_table, true);
         } else {
@@ -735,6 +807,10 @@ new Vue({
             d.graphic[0].style.text = f.value + " by Year";
             d.xAxis[0].data = sd.year.filtered;
           } else {
+            if (this.year_window[0] === 2000) {
+              this.year_window[0] = s.year.range[0];
+              this.year_window[1] = s.year.range[1];
+            }
             d.graphic[1].style.text =
               this.year_window[0] === this.year_window[1]
                 ? "Year = " + this.year_window[0]
@@ -745,7 +821,7 @@ new Vue({
             if (s.split1) {
               d.graphic[0].style.text += " by " + f.split1;
               d.xAxis[0].data = sd[s.split1].display;
-            }
+            } else d.xAxis[0].show = false;
           }
           if (s.split1) {
             if (s.split2) {
@@ -799,6 +875,8 @@ new Vue({
                         sd[s.split1].subgroups[s.split2][i].levels[l].filtered,
                       xAxisIndex: i,
                       yAxisIndex: i,
+                      animationEasing: this.settings.animation_type,
+                      showSymbol: false,
                     });
                   }
                 }
@@ -808,9 +886,9 @@ new Vue({
                 d.graphic[0].style.text += " between " + f.split2;
                 if (
                   sd.display_info.sumlen * 12 >
-                  this.$el.getBoundingClientRect().width - 450
+                  this.$el.getBoundingClientRect().width - 470
                 ) {
-                  d.xAxis[0].axisLabel.rotate = 90;
+                  d.xAxis[0].axisLabel.rotate = 60;
                 }
                 for (i = 0, n = d.legend.data.length; i < n; i++) {
                   for (
@@ -829,6 +907,8 @@ new Vue({
                     name: d.legend.data[i],
                     type: s.plot_type,
                     data: means,
+                    animationEasing: this.settings.animation_type,
+                    showSymbol: false,
                   });
                 }
               }
@@ -842,6 +922,8 @@ new Vue({
                     name: sd.levels[i].label,
                     type: s.plot_type,
                     data: sd.levels[i].filtered,
+                    animationEasing: this.settings.animation_type,
+                    showSymbol: false,
                   });
                   d.legend.data.push(sd.levels[i].label);
                 }
@@ -852,12 +934,14 @@ new Vue({
                 d.series.push({
                   type: s.plot_type,
                   data: means,
+                  animationEasing: this.settings.animation_type,
+                  showSymbol: false,
                 });
                 if (
                   sd.display_info.sumlen * 12 >
-                  this.$el.getBoundingClientRect().width - 450
+                  this.$el.getBoundingClientRect().width - 470
                 ) {
-                  d.xAxis[0].axisLabel.rotate = 90;
+                  d.xAxis[0].axisLabel.rotate = 60;
                 }
                 d.legend.data.push(sd.label);
               }
@@ -868,6 +952,7 @@ new Vue({
               d.series.push({
                 type: s.plot_type,
                 data: sd.total.filtered,
+                showSymbol: false,
               });
             } else {
               d.graphic[0].style.text = "Average " + f.value;
@@ -876,6 +961,7 @@ new Vue({
               d.series.push({
                 type: s.plot_type,
                 data: [sd.total.mean],
+                animationEasing: this.settings.animation_type,
               });
             }
           }
@@ -925,26 +1011,34 @@ new Vue({
           }
           if (
             d.graphic[0].style.text.length * 12 * d.graphic[0].scale[0] >
-            width - (width > 590) * 250
+            width - (width > 590) * 270
           ) {
             scale = Math.max(
               0.6,
-              (width - (width > 590) * 250) /
+              (width - (width > 590) * 270) /
                 (d.graphic[0].style.text.length * 12)
             );
             d.graphic[0].scale = [scale, scale];
             d.graphic[1].top = scale * 20 + 10;
           }
           d.legend.type = d.legend.data.length > 9 ? "scroll" : "plain";
+          this.$root.$options.plot.options.tooltip.position =
+            screen.width > 500
+              ? null
+              : function(pos, params, el, elRect, size) {
+                  var obj = { top: 45 };
+                  obj[pos[0] < size.viewSize[0] / 2 ? "left" : "right"] = 10;
+                  return obj;
+                };
           if (this.$options.plot && this.$options.plot.instance) {
             this.$options.plot.instance.setOption(
               {
                 textStyle: this.$options.plot.options.textStyle,
                 tooltip: this.$options.plot.options.tooltip,
-                animationDurationUpdate: this.$options.plot.options
-                  .animationDurationUpdate,
-                animationEasingUpdate: this.$options.plot.options
-                  .animationEasingUpdate,
+                animationDuration: s.animation_time,
+                animationDurationUpdate: s.animation_time,
+                animationEasing: s.animation_type,
+                animationEasingUpdate: s.animation_type,
                 title: d.title,
                 legend: d.legend,
                 xAxis: d.xAxis,

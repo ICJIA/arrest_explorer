@@ -6,7 +6,7 @@
           <DataDisplay />
         </div>
         <div id="side-menu"><DataSheet /></div>
-        <v-toolbar
+        <v-card
           elevation="4"
           floating
           dense
@@ -20,29 +20,41 @@
               @click="$root.settings.as_table = !$root.settings.as_table"
             >
               {{ $root.settings.as_table ? "Plot" : "Table" }}
+              <v-icon right>{{
+                $root.settings.as_table
+                  ? "mdi-chart-" +
+                    ($root.settings.plot_type === "scatter"
+                      ? "scatter-plot"
+                      : $root.settings.plot_type)
+                  : "mdi-table-large"
+              }}</v-icon>
             </v-btn>
             <v-btn text @click="$root.settings.export_open = true"
-              >Export</v-btn
+              >Export<v-icon right>mdi-download</v-icon></v-btn
             >
           </v-btn-toggle>
-        </v-toolbar>
+        </v-card>
       </v-row>
       <v-row no-gutters><Menu /></v-row>
     </v-col>
+    <Intro />
     <Export />
   </v-app>
 </template>
 
 <script>
 import DataDisplay from "./components/DataDisplay";
-import DataSheet from "./components/MenuSheets/Data";
+import Intro from "./components/MenuSheets/Intro";
 import Export from "./components/MenuSheets/Export";
 import Menu from "./components/Menu";
 
 export default {
   components: {
     DataDisplay,
-    DataSheet,
+    DataSheet: async function() {
+      return import("./components/MenuSheets/Data");
+    },
+    Intro,
     Export,
     Menu,
   },
@@ -69,7 +81,9 @@ export default {
   margin: 0;
 }
 .floating-menu {
-  right: 27px;
+  position: absolute;
+  height: 48px;
+  right: 20px;
   bottom: 1em;
   border-radius: 25px;
 }
@@ -118,21 +132,20 @@ html {
 .v-label {
   margin: 0 0.5em 0 0;
 }
-.v-toolbar__content {
-  padding: 0;
-}
 .api-display {
   text-align: center;
   padding: 1em;
+  margin: 0 0 0 0.5em;
   border-radius: 10px;
   width: 100%;
-  word-break: break-all;
+}
+.api-display span {
+  display: inline-block;
 }
 .api-display a {
   padding: 0.5em;
   text-decoration: none;
 }
-
 .theme--dark .primary,
 .theme--dark .primary .v-btn__content {
   color: #000;
@@ -168,7 +181,6 @@ html {
 .theme--dark .url-param-sep {
   color: #f5da77;
 }
-
 .theme--light .api-display {
   color: #5d5d5d;
   background: #f3f3f3;
@@ -195,9 +207,6 @@ html {
 @media screen and (max-width: 590px) {
   #menu-sheet-wrap {
     width: 100%;
-  }
-  .v-toolbar__content {
-    height: 20px;
   }
 }
 @media screen and (max-width: 315px) {

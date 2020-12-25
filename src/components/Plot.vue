@@ -39,8 +39,10 @@ export default {
             type: "shadow",
           },
         },
+        animationEasing: "elasticOut",
+        animationDuration: 700,
+        animationEasingUpdate: "elasticOut",
         animationDurationUpdate: 700,
-        animationEasingUpdate: "quinticInOut",
       },
     };
   },

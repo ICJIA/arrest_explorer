@@ -16,35 +16,18 @@
       </v-col>
     </v-row>
     <v-card-text>
-      <v-expansion-panels>
-        <v-expansion-panel>
-          <v-expansion-panel-header
-            ><h4>
-              User Agreement
-            </h4></v-expansion-panel-header
-          >
-          <v-expansion-panel-content>
-            User agreement text.
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-        <v-expansion-panel>
-          <v-expansion-panel-header
-            ><h4>
-              Notice of federal funding and federal disclaimer
-            </h4></v-expansion-panel-header
-          >
-          <v-expansion-panel-content>
-            This website is funded through a grant from the Bureau of Justice
-            Statistics, Office of Justice Programs, U.S. Department of Justice.
-            Neither the U.S. Department of Justice nor any of its components
-            operate, control, are responsible for, or necessarily endorse, this
-            website (including, without limitation, its content, technical
-            infrastructure, and policies, and any services or tools provided).
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
-
       <v-row class="button-blocks">
+        <v-col>
+          <v-btn
+            block
+            x-large
+            @click="
+              $root.settings.sheet = '';
+              $root.settings.intro = true;
+            "
+            >Show Introduction</v-btn
+          >
+        </v-col>
         <v-col>
           <v-btn
             block
@@ -75,8 +58,6 @@
     </v-card-text>
   </v-card>
 </template>
-
-<script></script>
 
 <style scoped>
 .about-header {

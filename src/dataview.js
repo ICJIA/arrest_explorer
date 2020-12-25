@@ -12,13 +12,9 @@ const format = /^(?:cs|c$|[jt])/,
   letter = /[A-Za-z]/,
   digit = /\d/,
   whitespace = /\s/,
-  upper = /[^A-Z]/,
+  upper = /[A-Z]/,
   quotes = /%27|%22/g,
-  aspect = { has: /\[/, name: /\[.*$/, aspect: /^.*\[|\]/g },
-  defaults = {
-    value: "arrests",
-    format: "csv",
-  };
+  aspect = { has: /\[/, name: /\[.*$/, aspect: /^.*\[|\]/g };
 
 function which_format(s) {
   switch (s.substr(0, 1).toLowerCase()) {
@@ -77,8 +73,8 @@ function conditions(o) {
 function add_level_spec(o, s) {
   if (
     !Object.prototype.hasOwnProperty.call(o, "value") ||
-    !typeof o.value === "object" ||
-    !o.value.push
+    typeof o.value !== "object" ||
+    o.value.push
   )
     o.value = {};
   for (
@@ -111,7 +107,10 @@ function add_level_spec(o, s) {
 function attach_criteria(arr) {
   for (var i = arr.length; i--; ) {
     if (!Object.prototype.hasOwnProperty.call(arr[i], "display_value")) {
-      arr[i].display_value = arr[i].value;
+      arr[i].display_value =
+        typeof arr[i].value === "object" && !arr[i].value.push
+          ? Object.keys(arr[i].value)
+          : arr[i].value;
       arr[i].enabled = true;
     }
     if (equality.test(arr[i].type) && arr[i].display_value.length) {
@@ -119,7 +118,7 @@ function attach_criteria(arr) {
     } else
       arr[i].value = number.test(arr[i].display_value)
         ? Number(arr[i].display_value)
-        : arr[i].display_value;
+        : 0;
     arr[i].fun = conditions(arr[i]);
     if (!Object.prototype.hasOwnProperty.call(arr[i], "aspect"))
       arr[i].aspect = equality.test(arr[i].type) ? "label" : "mean";
@@ -151,8 +150,7 @@ function Dataview(data, levels, options, variables) {
   this.dim = { nrow: 0, ncol: 0 };
   this.levels = levels || {};
   this.options = options || {};
-  this.criteria = {};
-  this.prepare_data = function(data) {
+  this.prepare_data = async function(data) {
     var vars = {
         values: { values: [], splits: {}, total: {} },
       },
@@ -379,9 +377,9 @@ function Dataview(data, levels, options, variables) {
 
 Dataview.prototype = {
   constructor: Dataview,
+  options: {},
   update: function(options) {
-    var k,
-      ckf = true;
+    var k;
     this.options = {};
     if (options) {
       for (k in options)
@@ -392,14 +390,13 @@ Dataview.prototype = {
             !options[k].aspect
               ? options[k].value
               : options[k];
-          if (
-            ckf &&
-            (k === "year" ||
-              (k === "sort" &&
-                Object.prototype.hasOwnProperty.call(options.sort, "year")))
-          )
-            this.filter = this.vector_filter();
         }
+      if (
+        Object.prototype.hasOwnProperty.call(options, "year") ||
+        (Object.prototype.hasOwnProperty.call(options, "sort") &&
+          Object.prototype.hasOwnProperty.call(options.sort, "year"))
+      )
+        this.filter = this.vector_filter();
     } else this.filter = this.vector_filter();
     this.prepare_view();
   },
@@ -408,7 +405,11 @@ Dataview.prototype = {
     for (k in this.options)
       if (Object.prototype.hasOwnProperty.call(this.options, k)) {
         if (k === "format_category") {
-          switch (this.options[k].substr(0, 1).toLowerCase()) {
+          switch (
+            typeof this.options[k] === "string"
+              ? this.options[k].substr(0, 1).toLowerCase()
+              : ""
+          ) {
             case "i":
               this.options[k] = "index";
               break;
@@ -479,9 +480,10 @@ Dataview.prototype = {
       s = [],
       rows = [];
     if (Object.prototype.hasOwnProperty.call(this.raw, "year")) {
-      if (Object.prototype.hasOwnProperty.call(this.criteria, "year")) {
+      if (Object.prototype.hasOwnProperty.call(this.options, "year")) {
+        attach_criteria(this.options.year);
         for (i = this.raw.year.length; i--; ) {
-          if (check_value(this.raw.year[i], this.criteria.year))
+          if (check_value(this.raw.year[i], this.options.year))
             rows.splice(0, 0, i);
         }
       } else for (i = this.raw.year.length; i--; ) rows[i] = i;
@@ -603,10 +605,11 @@ Dataview.prototype = {
       display: [],
       levels: [],
     };
+    if (!Object.prototype.hasOwnProperty.call(this.options, "sort"))
+      this.options.sort = {};
     if (o) {
       if (crit) attach_criteria(crit);
       f =
-        Object.prototype.hasOwnProperty.call(this.options, "sort") &&
         Object.prototype.hasOwnProperty.call(this.options.sort, split) &&
         (this.options.sort[split].aspect !== "label" ||
           !this.options.sort[split].increasing)
@@ -619,8 +622,7 @@ Dataview.prototype = {
                   for (i = r.levels.length; i--; )
                     if (r.levels[i][s.aspect] >= c[s.aspect]) break;
                 }
-                i++;
-                r.levels.splice(i, 0, c);
+                r.levels.splice(++i, 0, c);
                 r.labels.splice(i, 0, l);
                 r.display.splice(i, 0, c.label);
               } else {
@@ -716,11 +718,12 @@ Dataview.prototype = {
       }
     }
   },
-  prepare_view: function() {
+  prepare_view: async function() {
     if (!Object.prototype.hasOwnProperty.call(this, "variables"))
-      this.variables = this.prepare_data(this.raw);
+      this.variables = await this.prepare_data(this.raw);
     this.validate_options();
-    var r = { slot: { value: this.options.value } },
+    var i,
+      r = { slot: { value: this.options.value } },
       split1,
       split2;
     this.view = r;
@@ -731,12 +734,10 @@ Dataview.prototype = {
       split1 = this.options.split[0];
       if (this.options.split[1]) split2 = this.options.split[1];
     }
-    this.criteria = {};
     if (Object.prototype.hasOwnProperty.call(this.raw, "year")) {
       if (Object.prototype.hasOwnProperty.call(this.options, "year")) {
-        this.criteria.year = this.options.year;
         attach_criteria(this.options.year);
-        if ((this.criteria.year, length)) this.filter = this.vector_filter();
+        if ((this.options.year, length)) this.filter = this.vector_filter();
       }
       r.year = this.filter(this.raw.year);
       r.slot.year = { name: "year", data: r.year };
@@ -758,15 +759,18 @@ Dataview.prototype = {
         this.options[split1],
         split1
       );
-      if (r[split1].levels.length) {
-        r[split1].label = split1;
-        r.slot.split1 = { name: split1, data: r[split1].levels };
-      } else {
-        delete r[split1];
-        split1 = null;
+      if (!r[split1].levels.length) {
+        for (i = this.options[split1].length; i--; )
+          this.options[split1][i].enabled = false;
+        r[split1] = this.filter_levels(
+          this.raw[this.options.value][split1].total,
+          void 0,
+          split1
+        );
       }
+      r[split1].label = split1;
+      r.slot.split1 = { name: split1, data: r[split1].levels };
       if (
-        split1 &&
         split2 &&
         this.variables[split1].splits[this.options.value].indexOf(split2) !== -1
       ) {
@@ -1129,7 +1133,6 @@ Dataview.prototype = {
         }
         if (
           typeof par[arg[0]].value === "string" &&
-          !Object.prototype.hasOwnProperty.call(defaults, arg[0]) &&
           equality.test(par[arg[0]].type)
         ) {
           par[arg[0]].value = {};

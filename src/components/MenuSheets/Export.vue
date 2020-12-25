@@ -1,134 +1,132 @@
 <template>
-  <v-row justify="center">
-    <v-dialog
-      v-model="$root.settings.export_open"
-      open-delay="0"
-      overlay-opacity=".8"
-      max-width="1200px"
-    >
-      <v-card>
-        <v-card-title>
-          <span class="headline">Export Image or Data</span>
-        </v-card-title>
-        <v-card-text>
-          <v-col>
-            <v-row class="block-row">
-              <v-col>
-                <v-btn block @click="save_image">Save Image</v-btn>
-                <v-row>
-                  <v-col>
-                    <v-select
-                      :items="['svg', 'png', 'jpeg']"
-                      label="Image Format"
-                      class="image-format"
-                      v-model="$root.settings.format_image"
+  <v-dialog
+    v-model="$root.settings.export_open"
+    open-delay="0"
+    overlay-opacity=".8"
+    max-width="1200px"
+  >
+    <v-card>
+      <v-card-title>
+        <span class="headline">Export Image or Data</span>
+      </v-card-title>
+      <v-card-text>
+        <v-col>
+          <v-row class="block-row">
+            <v-col>
+              <v-btn block @click="save_image">Save Image</v-btn>
+              <v-row>
+                <v-col>
+                  <v-select
+                    :items="['svg', 'png', 'jpeg']"
+                    label="Image Format"
+                    class="image-format"
+                    v-model="$root.settings.format_image"
+                    hide-details
+                  ></v-select>
+                </v-col>
+                <v-col v-if="$root.settings.format_image !== 'svg'">
+                  <v-row class="input-row">
+                    <v-combobox
+                      label="Width"
+                      :items="['500%', '4096', '2048', '1920', '100%']"
+                      :rules="valid_dim"
+                      v-model="$root.settings.image_dim[0]"
                       hide-details
-                    ></v-select>
-                  </v-col>
-                  <v-col v-if="$root.settings.format_image !== 'svg'">
-                    <v-row class="input-row">
-                      <v-combobox
-                        label="Width"
-                        :items="['500%', '4096', '2048', '1920', '100%']"
-                        :rules="valid_dim"
-                        v-model="$root.settings.image_dim[0]"
-                        hide-details
-                      ></v-combobox>
-                      <v-icon slot="append">mdi-close</v-icon>
-                      <v-combobox
-                        label="Height"
-                        :items="['500%', '2160', '1440', '1080', '100%']"
-                        :rules="valid_dim"
-                        v-model="$root.settings.image_dim[1]"
-                        hide-details
-                      ></v-combobox>
-                    </v-row>
-                  </v-col>
-                </v-row>
-              </v-col>
-              <v-col>
-                <v-btn block @click="download_data">Download Data</v-btn>
-                <v-row>
-                  <v-col>
-                    <v-select
-                      :items="['csv', 'json', 'tsv']"
-                      label="File Format"
-                      v-model="$root.settings.format_file"
+                    ></v-combobox>
+                    <v-icon slot="append">mdi-close</v-icon>
+                    <v-combobox
+                      label="Height"
+                      :items="['500%', '2160', '1440', '1080', '100%']"
+                      :rules="valid_dim"
+                      v-model="$root.settings.image_dim[1]"
                       hide-details
-                    ></v-select>
-                  </v-col>
-                  <v-col v-if="$root.settings.format_file === 'json'">
-                    <v-select
-                      :items="['raw', 'arrays', 'objects']"
-                      label="JSON Format"
-                      v-model="$root.settings.format_json"
-                      hide-details
-                    ></v-select> </v-col
-                  ><v-col
+                    ></v-combobox>
+                  </v-row>
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col>
+              <v-btn block @click="download_data">Download Data</v-btn>
+              <v-row>
+                <v-col>
+                  <v-select
+                    :items="['csv', 'json', 'tsv']"
+                    label="File Format"
+                    v-model="$root.settings.format_file"
+                    hide-details
+                  ></v-select>
+                </v-col>
+                <v-col v-if="$root.settings.format_file === 'json'">
+                  <v-select
+                    :items="['raw', 'arrays', 'objects']"
+                    label="JSON Format"
+                    v-model="$root.settings.format_json"
+                    hide-details
+                  ></v-select> </v-col
+                ><v-col
+                  v-if="
+                    $root.settings.format_file !== 'json' ||
+                      $root.settings.format_json !== 'raw'
+                  "
+                >
+                  <v-select
+                    :items="['tall', 'mixed', 'wide']"
+                    label="Table Format"
+                    v-model="$root.settings.format_table"
+                    hide-details
+                  ></v-select> </v-col
+                ><v-col>
+                  <v-select
                     v-if="
                       $root.settings.format_file !== 'json' ||
                         $root.settings.format_json !== 'raw'
                     "
-                  >
-                    <v-select
-                      :items="['tall', 'mixed', 'wide']"
-                      label="Table Format"
-                      v-model="$root.settings.format_table"
-                      hide-details
-                    ></v-select> </v-col
-                  ><v-col>
-                    <v-select
-                      v-if="
-                        $root.settings.format_file !== 'json' ||
-                          $root.settings.format_json !== 'raw'
-                      "
-                      :items="['labels', 'indices', 'codes']"
-                      label="Category Format"
-                      v-model="$root.settings.format_category"
-                      hide-details
-                    ></v-select>
-                  </v-col>
-                </v-row>
-              </v-col>
-            </v-row>
-            <v-row v-for="url in urls" :key="url.base">
-              <h3>{{ url.header }}</h3>
-              <div class="api-display">
-                <a :href="url.base + query.string" target="_blank">
-                  <span class="url-base">{{ url.base }}</span>
-                  <span v-if="query.parts.length" class="url-param-inital"
-                    >?</span
-                  >
+                    :items="['labels', 'indices', 'codes']"
+                    label="Category Format"
+                    v-model="$root.settings.format_category"
+                    hide-details
+                  ></v-select>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+          <v-row v-for="url in urls" :key="url.base">
+            <h3>{{ url.header }}</h3>
+            <div class="api-display">
+              <a :href="url.base + url.query.string" target="_blank">
+                <span class="url-base">{{ url.base }}</span>
+                <span v-if="url.query.parts.length" class="url-param-inital"
+                  >?</span
+                >
+                <span
+                  v-for="(part, index) in url.query.parts"
+                  :key="part.slot + part.type + part.value"
+                >
+                  <span class="url-param-key">{{ part.slot }}</span>
+                  <span v-if="part.aspect" class="url-param-aspect">{{
+                    "[" + part.aspect + "]"
+                  }}</span>
+                  <span class="url-param-type">{{ part.type }}</span>
+                  <span class="url-param-value">{{ part.value }}</span>
                   <span
-                    v-for="(part, index) in query.parts"
-                    :key="part.slot + part.type + part.value"
+                    v-if="index !== url.query.parts.length - 1"
+                    class="url-param-sep"
+                    >&</span
                   >
-                    <span class="url-param-key">{{ part.slot }}</span>
-                    <span v-if="part.aspect" class="url-param-aspect">{{
-                      "[" + part.aspect + "]"
-                    }}</span>
-                    <span class="url-param-type">{{ part.type }}</span>
-                    <span class="url-param-value">{{ part.value }}</span>
-                    <span
-                      v-if="index !== query.parts.length - 1"
-                      class="url-param-sep"
-                      >&</span
-                    >
-                  </span>
-                </a>
-              </div>
-            </v-row>
-          </v-col>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="$root.settings.export_open = false">
-            Close
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-row>
+                </span>
+              </a>
+            </div>
+          </v-row>
+        </v-col>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="$root.settings.export_open = false">
+          Close
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -164,20 +162,25 @@ export default {
         {
           header: "Link to this plot:",
           base: window.location.origin + "/",
+          refresh: this.$root.display_query,
+          query: { parts: [], string: "" },
         },
         {
           header: "Download through the API:",
           base: this.$root.settings.base_url,
+          refresh: this.$root.display_query.bind(this, {
+            value: "arrests",
+            by_year: true,
+            format_file: "csv",
+            format_table: "mixed",
+            format_category: "labels",
+          }),
+          query: { parts: [], string: "" },
         },
       ],
-      query: { parts: [], string: "" },
     };
   },
   methods: {
-    reset: function() {
-      localStorage.clear();
-      window.location.reload();
-    },
     make_name: function(format, data_out) {
       var s = this.$root.settings,
         n =
@@ -202,16 +205,12 @@ export default {
             ? this.$root.$options.source.raw
             : this.$root.$options.source.reformat(
                 s.format_table,
-                s.format_categories === "index",
                 s.format_json === "objects"
               )
         );
       } else {
         data = this.$root.$options.source.to_string(
-          this.$root.$options.source.reformat(
-            s.format_table,
-            s.format_categories === "index"
-          ),
+          this.$root.$options.source.reformat(s.format_table),
           s.format_file === "csv" ? "," : "\t"
         );
       }
@@ -223,13 +222,17 @@ export default {
               : "text/" +
                 (s.format_file === "tsv" ? "tab-separated-values" : "csv"),
         }),
-        this.make_name(s.format_file, true)
+        s.format_file === "json" && s.format_json === "raw"
+          ? "arrest_explorer-" +
+              this.$root.$options.source.raw.version.replace(/\//g, "") +
+              ".json"
+          : this.make_name(s.format_file, true)
       );
     },
     save_image: function() {
       if (this.$root.settings.as_table) {
         this.$root.settings.as_table = false;
-        setTimeout(this.save_image, 1100);
+        setTimeout(this.save_image, this.$root.settings.animation_time + 100);
         return;
       }
       if (!this.$root.settings.svg) {
@@ -239,7 +242,7 @@ export default {
             this.save_image();
             this.$root.settings.svg = false;
           }.bind(this),
-          1100
+          this.$root.settings.animation_time + 100
         );
         return;
       }
@@ -249,7 +252,7 @@ export default {
       if (uri) {
         data = uri.getDataURL();
         if (type === "svg") {
-          save(data, "arrest_explorer_image.svg");
+          save(data, this.make_name(type));
         } else {
           var i = document.createElement("img"),
             c = document.createElement("canvas"),
@@ -280,8 +283,21 @@ export default {
     },
   },
   watch: {
-    "$root.settings.export_open": function() {
-      this.query = this.$root.display_query();
+    "$root.settings": {
+      handler: function() {
+        if (
+          this.$root.settings.active &&
+          this.$root.settings.export_open &&
+          Object.prototype.hasOwnProperty.call(
+            this.$root.$options.source,
+            "variables"
+          )
+        ) {
+          for (var i = this.urls.length; i--; )
+            this.urls[i].query = this.urls[i].refresh();
+        }
+      },
+      deep: true,
     },
   },
 };

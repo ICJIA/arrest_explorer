@@ -3,8 +3,8 @@
     <v-card-title>Examples</v-card-title>
     <v-card-text>
       <v-row v-for="content in examples" :key="content.name">
-        <p class="display-1 text--primary">{{ content.question }}</p>
-        <p>{{ content.decription }}</p>
+        <p class="title text--primary">{{ content.question }}</p>
+        <p class="body-1">{{ content.decription }}</p>
         <div class="api-display">
           <a :href="content.url.string">
             <span class="url-base">{{ content.base_url }}</span>
@@ -41,36 +41,65 @@ export default {
       examples: [
         {
           name: "arrests by sex",
-          question: "How do arrests vary by sex?",
+          question: "How did arrest rates vary by sex?",
           decription:
             "You might look at average arrests within each sex group:",
           base_url: window.location.origin,
           url: this.$root.display_query(
             {},
-            { by_year: false, split: ["gender"], plot_type: "bar" },
+            {
+              value: "arrests",
+              by_year: false,
+              split: ["gender"],
+              plot_type: "bar",
+            },
+            true
+          ),
+        },
+        {
+          name: "arrests_per_arrestee by age_group",
+          question:
+            "Over time, which age groups were most likely to be re-arrested?",
+          decription:
+            "You might look at arrests per arrestee within age groups:",
+          base_url: window.location.origin,
+          url: this.$root.display_query(
+            {},
+            {
+              value: "arrests_per_arrestee",
+              by_year: true,
+              split: ["age_group"],
+              plot_type: "line",
+            },
             true
           ),
         },
         {
           name: "frequent categories over time",
-          question:
-            "How have the most frequent arrest charges changed over time?",
-          decription: "You might look at offense categories with large means:",
+          question: "What were people most frequently arrested for?",
+          decription:
+            "You might look at average arrest charges by offense categories with large means:",
           base_url: window.location.origin,
           url: this.$root.display_query(
             {},
             {
               value: "arrest_charges",
-              by_year: true,
-              plot_type: "line",
+              by_year: false,
+              plot_type: "bar",
               split: ["offense_category"],
               offense_category: [
                 {
                   aspect: "mean",
                   type: ">",
-                  display_value: "25000",
+                  display_value: "10000",
                 },
               ],
+              sort: {
+                offense_category: {
+                  aspect: "mean",
+                  increasing: false,
+                },
+              },
             },
             true
           ),
@@ -88,5 +117,15 @@ a {
 }
 .v-card__text .row {
   margin: 0 0 1em 0;
+}
+.menu-sheet-content {
+  padding: 0;
+}
+.v-application .title {
+  font-size: 1.2rem !important;
+  margin: 0;
+}
+.v-application .body-1 {
+  font-size: 0.91rem !important;
 }
 </style>

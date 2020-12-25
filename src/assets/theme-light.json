@@ -1,13 +1,13 @@
 {
   "color": [
-    "#0d4474",
+    "#0D4474",
     "#fe8869",
     "#777777",
     "#9ecd5c",
-    "#96c6ea",
+    "#6DB6C1",
     "#a94442",
-    "#555555",
-    "#337ab7"
+    "#2C53A5",
+    "#555555"
   ],
   "backgroundColor": "rgba(0, 0, 0, 0)",
   "textStyle": {},
@@ -320,6 +320,13 @@
     }
   },
   "tooltip": {
+    "backgroundColor": "rgba(255,255,255,0.8)",
+    "shadowStyle": {
+      "color": "rgba(0,0,0,0.7)"
+    },
+    "textStyle": {
+      "color": "#333"
+    },
     "axisPointer": {
       "lineStyle": {
         "color": "#ccc",

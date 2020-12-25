@@ -38,7 +38,7 @@
       </v-col>
       <v-col class="menu-bar-offset">
         <v-btn @click="toggleDataMenu()" :active="$root.settings.data_menu_open"
-          >Data</v-btn
+          >Data<v-icon right>mdi-database-cog</v-icon></v-btn
         >
       </v-col>
     </v-row>
@@ -108,7 +108,12 @@ export default {
         this.$root.settings.data_menu_open = true;
       }
       if (!this.$root.settings.as_table && this.$root.$options.plot.instance) {
-        setTimeout(this.$root.$options.plot.instance.resize, 400);
+        this.$root.$options.plot.element.style.width =
+          this.data_container.getBoundingClientRect().width +
+          (this.$root.settings.data_menu_open ? -325 : 315) +
+          "px";
+        this.$root.$options.plot.instance.resize();
+        this.$root.$options.plot.element.style.width = "100%";
       }
     },
     updatePlotParts(e) {
@@ -238,9 +243,5 @@ button[active="true"] {
 }
 .theme--light.v-expansion-panels > div.v-expansion-panel {
   background: #f5f5f5;
-}
-.v-application--is-ltr .v-input__slider--inverse-label .v-input__slot .v-label {
-  margin-left: 0;
-  margin-right: 12px;
 }
 </style>

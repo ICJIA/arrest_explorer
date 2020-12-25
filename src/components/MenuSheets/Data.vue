@@ -4,7 +4,8 @@
       label="Which values would you like to view?"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
-      hide-details
+      hint="View arrest_charges for crime-related variables, and others for demographic variables."
+      persistent-hint
     ></v-select>
     <v-btn
       @click="$root.settings.by_year = !$root.settings.by_year"
@@ -107,41 +108,31 @@
         </table>
       </v-card>
     </v-row>
-    <v-menu offset-y>
-      <template v-slot:activator="{ on, attrs }">
+    <v-row v-if="$root.settings.split1">
+      <v-subheader class="sort-header">Filter</v-subheader>
+      <v-row class="criteria-row" v-for="(s, i) in this.splits" :key="i">
         <v-btn
-          :disabled="!filterable"
-          block
-          v-bind="attrs"
-          v-on="on"
+          v-if="
+            s &&
+              !Object.prototype.hasOwnProperty.call(
+                $root.$options.display.options,
+                s
+              )
+          "
           color="primary"
+          block
+          @click="add_filter(s)"
+          >{{ "Filter " + s }}</v-btn
         >
-          {{ filterable ? "Add Filter" : "Add splits to filter" }}
-        </v-btn>
-      </template>
-      <v-list>
-        <v-list-item-group>
-          <v-list-item
-            v-for="(item, i) in available_filters"
-            :key="i"
-            @click="add_filter(item, i)"
-          >
-            <v-list-item-title v-text="item"></v-list-item-title>
-          </v-list-item>
-        </v-list-item-group>
-      </v-list>
-    </v-menu>
-    <v-col class="criteria-container">
-      <v-row
-        class="criteria-row"
-        v-for="(criterion, index) in criteria"
-        :key="index"
-      >
-        <v-card elevation="4" outlined>
+        <v-card v-else-if="s" elevation="4" outlined>
           <v-app-bar flat height="35" class="criteria-header">
-            <v-card-title v-text="criterion.name"></v-card-title>
+            <v-card-title v-text="s"></v-card-title>
             <v-spacer></v-spacer>
-            <v-btn @click="remove_variable(criterion.name)" icon color="error"
+            <v-btn
+              aria-label="remove filter"
+              @click="remove_variable(s)"
+              icon
+              color="error"
               ><v-icon>
                 mdi-close
               </v-icon></v-btn
@@ -149,10 +140,11 @@
           </v-app-bar>
           <v-row
             class="conditions"
-            v-for="condition in criterion.conditions"
-            :key="condition.aspect + condition.type + condition.value"
+            v-for="(condition, i) in options[s]"
+            :key="condition.aspect + condition.type + condition.value + i"
           >
             <v-checkbox
+              aria-label="toggle condition"
               v-model="condition.enabled"
               hide-details
               @change="refilter"
@@ -161,7 +153,7 @@
               label="aspect"
               :items="['label', 'max', 'min', 'sum', 'mean']"
               v-model="condition.aspect"
-              @change="refilter"
+              @change="refilter(this, condition)"
               dense
               hide-details
             ></v-select>
@@ -169,7 +161,7 @@
               label="type"
               :items="condition.aspect === 'label' ? ['=', '!='] : ['>', '<']"
               v-model="condition.type"
-              @change="refilter"
+              @change="refilter(this, condition)"
               dense
               hide-details
             ></v-select>
@@ -179,9 +171,9 @@
                   (condition.type === '=' || condition.type === '!=')
               "
               label="values"
-              :items="$root.$options.source.variables[criterion.name].levels"
+              :items="$root.$options.source.levels[s].label"
               v-model="condition.display_value"
-              @blur="refilter"
+              @blur="refilter(this, condition)"
               dense
               hide-details
               multiple
@@ -194,6 +186,7 @@
               </template>
             </v-select>
             <v-text-field
+              type="number"
               v-else
               label="value"
               v-model="condition.display_value"
@@ -202,11 +195,12 @@
               hide-details
             ></v-text-field>
             <v-btn
+              aria-label="remove condition"
               class="condition-remove"
               icon
               small
               color="error"
-              @click="condition_remove(criterion.name, condition.type)"
+              @click="condition_remove(s, condition.type)"
               ><v-icon>
                 mdi-close
               </v-icon></v-btn
@@ -214,10 +208,11 @@
           </v-row>
           <v-card-actions class="condition-foot">
             <v-btn
+              aria-label="add condition"
               class="add-condition"
               icon
               color="success"
-              @click="condition_add(criterion.name)"
+              @click="condition_add(s)"
               ><v-icon>
                 mdi-plus
               </v-icon></v-btn
@@ -225,59 +220,46 @@
           </v-card-actions>
         </v-card>
       </v-row>
-      <v-divider></v-divider>
-      <v-select
-        label="Category Format"
-        :items="['labels', 'indices', 'codes']"
-        v-model="$root.settings.format_category"
-      ></v-select>
-      <v-select
-        v-if="$root.settings.as_table"
-        label="Table Format"
-        :items="['tall', 'mixed', 'wide']"
-        v-model="$root.settings.format_table"
-      ></v-select>
-      <v-select
-        v-else
-        label="Plot Type"
-        :items="$root.settings.plot_types"
-        v-model="$root.settings.plot_type"
-      ></v-select>
-    </v-col>
+    </v-row>
+    <v-divider></v-divider>
+    <v-select
+      v-if="$root.settings.split1"
+      label="Category Format"
+      :items="$root.settings.category_formats"
+      v-model="$root.settings.format_category"
+      hide-details
+    ></v-select>
+    <v-select
+      v-if="$root.settings.as_table"
+      label="Table Format"
+      :items="$root.settings.table_formats"
+      v-model="$root.settings.format_table"
+    ></v-select>
+    <v-select
+      v-else
+      label="Plot Type"
+      :items="$root.settings.plot_types"
+      v-model="$root.settings.plot_type"
+    ></v-select>
   </v-card>
 </template>
 
 <script>
-function get_criteria() {
+function get_splits() {
   var o = this.$root.$options.display.options,
     s = this.$root.settings;
-  this.variables = this.$root.$options.source.variables.values.splits[
-    this.$root.settings.value
-  ];
-  this.available_filters = [];
-  this.filterable = false;
-  this.criteria = [];
+  this.splits[0] = this.splits[1] = "";
   if (!Object.prototype.hasOwnProperty.call(o, "sort")) o.sort = {};
   if (!Object.prototype.hasOwnProperty.call(o.sort, "year"))
     o.sort.year = { aspect: "label", increasing: true };
   this.sort = [{ name: "year", specs: o.sort.year }];
   if (s.split1) {
-    if (Object.prototype.hasOwnProperty.call(o, s.split1)) {
-      this.criteria.push({ name: s.split1, conditions: o[s.split1] });
-    } else {
-      this.filterable = true;
-      this.available_filters.push(s.split1);
-    }
+    this.splits[0] = s.split1;
     if (!Object.prototype.hasOwnProperty.call(o.sort, s.split1))
       o.sort[s.split1] = { aspect: "label", increasing: true };
     this.sort.push({ name: s.split1, specs: o.sort[s.split1] });
     if (s.split2) {
-      if (Object.prototype.hasOwnProperty.call(o, s.split2)) {
-        this.criteria.push({ name: s.split2, conditions: o[s.split2] });
-      } else {
-        this.filterable = true;
-        this.available_filters.push(s.split2);
-      }
+      this.splits[1] = s.split2;
       if (!Object.prototype.hasOwnProperty.call(o.sort, s.split2))
         o.sort[s.split2] = { aspect: "label", increasing: true };
       this.sort.push({ name: s.split2, specs: o.sort[s.split2] });
@@ -288,11 +270,9 @@ function get_criteria() {
 export default {
   data: function() {
     return {
-      filterable: false,
-      criteria: [],
+      splits: ["", ""],
       sort: [],
-      available_filters: [],
-      variables: [],
+      options: this.$root.$options.display.options,
     };
   },
   methods: {
@@ -302,9 +282,8 @@ export default {
       this.$root.settings.split2 = s;
     },
     add_filter: function(v) {
-      var d = this.$root.$options.display.options;
-      if (!Object.prototype.hasOwnProperty.call(d, v)) {
-        d[v] = [
+      if (!Object.prototype.hasOwnProperty.call(this.options, v)) {
+        this.options[v] = [
           {
             enabled: false,
             aspect: "mean",
@@ -313,54 +292,87 @@ export default {
             value: 0,
           },
         ];
-        this.criteria.push({ name: v, conditions: d[v] });
-        this.available_filters.splice(this.available_filters.indexOf(v), 1);
-        this.filterable = this.available_filters.length;
-        this.$root.queue_update();
       }
+      get_splits.bind(this)();
     },
     remove_variable: function(v) {
-      var d = this.$root.$options.display.options;
-      if (Object.prototype.hasOwnProperty.call(d, v)) {
-        delete d[v];
-        get_criteria.bind(this)();
+      if (Object.prototype.hasOwnProperty.call(this.options, v)) {
+        delete this.options[v];
+        get_splits.bind(this)();
         this.$root.queue_update();
       }
     },
     condition_remove: function(variable, type) {
-      var d = this.$root.$options.display.options,
-        i;
-      if (Object.prototype.hasOwnProperty.call(d, variable)) {
-        for (i = d[variable].length; i--; )
-          if (d[variable][i].type === type) {
-            d[variable].splice(i, 1);
+      if (Object.prototype.hasOwnProperty.call(this.options, variable)) {
+        for (var i = this.options[variable].length; i--; )
+          if (this.options[variable][i].type === type) {
+            this.options[variable].splice(i, 1);
             break;
           }
+        get_splits.bind(this)();
         this.$root.queue_update();
       }
     },
     condition_add: function(variable) {
-      var d = this.$root.$options.display.options,
-        i;
-      if (Object.prototype.hasOwnProperty.call(d, variable)) {
-        for (i = d[variable].length; i--; )
-          if (d[variable][i].type === "") return;
-        d[variable].push({ aspect: "", type: "", display_value: "" });
+      if (Object.prototype.hasOwnProperty.call(this.options, variable)) {
+        for (var i = this.options[variable].length; i--; )
+          if (this.options[variable][i].type === "") return;
+        this.options[variable].push({
+          aspect: "",
+          type: "",
+          display_value: "",
+        });
+        get_splits.bind(this)();
       }
     },
-    refilter: function() {
+    refilter: function(e, c) {
+      if (c) {
+        if (c.aspect === "label") {
+          if (!c.display_value.push) c.display_value = "";
+          c.value = c.display_value;
+        } else {
+          if (c.display_value.push) c.display_value = 0;
+        }
+      }
+      get_splits.bind(this)();
       this.$root.queue_update();
     },
   },
   watch: {
-    "$root.settings.split1": get_criteria,
-    "$root.settings.split2": get_criteria,
+    "$root.settings.split1": get_splits,
+    "$root.settings.split2": get_splits,
+    "$root.settings.data_menu_open": get_splits,
   },
-  mounted() {
-    get_criteria.bind(this)();
+  created() {
+    for (var i = this.$root.$options.source.raw.year.length; i--; ) {
+      if (
+        this.$root.settings.year.range[0] >
+        this.$root.$options.source.raw.year[i]
+      )
+        this.$root.settings.year.range[0] = this.$root.$options.source.raw.year[
+          i
+        ];
+      if (
+        this.$root.settings.year.range[1] <
+        this.$root.$options.source.raw.year[i]
+      )
+        this.$root.settings.year.range[1] = this.$root.$options.source.raw.year[
+          i
+        ];
+    }
   },
 };
 </script>
+
+<style>
+.v-application--is-ltr .v-input__slider--inverse-label .v-input__slot .v-label {
+  margin-left: 0;
+  margin-right: 12px;
+}
+.v-messages__message {
+  line-height: 1.2em;
+}
+</style>
 
 <style scoped>
 .v-input--range-slider {
@@ -373,6 +385,7 @@ export default {
 }
 .sort-container {
   margin: 0 0 1em 0;
+  overflow: hidden;
 }
 .sort-table {
   border-spacing: 0;
@@ -387,10 +400,10 @@ export default {
   padding: 0.4em 0.5em;
 }
 .sort-table td:first-of-type {
-  max-width: 103px;
+  max-width: 97px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 .sort-table td {
   padding: 0.1em 0.5em;
@@ -411,6 +424,9 @@ export default {
 .criteria-row {
   margin: 0.3em 0;
   padding: 0;
+}
+.criteria-row .v-card {
+  width: 100%;
 }
 .v-card__title {
   padding: 0;
