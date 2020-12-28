@@ -44,15 +44,15 @@
 
 <script>
 import DataDisplay from "./components/DataDisplay";
-import Intro from "./components/MenuSheets/Intro";
-import Export from "./components/MenuSheets/Export";
+import Intro from "./components/Sheets/Intro";
+import Export from "./components/Sheets/Export";
 import Menu from "./components/Menu";
 
 export default {
   components: {
     DataDisplay,
     DataSheet: async function() {
-      return import("./components/MenuSheets/Data");
+      return import("./components/Sheets/Data");
     },
     Intro,
     Export,

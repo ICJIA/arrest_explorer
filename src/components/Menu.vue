@@ -46,9 +46,9 @@
 </template>
 
 <script>
-import About from "./MenuSheets/About";
-import Examples from "./MenuSheets/Examples";
-import Options from "./MenuSheets/Options";
+import About from "./Sheets/About";
+import Examples from "./Sheets/Examples";
+import Options from "./Sheets/Options";
 
 var watch = {
   "$root.settings.sheet": {

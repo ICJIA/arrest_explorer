@@ -71,61 +71,6 @@ function conditions(o) {
   }
 }
 
-function add_level_spec(o, s) {
-  if (
-    !Object.prototype.hasOwnProperty.call(o, "value") ||
-    typeof o.value !== "object" ||
-    o.value.push
-  )
-    o.value = {};
-  for (
-    var level, format, lvs = s.split ? s.split(seps) : s, i = lvs.length;
-    i--;
-
-  ) {
-    level = lvs[i].replace(not, "").replace(aspect.name, "");
-    if (level) {
-      if (!format) {
-        format = integer.test(level)
-          ? "index"
-          : level.length === 1 || (!whitespace.test(level) && digit.test(level))
-          ? "code"
-          : upper.test(level)
-          ? "display"
-          : "label";
-      } else if (format === "index" && letter.test(level)) format = "code";
-      o.value[level] = {
-        aspect: aspect.has.test(lvs[i])
-          ? lvs[i].replace(aspect.aspect, "")
-          : "label",
-        increasing: not.test(lvs[i]),
-      };
-    }
-  }
-  o.format = format;
-}
-
-function attach_criteria(arr) {
-  for (var i = arr.length; i--; ) {
-    if (!Object.prototype.hasOwnProperty.call(arr[i], "display_value")) {
-      arr[i].display_value =
-        typeof arr[i].value === "object" && !arr[i].value.push
-          ? Object.keys(arr[i].value)
-          : arr[i].value;
-      arr[i].enabled = true;
-    }
-    if (equality.test(arr[i].type) && arr[i].display_value.length) {
-      add_level_spec(arr[i], arr[i].display_value);
-    } else
-      arr[i].value = number.test(arr[i].display_value)
-        ? Number(arr[i].display_value)
-        : 0;
-    arr[i].fun = conditions(arr[i]);
-    if (!Object.prototype.hasOwnProperty.call(arr[i], "aspect"))
-      arr[i].aspect = equality.test(arr[i].type) ? "label" : "mean";
-  }
-}
-
 function check_value(v, c) {
   for (var i = c.length; i--; ) {
     if (!c[i].fun(v)) return false;
@@ -405,7 +350,65 @@ Dataview.prototype = {
       console.log("prepare_view failed:", e);
     }
   },
+  add_level_spec: function(o, s, n) {
+    if (
+      !Object.prototype.hasOwnProperty.call(o, "value") ||
+      typeof o.value !== "object" ||
+      o.value.push
+    )
+      o.value = {};
+    for (
+      var level, format, lvs = s.split ? s.split(seps) : s, i = lvs.length;
+      i--;
 
+    ) {
+      level = lvs[i].replace(not, "").replace(aspect.name, "");
+      if (level) {
+        if (!format) {
+          format =
+            n &&
+            Object.prototype.hasOwnProperty.call(this.levels, n) &&
+            this.levels[n].label.indexOf(level) !== -1
+              ? "label"
+              : integer.test(level)
+              ? "index"
+              : level.length === 1 ||
+                (!whitespace.test(level) && digit.test(level))
+              ? "code"
+              : upper.test(level)
+              ? "display"
+              : "label";
+        } else if (format === "index" && letter.test(level)) format = "code";
+        o.value[level] = {
+          aspect: aspect.has.test(lvs[i])
+            ? lvs[i].replace(aspect.aspect, "")
+            : "label",
+          increasing: not.test(lvs[i]),
+        };
+      }
+    }
+    o.format = format;
+  },
+  attach_criteria: function(arr, name) {
+    for (var i = arr.length; i--; ) {
+      if (!Object.prototype.hasOwnProperty.call(arr[i], "display_value")) {
+        arr[i].display_value =
+          typeof arr[i].value === "object" && !arr[i].value.push
+            ? Object.keys(arr[i].value)
+            : arr[i].value;
+        arr[i].enabled = true;
+      }
+      if (equality.test(arr[i].type) && arr[i].display_value.length) {
+        this.add_level_spec(arr[i], arr[i].display_value, name);
+      } else
+        arr[i].value = number.test(arr[i].display_value)
+          ? Number(arr[i].display_value)
+          : 0;
+      arr[i].fun = conditions(arr[i]);
+      if (!Object.prototype.hasOwnProperty.call(arr[i], "aspect"))
+        arr[i].aspect = equality.test(arr[i].type) ? "label" : "mean";
+    }
+  },
   validate_options: function() {
     var k, v;
     for (k in this.options)
@@ -489,7 +492,7 @@ Dataview.prototype = {
       rows = [];
     if (Object.prototype.hasOwnProperty.call(this.raw, "year")) {
       if (Object.prototype.hasOwnProperty.call(this.options, "year")) {
-        attach_criteria(this.options.year);
+        this.attach_criteria(this.options.year);
         for (i = this.raw.year.length; i--; ) {
           if (check_value(this.raw.year[i], this.options.year))
             rows.splice(0, 0, i);
@@ -618,7 +621,7 @@ Dataview.prototype = {
     if (o) {
       if (crit) {
         if (!crit.length) crit = [crit];
-        attach_criteria(crit);
+        this.attach_criteria(crit, split);
       }
       f =
         Object.prototype.hasOwnProperty.call(this.options.sort, split) &&
@@ -752,7 +755,7 @@ Dataview.prototype = {
     }
     if (Object.prototype.hasOwnProperty.call(this.raw, "year")) {
       if (Object.prototype.hasOwnProperty.call(this.options, "year")) {
-        attach_criteria(this.options.year);
+        this.attach_criteria(this.options.year);
         if ((this.options.year, length)) this.filter = this.vector_filter();
       }
       r.year = this.filter(this.raw.year);
@@ -1142,7 +1145,7 @@ Dataview.prototype = {
             type: "=",
             value: {},
           };
-          add_level_spec(par.sort, arg[2]);
+          this.add_level_spec(par.sort, arg[2]);
         } else {
           par[arg[0]] = {
             type: arg[1],
@@ -1164,7 +1167,7 @@ Dataview.prototype = {
             if (arg[0] === "split") {
               par[arg[0]].value = arg[2].split(seps);
             } else {
-              add_level_spec(par[arg[0]], arg[2]);
+              this.add_level_spec(par[arg[0]], arg[2], arg[0]);
             }
           } else if (arg[0] === "split") {
             par[arg[0]].value = [arg[2]];
