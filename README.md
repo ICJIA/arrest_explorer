@@ -2,7 +2,7 @@
 
 ## Application Programing Interface
 
-Runs on a local server from [server.mjs](./server.mjs) (`npm run serve_api`), and only uses [dataview.js](./src/dataview.js) and [data.json](./src/data.json).
+Runs on a local server from [server.mjs](./server.mjs) (`npm run serve_api`), and only uses [dataview.js](./src/dataview.js), [data.json](./src/data.json), and [levels.json](./src/levels.json).
 
 ## Graphical User Interface
 

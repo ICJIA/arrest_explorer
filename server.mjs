@@ -1,59 +1,59 @@
 import Dataview from "./src/dataview.js";
 import rawdata from "./src/data.json";
+import levels from "./src/levels.json";
 import express from "express";
 
+function make_name(d, o) {
+  var n =
+    "arrest_explorer-" + d.raw.version.replace(/\//g, "") + "-" + o.value.value;
+  if (o.split) {
+    if (o.split.value[0]) {
+      n += "-" + o.split.value[0];
+      if (o.split.value[1]) n += "-" + o.split.value[1];
+    }
+  }
+  n += "-" + (o.format_table ? o.format_table.value : "mixed");
+  if (o.by_year && o.by_year.value !== "true") n += "-averages";
+  n += "." + o.format_file.value;
+  return n;
+}
+
 const app = express(),
-  port = process.env.PORT || 3000;
+  port = process.env.PORT || 8080;
 
-var data = new Dataview(rawdata);
+var data = new Dataview(rawdata, levels);
 
-app.get("/", function(req, res) {
+app.get("/", async function(req, res) {
   var r = {
-    status: res.status,
     options: data.parse_query(req._parsedUrl.search),
   };
-
-  data.update(r.options);
-  data.view = data.prepare_view();
-
   console.log(r);
-
-  if (Object.prototype.hasOwnProperty.call(r.options, "format_file"))
-    r.options.format = r.options.format_file;
-  if (r.options.format.display_value === "json") {
+  await data.update(r.options);
+  if (r.options.format_file.value === "json") {
     res.json(
       data.reformat(
-        r.options.format_table ? r.options.format_table.display_value : "mixed",
-        r.options.format_value
-          ? r.options.format_value.display_value === "index"
+        r.options.format_table ? r.options.format_table.value : "mixed",
+        r.options.format_category
+          ? r.options.format_category.value === "index"
           : false,
-        r.options.format_json
-          ? r.options.format_json.display_value !== "arrays"
-          : true
+        r.options.format_json ? r.options.format_json.value !== "arrays" : true
       )
     );
   } else {
     res.header(
       "Content-Type",
-      "text/" +
-        (r.options.format.display_value === "tsv"
-          ? "tab-separated-values"
-          : "csv")
+      "text/" + (r.options.format_file.value === "tsv" ? "plain" : "csv")
     );
-    res.attachment(
-      "arrest_explorer_export." + (r.options.format.display_value || "csv")
-    );
+    res.attachment(make_name(data, r.options));
     res.send(
       data.to_string(
         data.reformat(
-          r.options.format_table
-            ? r.options.format_table.display_value
-            : "mixed",
-          r.options.format_value
-            ? r.options.format_value.display_value === "index"
+          r.options.format_table ? r.options.format_table.value : "mixed",
+          r.options.format_category
+            ? r.options.format_category.value === "index"
             : false
         ),
-        r.options.format.display_value !== "csv" ? "\t" : ","
+        r.options.format_file.value !== "csv" ? "\t" : ","
       )
     );
   }

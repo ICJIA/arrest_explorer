@@ -465,6 +465,7 @@ new Vue({
                         k
                       ) ||
                       (k === "year" &&
+                        isFinite(d.year[0].value) &&
                         d.year[0].value !== 2000 &&
                         d[k][i].value !==
                           this.$root.settings.year.range[
@@ -638,8 +639,8 @@ new Vue({
         d.options.split[0] = s.split1;
         d.options.split[1] = s.split2;
         store_option("display_options", d.options);
-        this.$options.source.update(d.options);
-        sd = await this.$options.source.prepare_view();
+        await this.$options.source.update(d.options);
+        sd = this.$options.source.view;
         if (!Object.prototype.hasOwnProperty.call(sd, s.split1)) {
           s.split1 = "";
         }
@@ -807,7 +808,7 @@ new Vue({
             d.graphic[0].style.text = f.value + " by Year";
             d.xAxis[0].data = sd.year.filtered;
           } else {
-            if (this.year_window[0] === 2000) {
+            if (isFinite(this.year_window[0]) && this.year_window[0] === 2000) {
               this.year_window[0] = s.year.range[0];
               this.year_window[1] = s.year.range[1];
             }

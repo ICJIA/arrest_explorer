@@ -366,8 +366,8 @@ export default {
 
 <style>
 .v-application--is-ltr .v-input__slider--inverse-label .v-input__slot .v-label {
-  margin-left: 0;
-  margin-right: 12px;
+  margin-left: 0 !important;
+  margin-right: 12px !important;
 }
 .v-messages__message {
   line-height: 1.2em;

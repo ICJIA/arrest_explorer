@@ -219,8 +219,7 @@ export default {
           type:
             s.format_file === "json"
               ? "application/json"
-              : "text/" +
-                (s.format_file === "tsv" ? "tab-separated-values" : "csv"),
+              : "text/" + (s.format_file === "tsv" ? "plain" : "csv"),
         }),
         s.format_file === "json" && s.format_json === "raw"
           ? "arrest_explorer-" +

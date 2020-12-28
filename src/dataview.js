@@ -7,6 +7,7 @@ const format = /^(?:cs|c$|[jt])/,
   lesser = /%3c/g,
   seps = /\s*(?:[,|])+\s*/g,
   not = /^[!-]/,
+  bool = /true|false/,
   number = /^[+-]?\d*(?:e[+-]?|\.)?\d*$/,
   integer = /^\d+$/,
   letter = /[A-Za-z]/,
@@ -378,7 +379,7 @@ function Dataview(data, levels, options, variables) {
 Dataview.prototype = {
   constructor: Dataview,
   options: {},
-  update: function(options) {
+  update: async function(options) {
     var k;
     this.options = {};
     if (options) {
@@ -398,8 +399,13 @@ Dataview.prototype = {
       )
         this.filter = this.vector_filter();
     } else this.filter = this.vector_filter();
-    this.prepare_view();
+    try {
+      await this.prepare_view();
+    } catch (e) {
+      console.log("prepare_view failed:", e);
+    }
   },
+
   validate_options: function() {
     var k, v;
     for (k in this.options)
@@ -448,6 +454,8 @@ Dataview.prototype = {
             }
         }
       }
+    if (!Object.prototype.hasOwnProperty.call(this.options, "value"))
+      this.options.value = "arrests";
   },
   invert_nest: function(o, sum) {
     var y,
@@ -608,7 +616,10 @@ Dataview.prototype = {
     if (!Object.prototype.hasOwnProperty.call(this.options, "sort"))
       this.options.sort = {};
     if (o) {
-      if (crit) attach_criteria(crit);
+      if (crit) {
+        if (!crit.length) crit = [crit];
+        attach_criteria(crit);
+      }
       f =
         Object.prototype.hasOwnProperty.call(this.options.sort, split) &&
         (this.options.sort[split].aspect !== "label" ||
@@ -720,7 +731,12 @@ Dataview.prototype = {
   },
   prepare_view: async function() {
     if (!Object.prototype.hasOwnProperty.call(this, "variables"))
-      this.variables = await this.prepare_data(this.raw);
+      try {
+        this.variables = await this.prepare_data(this.raw);
+      } catch (e) {
+        console.log("prepare_data failed:", e);
+        return void 0;
+      }
     this.validate_options();
     var i,
       r = { slot: { value: this.options.value } },
@@ -1070,6 +1086,7 @@ Dataview.prototype = {
   to_string: function(m, sep) {
     for (var n = m.rows.length, i = 0, o = [m.header.join(sep)]; i < n; i++)
       o.push(m.rows[i].join(sep));
+    if (o.length < 3) o.push("");
     return o.join("\n");
   },
   parse_query: function(q) {
@@ -1094,18 +1111,20 @@ Dataview.prototype = {
             value: which_value(arg.length === 1 ? arg[0] : arg[2]),
           };
         } else if (format.test(arg[0])) {
-          par.format = { type: "=", value: which_format(arg[0]) };
+          par.format_file = { type: "=", value: which_format(arg[0]) };
         }
       } else if (arg.length === 3) {
         arg[2] =
           arg[0] === "value"
             ? which_value(arg[2])
-            : arg[0] === "format"
+            : arg[0] === "format_file"
             ? which_format(arg[2])
             : arg[2].replace(space, " ");
         if (!arg[2]) continue;
         if (number.test(arg[2])) {
           arg[2] = Number(arg[2]);
+        } else if (bool.test(arg[2])) {
+          arg[2] = arg[2] === "true";
         } else arg[2] = arg[2].replace(quotes, "");
         if (aspect.has.test(arg[0])) {
           arg[3] = arg[0].replace(aspect.aspect, "");
@@ -1137,7 +1156,11 @@ Dataview.prototype = {
         ) {
           par[arg[0]].value = {};
           seps.lastIndex = 0;
-          if (seps.test(arg[2])) {
+          if (
+            seps.test(arg[2]) ||
+            (Object.prototype.hasOwnProperty.call(this, "variables") &&
+              Object.prototype.hasOwnProperty.call(this.variables, arg[2]))
+          ) {
             if (arg[0] === "split") {
               par[arg[0]].value = arg[2].split(seps);
             } else {
@@ -1145,7 +1168,7 @@ Dataview.prototype = {
             }
           } else if (arg[0] === "split") {
             par[arg[0]].value = [arg[2]];
-          } else par[arg[0]] = { type: "=", value: arg[2] };
+          } else par[arg[0]] = { type: arg[1], value: arg[2] };
         }
       }
     }

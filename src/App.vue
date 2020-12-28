@@ -129,9 +129,6 @@ html {
 .col {
   padding: 0;
 }
-.v-label {
-  margin: 0 0.5em 0 0;
-}
 .api-display {
   text-align: center;
   padding: 1em;
