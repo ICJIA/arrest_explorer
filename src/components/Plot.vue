@@ -30,7 +30,7 @@ export default {
       },
       options: {
         textStyle: {
-          fontFamily: "Lucida Sans",
+          fontFamily: "Lato",
         },
         tooltip: {
           trigger: "axis",

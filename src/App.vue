@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <Header />
     <v-col>
       <v-row class="data-wrap" no-gutters>
         <div id="data-container" @click="$root.settings.sheet = ''">
@@ -43,6 +44,7 @@
 </template>
 
 <script>
+import Header from "./components/Header";
 import DataDisplay from "./components/DataDisplay";
 import Intro from "./components/Sheets/Intro";
 import Export from "./components/Sheets/Export";
@@ -50,6 +52,7 @@ import Menu from "./components/Menu";
 
 export default {
   components: {
+    Header,
     DataDisplay,
     DataSheet: async function() {
       return import("./components/Sheets/Data");
@@ -95,7 +98,7 @@ export default {
 }
 #data-container {
   position: absolute;
-  top: 0;
+  top: 40px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -120,8 +123,10 @@ export default {
 html {
   overflow-y: auto;
 }
-#app {
-  font-family: "Lucida Sans", sans-serif;
+#app,
+.v-application .title,
+.v-application .body-1 {
+  font-family: "Lato", sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 20px;

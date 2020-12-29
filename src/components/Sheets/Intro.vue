@@ -7,12 +7,25 @@
     persistent
   >
     <v-card>
-      <v-card-title><span class="text-h3">Arrest Explorer</span></v-card-title>
-      <v-card-subtitle
-        ><span class="text-h6"
-          >Illinois Criminal Justice Information Authority</span
-        ></v-card-subtitle
-      >
+      <v-row class="intro-header">
+        <v-col>
+          <v-img
+            max-width="250px"
+            contain
+            alt="ICJIA logo"
+            src="https://icjia.illinois.gov/researchhub/icjia-logo.png"
+          /> </v-col
+        ><v-col>
+          <v-card-title
+            ><span class="text-h3">Arrest Explorer</span></v-card-title
+          >
+          <v-card-subtitle
+            ><span class="text-h6"
+              >Illinois Criminal Justice Information Authority</span
+            ></v-card-subtitle
+          ></v-col
+        >
+      </v-row>
       <v-card-text>
         <v-row>
           <h1 class="text--primary">Exploring the Data</h1>
@@ -41,6 +54,7 @@
             <br />
             For more information about how data were prepared, please visit our
             <a
+              rel="noreferrer"
               href="https://icjia-arrest-explorer-docs.netlify.app"
               target="_blank"
               >documentation site</a
@@ -52,6 +66,7 @@
           <p class="text--secondary">
             Use of this site or its data is subject to our
             <a
+              rel="noreferrer"
               href="https://icjia-arrest-explorer-docs.netlify.app/agreement"
               target="_blank"
               >User Agreement</a
@@ -83,6 +98,19 @@
 </template>
 
 <style scoped>
+.intro-header {
+  height: 150px;
+}
+.intro-header .v-image {
+  margin: auto;
+}
+.intro-header .col:first-of-type {
+  position: absolute;
+  width: 175px;
+}
+.intro-header .col:last-of-type {
+  margin: 0 0 0 175px;
+}
 .v-application .text-h3 {
   font-size: 2.5rem !important;
 }
@@ -98,5 +126,16 @@ a {
 }
 .v-card__text .row {
   display: block;
+}
+@media screen and (max-width: 550px) {
+  .intro-header {
+    height: auto;
+  }
+  .intro-header .col:first-of-type,
+  .intro-header .col:last-of-type {
+    margin: 0;
+    position: relative;
+    flex-basis: auto;
+  }
 }
 </style>

@@ -6,7 +6,7 @@
           height="100%"
           contain
           alt="ICJIA logo"
-          src="../../assets/logo-icjia.png"
+          src="https://icjia.illinois.gov/researchhub/icjia-logo.png"
         /> </v-col
       ><v-col>
         <v-card-title>Arrest Explorer</v-card-title>
@@ -33,6 +33,7 @@
             block
             x-large
             target="_blank"
+            rel="noreferrer"
             href="https://icjia-arrest-explorer-docs.netlify.app"
             >About this Project<v-icon right>mdi-open-in-new</v-icon></v-btn
           >
@@ -42,6 +43,7 @@
             block
             x-large
             target="_blank"
+            rel="noreferrer"
             href="http://www.icjia.state.il.us"
             >About the ICJIA<v-icon right>mdi-open-in-new</v-icon></v-btn
           ></v-col
@@ -50,6 +52,7 @@
             block
             x-large
             target="_blank"
+            rel="noreferrer"
             href="https://github.com/miserman/arrest_explorer"
             >Code Repository<v-icon right>mdi-open-in-new</v-icon></v-btn
           >

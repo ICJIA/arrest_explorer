@@ -67,13 +67,13 @@ var settings = {
     sheet: "",
     data_menu_open: false,
     as_table: false,
-    theme_dark: true,
+    theme_dark: false,
     format_file: "csv",
     format_json: "arrays",
     format_table: "mixed",
     format_category: "labels",
     format_image: "svg",
-    plot_area: ["85%", "100%"],
+    plot_area: ["80%", "100%"],
     image_dim: ["100%", "100%"],
     animation_time: 700,
     animation_type: "elasticOut",
@@ -687,7 +687,7 @@ new Vue({
               scale: [2, 2],
               style: {
                 text: (s.by_year ? "" : "Average ") + f.value,
-                font: "20px 'Lucida Sans', sans-serif",
+                font: "20px 'Lato', sans-serif",
                 fill: this.color,
               },
             },
@@ -700,7 +700,7 @@ new Vue({
               cursor: "default",
               style: {
                 text: "",
-                font: "13px 'Lucida Sans', sans-serif",
+                font: "13px 'Lato', sans-serif",
                 fill: this.color + "E0",
               },
             },
@@ -727,7 +727,7 @@ new Vue({
               rotation: 1.58,
               style: {
                 text: f.value,
-                font: "20px 'Lucida Sans', sans-serif",
+                font: "20px 'Lato', sans-serif",
                 fill: this.color,
               },
             },
@@ -764,7 +764,7 @@ new Vue({
               }.bind(this),
               style: {
                 text: s.by_year ? "Year" : f.split1,
-                font: "20px 'Lucida Sans', sans-serif",
+                font: "20px 'Lato', sans-serif",
                 fill: this.color,
               },
             },
@@ -798,7 +798,7 @@ new Vue({
               style: {
                 text:
                   s.by_year || f.split2 ? (f.split2 ? f.split2 : f.split1) : "",
-                font: "16px 'Lucida Sans', sans-serif",
+                font: "16px 'Lato', sans-serif",
                 fill: this.color,
                 textAlign: "left",
               },
