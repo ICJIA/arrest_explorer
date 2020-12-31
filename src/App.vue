@@ -98,12 +98,12 @@ export default {
 }
 #data-container {
   position: absolute;
-  top: 40px;
+  top: 35px;
   left: 0;
   right: 0;
   bottom: 0;
   overflow: auto;
-  padding: 0 0 4em 0;
+  padding: 0.3em 0 4em 0;
 }
 .data-wrap {
   position: fixed;

@@ -86,6 +86,18 @@
             infrastructure, and policies, and any services or tools provided.
           </p>
         </v-row>
+        <v-row>
+          <h1 class="text--primary">
+            Interaction Data
+          </h1>
+          <v-checkbox
+            label="Share Your Interaction Data"
+            v-model="$root.settings.send_data"
+            color="primary"
+            hint="We use Google Analytics to collect interaction data, which helps us learn how people use the site."
+            persistent-hint
+          ></v-checkbox>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>

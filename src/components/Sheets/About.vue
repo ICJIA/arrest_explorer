@@ -58,6 +58,9 @@
           >
         </v-col>
       </v-row>
+      <span v-show="$root.settings.version"
+        >Data updated {{ $root.settings.version }}.</span
+      >
     </v-card-text>
   </v-card>
 </template>
@@ -86,5 +89,8 @@ h1 {
 }
 .button-blocks .col {
   margin: 0.5em 0 0 0;
+}
+.v-card__text {
+  text-align: right;
 }
 </style>

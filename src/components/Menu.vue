@@ -87,6 +87,12 @@ export default {
   },
   methods: {
     toggleSheet: function(sheet) {
+      if (sheet && this.$root.settings.sheet !== sheet) {
+        this.$root.gtag("event", "click", {
+          event_category: "open_menu",
+          event_label: sheet,
+        });
+      }
       this.$root.settings.sheet =
         this.$root.settings.sheet === sheet ? "" : sheet;
     },
@@ -106,6 +112,10 @@ export default {
           this.data_menu.style.width = "320px";
         }
         this.$root.settings.data_menu_open = true;
+        this.$root.gtag("event", "click", {
+          event_category: "open_menu",
+          event_label: "data",
+        });
       }
       if (!this.$root.settings.as_table && this.$root.$options.plot.instance) {
         this.$root.$options.plot.element.style.width =
@@ -238,7 +248,8 @@ button[active="true"] {
 .button-row > .col {
   padding: 0.5em;
 }
-.v-input__slot {
+.v-input__slider .v-input__slot,
+.v-input--switch .v-input__slot {
   flex-direction: row-reverse;
 }
 .theme--light.v-expansion-panels > div.v-expansion-panel {

@@ -47,7 +47,6 @@ const store_options = [
   seps = /[\s_]/g;
 
 var settings = {
-    base_url: "https://icjia.illinois.gov/chri/api/",
     year: {
       range: [Infinity, -Infinity],
       window: [{ start: 0, end: 100, show: false }],
@@ -78,6 +77,8 @@ var settings = {
     animation_time: 700,
     animation_type: "elasticOut",
     intro: true,
+    version: rawdata.version,
+    send_data: false,
   },
   plot_part_menu = {
     open: false,
@@ -134,7 +135,7 @@ var settings = {
         for (var i = this.$options.display.series.length; i--; ) {
           this.$options.display.series[i].type = this.settings.plot_type;
         }
-        if (this.$options.plot.instance)
+        if (this.$options.plot && this.$options.plot.instance)
           this.$options.plot.instance.setOption({
             series: this.$options.display.series,
           });
@@ -239,6 +240,7 @@ new Vue({
   created() {
     var k, l, i, v;
     if (screen.height < 700) settings.plot_area[0] = "70%";
+    settings.url = window.location.origin + process.env.VUE_APP_PATH + "/";
     for (i = store_options.length; i--; ) {
       if (
         Object.prototype.hasOwnProperty.call(this.settings, store_options[i])
@@ -277,7 +279,7 @@ new Vue({
         s = this.settings,
         d = this.$options.display.options,
         parse_param = function(k, p) {
-          if (p.type && p.value) {
+          if (p.type && (typeof p.value === "boolean" || p.value)) {
             if (k === "split" && p.value.length) {
               s.split1 = d.split[0] = p.value[0];
               store_option("split1", s.split1);
@@ -288,7 +290,10 @@ new Vue({
               p.type === "=" &&
               Object.prototype.hasOwnProperty.call(s, k)
             ) {
-              s[k] = typeof s[k] === "boolean" ? p.value === "true" : p.value;
+              s[k] =
+                typeof p.value === "boolean" || typeof s[k] !== "boolean"
+                  ? p.value
+                  : p.value === "true";
               store_option(k, s[k]);
             } else {
               if (k === "sort") {
@@ -326,7 +331,7 @@ new Vue({
           } else parse_param(k, params[k]);
         }
       }
-      window.history.replaceState("", "", window.location.origin);
+      window.history.replaceState("", "", this.settings.url);
     }
     setTimeout(
       function() {
@@ -343,6 +348,11 @@ new Vue({
       } else if (this.$root.$options.display.options.year[i].type === "<=")
         this.year_window[1] = this.$root.$options.display.options.year[i].value;
     }
+    window.dataLayer = window.dataLayer || [];
+    this.gtag("js", new Date());
+    this.gtag("config", process.env.GA_ID, {
+      send_page_view: this.settings.send_data,
+    });
   },
   computed: {
     year_window: {
@@ -442,7 +452,12 @@ new Vue({
                   });
                   for (l in d[k])
                     if (Object.prototype.hasOwnProperty.call(d[k], l)) {
-                      if (!d[k][l].increasing || d[k][l].aspect !== "label")
+                      if (
+                        (all ||
+                          l === this.$root.settings.split1 ||
+                          l === this.$root.settings.split2) &&
+                        (!d[k][l].increasing || d[k][l].aspect !== "label")
+                      )
                         parts[i].value +=
                           (parts[i].value ? "," : "") +
                           (d[k][l].increasing ? "-" : "") +
@@ -633,6 +648,18 @@ new Vue({
         }
         if (s.split1) f.split1 = this.format_name(s.split1);
         if (s.split2) f.split2 = this.format_name(s.split2);
+        if (
+          d.options.value !== s.value ||
+          (s.split1 && d.options.split[0] !== s.split1) ||
+          (s.split2 && d.options.split[1] !== s.split2)
+        ) {
+          this.$root.gtag("event", "update_data", {
+            event_category: s.value,
+            event_label: s.split1
+              ? s.split1 + (s.split2 ? "," + s.split2 : "")
+              : "overall",
+          });
+        }
         d.options.value = s.value;
         d.options.by_year = s.by_year;
         d.options.format_category = s.format_category;
@@ -808,17 +835,19 @@ new Vue({
             d.graphic[0].style.text = f.value + " by Year";
             d.xAxis[0].data = sd.year.filtered;
           } else {
-            if (isFinite(this.year_window[0]) && this.year_window[0] === 2000) {
-              this.year_window[0] = s.year.range[0];
-              this.year_window[1] = s.year.range[1];
-            }
-            d.graphic[1].style.text =
-              this.year_window[0] === this.year_window[1]
-                ? "Year = " + this.year_window[0]
-                : "Year between " +
-                  this.year_window[0] +
-                  " and " +
-                  this.year_window[1];
+            if (isFinite(this.year_window[0]) && isFinite(s.year.range[0])) {
+              if (this.year_window[0] === 2000) {
+                this.year_window[0] = s.year.range[0];
+                this.year_window[1] = s.year.range[1];
+              }
+              d.graphic[1].style.text =
+                this.year_window[0] === this.year_window[1]
+                  ? "Year = " + this.year_window[0]
+                  : "Year between " +
+                    this.year_window[0] +
+                    " and " +
+                    this.year_window[1];
+            } else d.graphic[1].style.text = "";
             if (s.split1) {
               d.graphic[0].style.text += " by " + f.split1;
               d.xAxis[0].data = sd[s.split1].display;
@@ -1056,6 +1085,9 @@ new Vue({
         }
         this.settings.active = true;
       }
+    },
+    gtag: function() {
+      if (this.settings.send_data) window.dataLayer.push(arguments);
     },
   },
   render: (h) => h(App),

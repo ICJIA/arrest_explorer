@@ -14,6 +14,17 @@
     </v-row>
 
     <v-row>
+      <v-col><v-subheader>Share Interaction Data</v-subheader></v-col>
+      <v-col>
+        <v-switch
+          v-model="$root.settings.send_data"
+          inset
+          hide-details
+        ></v-switch>
+      </v-col>
+    </v-row>
+
+    <v-row>
       <v-col><v-subheader>Category Format</v-subheader></v-col>
       <v-col>
         <v-select
@@ -157,7 +168,7 @@ export default {
   methods: {
     reset: function() {
       localStorage.clear();
-      window.location.replace(window.location.origin);
+      window.location.replace(this.$root.settings.url);
     },
   },
 };

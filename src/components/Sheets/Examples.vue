@@ -9,7 +9,7 @@
           <a :href="content.url.string">
             <span class="url-base">{{ content.base_url }}</span>
             <span v-if="content.url.parts.length" class="url-param-inital"
-              >/?</span
+              >?</span
             >
             <span
               v-for="(part, index) in content.url.parts"
@@ -30,6 +30,18 @@
           </a>
         </div>
       </v-row>
+      <v-row>
+        <p>
+          See our
+          <a
+            rel="noreferrer"
+            href="https://github.com/miserman/arrest_explorer/tree/master/examples"
+            target="_blank"
+            >example scripts</a
+          >
+          to reproduce these examples in R or Python using the API.
+        </p>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
@@ -44,7 +56,7 @@ export default {
           question: "How did arrest rates vary by sex?",
           decription:
             "You might look at average arrests within each sex group:",
-          base_url: window.location.origin,
+          base_url: this.$root.settings.url,
           url: this.$root.display_query(
             {},
             {
@@ -62,7 +74,7 @@ export default {
             "Over time, which age groups were most likely to be re-arrested?",
           decription:
             "You might look at arrests per arrestee within age groups:",
-          base_url: window.location.origin,
+          base_url: this.$root.settings.url,
           url: this.$root.display_query(
             {},
             {
@@ -79,7 +91,7 @@ export default {
           question: "What were people most frequently arrested for?",
           decription:
             "You might look at average arrest charges by offense categories with large means:",
-          base_url: window.location.origin,
+          base_url: this.$root.settings.url,
           url: this.$root.display_query(
             {},
             {

@@ -1,7 +1,7 @@
 # make URL formatting function
 arrest_explorer = function(value = 'arrests', split = '', su = '', sort = '',
   format_table = 'tall', ...,
-  base_url = 'https://hungry-bohr-5cc8da.netlify.app/.netlify/functions/api'){
+  base_url = 'https://hungry-bohr-5cc8da.netlify.app/arrestexplorer/api'){
   url = paste0(base_url, '/?value=', value, '&format_table=', format_table)
   if(su != '') url = paste0(url, '&', su)
   args = c(list(

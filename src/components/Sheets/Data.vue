@@ -54,181 +54,6 @@
       Flip Splits <v-icon>mdi-shuffle-variant</v-icon>
     </v-btn>
     <v-divider></v-divider>
-    <v-range-slider
-      label="Year Range"
-      thumb-label="always"
-      v-model="$root.year_window"
-      :min="$root.settings.year.range[0]"
-      :max="$root.settings.year.range[1]"
-      :aria-valuetext="$root.year_window[0] + ' to ' + $root.year_window[1]"
-      :aria-valuenow="$root.year_window[0]"
-      inverse-label
-    ></v-range-slider>
-    <v-row v-if="$root.settings.by_year || sort.length > 1">
-      <v-subheader class="sort-header">Sort</v-subheader>
-      <v-card class="sort-container" elevation="4" outlined>
-        <table class="sort-table">
-          <thead>
-            <tr>
-              <td></td>
-              <td>aspect</td>
-              <td>increasing</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="sorter in sort"
-              :key="sorter.name"
-              :class="
-                sorter.name === 'year' && !$root.settings.by_year ? 'hide' : ''
-              "
-            >
-              <td>{{ sorter.name }}</td>
-              <td>
-                <v-select
-                  aria-label="aspect"
-                  :disabled="sorter.name === 'year'"
-                  :items="['label', 'max', 'min', 'sum', 'mean']"
-                  v-model="sorter.specs.aspect"
-                  @change="refilter"
-                  dense
-                  hide-details
-                ></v-select>
-              </td>
-              <td>
-                <v-switch
-                  aria-label="increasing"
-                  v-model="sorter.specs.increasing"
-                  @change="refilter"
-                  hide-details
-                ></v-switch>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </v-card>
-    </v-row>
-    <v-row v-if="$root.settings.split1">
-      <v-subheader class="sort-header">Filter</v-subheader>
-      <v-row class="criteria-row" v-for="(s, i) in this.splits" :key="i">
-        <v-btn
-          v-if="
-            s &&
-              !Object.prototype.hasOwnProperty.call(
-                $root.$options.display.options,
-                s
-              )
-          "
-          color="primary"
-          block
-          @click="add_filter(s)"
-          >{{ "Filter " + s }}</v-btn
-        >
-        <v-card v-else-if="s" elevation="4" outlined>
-          <v-app-bar flat height="35" class="criteria-header">
-            <v-card-title v-text="s"></v-card-title>
-            <v-spacer></v-spacer>
-            <v-btn
-              aria-label="remove filter"
-              @click="remove_variable(s)"
-              icon
-              color="error"
-              ><v-icon>
-                mdi-close
-              </v-icon></v-btn
-            >
-          </v-app-bar>
-          <v-row
-            class="conditions"
-            v-for="(condition, i) in options[s]"
-            :key="condition.aspect + condition.type + condition.value + i"
-          >
-            <v-checkbox
-              aria-label="toggle condition"
-              v-model="condition.enabled"
-              hide-details
-              @change="refilter"
-            ></v-checkbox>
-            <v-select
-              label="aspect"
-              :items="['label', 'max', 'min', 'sum', 'mean']"
-              v-model="condition.aspect"
-              @change="refilter(this, condition)"
-              dense
-              hide-details
-            ></v-select>
-            <v-select
-              label="type"
-              :items="condition.aspect === 'label' ? ['=', '!='] : ['>', '<']"
-              v-model="condition.type"
-              @change="refilter(this, condition)"
-              dense
-              hide-details
-            ></v-select>
-            <v-select
-              v-if="
-                condition.aspect === 'label' &&
-                  (condition.type === '=' || condition.type === '!=')
-              "
-              label="values"
-              :items="$root.$options.source.levels[s].label"
-              v-model="condition.display_value"
-              @blur="refilter(this, condition)"
-              dense
-              hide-details
-              multiple
-              clearable
-            >
-              <template v-slot:selection="{ index }">
-                <span v-if="index === 0">{{
-                  condition.display_value.length
-                }}</span>
-              </template>
-            </v-select>
-            <v-text-field
-              type="number"
-              v-else
-              label="value"
-              v-model="condition.display_value"
-              @change="refilter"
-              dense
-              hide-details
-            ></v-text-field>
-            <v-btn
-              aria-label="remove condition"
-              class="condition-remove"
-              icon
-              small
-              color="error"
-              @click="condition_remove(s, condition.type)"
-              ><v-icon>
-                mdi-close
-              </v-icon></v-btn
-            >
-          </v-row>
-          <v-card-actions class="condition-foot">
-            <v-btn
-              aria-label="add condition"
-              class="add-condition"
-              icon
-              color="success"
-              @click="condition_add(s)"
-              ><v-icon>
-                mdi-plus
-              </v-icon></v-btn
-            >
-          </v-card-actions>
-        </v-card>
-      </v-row>
-    </v-row>
-    <v-divider></v-divider>
-    <v-select
-      v-if="$root.settings.split1"
-      label="Category Format"
-      :items="$root.settings.category_formats"
-      v-model="$root.settings.format_category"
-      hide-details
-    ></v-select>
     <v-select
       v-if="$root.settings.as_table"
       label="Table Format"
@@ -241,6 +66,186 @@
       :items="$root.settings.plot_types"
       v-model="$root.settings.plot_type"
     ></v-select>
+    <v-expansion-panels class="data-menu-advanced" flat>
+      <v-expansion-panel>
+        <v-expansion-panel-header>Sort &amp; Filter</v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <v-range-slider
+            label="Year Range"
+            thumb-label="always"
+            v-model="$root.year_window"
+            :min="$root.settings.year.range[0]"
+            :max="$root.settings.year.range[1]"
+            :aria-valuetext="
+              $root.year_window[0] + ' to ' + $root.year_window[1]
+            "
+            :aria-valuenow="$root.year_window[0]"
+            inverse-label
+          ></v-range-slider>
+          <v-row v-if="$root.settings.by_year || sort.length > 1">
+            <v-subheader class="sort-header">Sort</v-subheader>
+            <v-card class="sort-container" elevation="4" outlined>
+              <table class="sort-table">
+                <thead>
+                  <tr>
+                    <td></td>
+                    <td>aspect</td>
+                    <td>increasing</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="sorter in sort"
+                    :key="sorter.name"
+                    :class="
+                      sorter.name === 'year' && !$root.settings.by_year
+                        ? 'hide'
+                        : ''
+                    "
+                  >
+                    <td>{{ sorter.name }}</td>
+                    <td>
+                      <v-select
+                        aria-label="aspect"
+                        :disabled="sorter.name === 'year'"
+                        :items="['label', 'max', 'min', 'sum', 'mean']"
+                        v-model="sorter.specs.aspect"
+                        @change="refilter"
+                        dense
+                        hide-details
+                      ></v-select>
+                    </td>
+                    <td>
+                      <v-switch
+                        aria-label="increasing"
+                        v-model="sorter.specs.increasing"
+                        @change="refilter"
+                        hide-details
+                      ></v-switch>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </v-card>
+          </v-row>
+          <v-row v-if="$root.settings.split1">
+            <v-subheader class="sort-header">Filter</v-subheader>
+            <v-row class="criteria-row" v-for="(s, i) in this.splits" :key="i">
+              <v-btn
+                v-if="
+                  s &&
+                    !Object.prototype.hasOwnProperty.call(
+                      $root.$options.display.options,
+                      s
+                    )
+                "
+                color="primary"
+                block
+                @click="add_filter(s)"
+                >{{ "Filter " + s }}</v-btn
+              >
+              <v-card v-else-if="s" elevation="4" outlined>
+                <v-app-bar flat height="35" class="criteria-header">
+                  <v-card-title v-text="s"></v-card-title>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    aria-label="remove filter"
+                    @click="remove_variable(s)"
+                    icon
+                    color="error"
+                    ><v-icon>
+                      mdi-close
+                    </v-icon></v-btn
+                  >
+                </v-app-bar>
+                <v-row
+                  class="conditions"
+                  v-for="(condition, i) in options[s]"
+                  :key="condition.aspect + condition.type + condition.value + i"
+                >
+                  <v-checkbox
+                    aria-label="toggle condition"
+                    v-model="condition.enabled"
+                    hide-details
+                    @change="refilter"
+                  ></v-checkbox>
+                  <v-select
+                    label="aspect"
+                    :items="['label', 'max', 'min', 'sum', 'mean']"
+                    v-model="condition.aspect"
+                    @change="refilter(this, condition)"
+                    dense
+                    hide-details
+                  ></v-select>
+                  <v-select
+                    label="type"
+                    :items="
+                      condition.aspect === 'label' ? ['=', '!='] : ['>', '<']
+                    "
+                    v-model="condition.type"
+                    @change="refilter(this, condition)"
+                    dense
+                    hide-details
+                  ></v-select>
+                  <v-select
+                    v-if="
+                      condition.aspect === 'label' &&
+                        (condition.type === '=' || condition.type === '!=')
+                    "
+                    label="values"
+                    :items="$root.$options.source.levels[s].label"
+                    v-model="condition.display_value"
+                    @blur="refilter(this, condition)"
+                    dense
+                    hide-details
+                    multiple
+                    clearable
+                  >
+                    <template v-slot:selection="{ index }">
+                      <span v-if="index === 0">{{
+                        condition.display_value.length
+                      }}</span>
+                    </template>
+                  </v-select>
+                  <v-text-field
+                    type="number"
+                    v-else
+                    label="value"
+                    v-model="condition.display_value"
+                    @change="refilter"
+                    dense
+                    hide-details
+                  ></v-text-field>
+                  <v-btn
+                    aria-label="remove condition"
+                    class="condition-remove"
+                    icon
+                    small
+                    color="error"
+                    @click="condition_remove(s, condition.type)"
+                    ><v-icon>
+                      mdi-close
+                    </v-icon></v-btn
+                  >
+                </v-row>
+                <v-card-actions class="condition-foot">
+                  <v-btn
+                    aria-label="add condition"
+                    class="add-condition"
+                    icon
+                    color="success"
+                    @click="condition_add(s)"
+                    ><v-icon>
+                      mdi-plus
+                    </v-icon></v-btn
+                  >
+                </v-card-actions>
+              </v-card>
+            </v-row>
+          </v-row>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+    </v-expansion-panels>
   </v-card>
 </template>
 
@@ -365,6 +370,12 @@ export default {
 </script>
 
 <style>
+.data-menu-advanced {
+  z-index: 0;
+}
+.data-menu-advanced .v-expansion-panel-content__wrap {
+  padding: 0.3em;
+}
 .v-application--is-ltr .v-input__slider--inverse-label .v-input__slot .v-label {
   margin-left: 0 !important;
   margin-right: 12px !important;
@@ -416,7 +427,7 @@ export default {
   margin: 0;
 }
 .v-divider {
-  margin: 1em 0 0.5em 0;
+  margin: 2em 0.5em 0.5em 0.5em;
 }
 .criteria-header {
   padding: 0 0.5em;

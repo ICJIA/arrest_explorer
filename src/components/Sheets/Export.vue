@@ -28,7 +28,7 @@
                   <v-row class="input-row">
                     <v-combobox
                       label="Width"
-                      :items="['500%', '4096', '2048', '1920', '100%']"
+                      :items="['500%', '4096', '2560', '1920', '100%']"
                       :rules="valid_dim"
                       v-model="$root.settings.image_dim[0]"
                       hide-details
@@ -90,7 +90,7 @@
               </v-row>
             </v-col>
           </v-row>
-          <v-row v-for="url in urls" :key="url.base">
+          <v-row v-for="url in urls" :key="url.header">
             <h3>{{ url.header }}</h3>
             <div class="api-display">
               <a :href="url.base + url.query.string" target="_blank">
@@ -161,13 +161,13 @@ export default {
       urls: [
         {
           header: "Link to this plot:",
-          base: window.location.origin + "/",
+          base: this.$root.settings.url,
           refresh: this.$root.display_query,
           query: { parts: [], string: "" },
         },
         {
           header: "Download through the API:",
-          base: this.$root.settings.base_url,
+          base: this.$root.settings.url + "api/",
           refresh: this.$root.display_query.bind(this, {
             value: "arrests",
             by_year: true,
@@ -227,6 +227,10 @@ export default {
               ".json"
           : this.make_name(s.format_file, true)
       );
+      this.$root.gtag("event", "download_data", {
+        event_category: s.value,
+        event_label: s.split1 + (s.split2 ? "," + s.split2 : ""),
+      });
     },
     save_image: function() {
       if (this.$root.settings.as_table) {
@@ -278,6 +282,14 @@ export default {
             save(data, this.make_name(type));
           }.bind(this);
         }
+        this.$root.gtag("event", "download_image", {
+          event_category: this.$root.settings.value,
+          event_label:
+            this.$root.settings.split1 +
+            (this.$root.settings.split2
+              ? "," + this.$root.settings.split2
+              : ""),
+        });
       }
     },
   },
