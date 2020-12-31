@@ -1,7 +1,7 @@
 # make URL formatting function
 def arrest_explorer(value = 'arrests', split = '', su = '',
   sort = '', format_table = 'tall',
-  base_url = 'https://hungry-bohr-5cc8da.netlify.app/arrestexplorer/api',
+  base_url = 'https://icjia.illinois.gov/arrestexplorer/api',
   **args):
   url = base_url + '/?value=' + value + '&format_table=' + format_table
   if su != '':

@@ -33,10 +33,7 @@
       <v-row>
         <p>
           See our
-          <a
-            rel="noreferrer"
-            href="https://github.com/miserman/arrest_explorer/tree/master/examples"
-            target="_blank"
+          <a rel="noreferrer" :href="this.$root.settings.repo" target="_blank"
             >example scripts</a
           >
           to reproduce these examples in R or Python using the API.

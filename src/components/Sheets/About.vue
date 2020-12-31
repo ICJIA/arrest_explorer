@@ -53,7 +53,7 @@
             x-large
             target="_blank"
             rel="noreferrer"
-            href="https://github.com/miserman/arrest_explorer"
+            :href="this.$root.settings.repo"
             >Code Repository<v-icon right>mdi-open-in-new</v-icon></v-btn
           >
         </v-col>

@@ -79,6 +79,7 @@ var settings = {
     intro: true,
     version: rawdata.version,
     send_data: false,
+    repo: "https://github.com/ICJIA/arrest_explorer",
   },
   plot_part_menu = {
     open: false,
