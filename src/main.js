@@ -240,7 +240,7 @@ new Vue({
   created() {
     var k, l, i, v;
     if (screen.height < 700) settings.plot_area[0] = "70%";
-    settings.url = window.location.origin + process.env.VUE_APP_PATH + "/";
+    settings.url = window.location.origin + process.env.VUE_APP_PATH;
     for (i = store_options.length; i--; ) {
       if (
         Object.prototype.hasOwnProperty.call(this.settings, store_options[i])
