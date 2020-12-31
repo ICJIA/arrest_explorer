@@ -3,7 +3,7 @@
 
 [[redirects]]
   from = '/arrestexplorer/api'
-  to = '/.netlify/functions/api'
+  to = 'https://festive-meitner-0c6e7d.netlify.app/.netlify/functions/api'
   status = 200
 
 [[redirects]]
