@@ -756,7 +756,7 @@ Dataview.prototype = {
     if (Object.prototype.hasOwnProperty.call(this.raw, "year")) {
       if (Object.prototype.hasOwnProperty.call(this.options, "year")) {
         this.attach_criteria(this.options.year);
-        if ((this.options.year, length)) this.filter = this.vector_filter();
+        if (this.options.year.length) this.filter = this.vector_filter();
       }
       r.year = this.filter(this.raw.year);
       r.slot.year = { name: "year", data: r.year };

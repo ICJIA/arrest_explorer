@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="https://icjia.illinois.gov/researchhub/docs/assets/favicon.ico">
     <meta name="description" content="Aggregated arrest data from the Illinois Criminal Justice Information Authority.">
-    <title><%= htmlWebpackPlugin.options.title %></title>
+    <title>Arrest Explorer</title>
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Lato:300,400&display=swap"
@@ -16,12 +16,12 @@
       href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css"
     />
   </head>
-  <body style="background: #000">
+  <body style="background: rgb(126, 126, 126)">
     <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+      <strong>We're sorry but Arrest Explorer doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </body>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=<%= process.env.VUE_APP_GA %>"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=<%= VUE_APP_GA %>"></script>
 </html>
