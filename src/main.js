@@ -243,7 +243,8 @@ new Vue({
   created() {
     var k, l, i, v;
     if (screen.height < 700) settings.plot_area[0] = "70%";
-    settings.url = window.location.origin + process.env.VUE_APP_PATH;
+    settings.url = window.location.origin + window.location.pathname;
+    if (!/\/$/.test(settings.url)) settings.url += "/";
     local_storage = localStorage || store_fallback;
     for (i = store_options.length; i--; ) {
       if (
