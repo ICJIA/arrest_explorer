@@ -38,8 +38,9 @@ const store_options = [
     "split1",
     "split2",
   ],
+  store_fallback = { setItem: function() {}, getItem: function() {} },
   store_option = function(k, v) {
-    localStorage.setItem(k, JSON.stringify(v));
+    local_storage.setItem(k, JSON.stringify(v));
   },
   queue_update = function() {
     window.requestAnimationFrame(this.update_data);
@@ -89,6 +90,7 @@ var settings = {
     part: "value",
     value: "",
   },
+  local_storage = store_fallback,
   watch = {
     // special watchers here, with other settings in
     // `store_options` getting stored on change, and those in
@@ -242,12 +244,13 @@ new Vue({
     var k, l, i, v;
     if (screen.height < 700) settings.plot_area[0] = "70%";
     settings.url = window.location.origin + process.env.VUE_APP_PATH;
+    local_storage = localStorage || store_fallback;
     for (i = store_options.length; i--; ) {
       if (
         Object.prototype.hasOwnProperty.call(this.settings, store_options[i])
       ) {
         try {
-          v = JSON.parse(localStorage.getItem(store_options[i]));
+          v = JSON.parse(local_storage.getItem(store_options[i]));
         } catch (e) {
           v = undefined;
         }
@@ -260,16 +263,13 @@ new Vue({
                 }
             } else this.settings[store_options[i]] = v;
           } else
-            localStorage.setItem(
-              store_options[i],
-              JSON.stringify(this.settings[store_options[i]])
-            );
+            store_option(store_options[i], this.settings[store_options[i]]);
         }
       }
     }
-    if (Object.prototype.hasOwnProperty.call(localStorage, "display_options"))
+    if (Object.prototype.hasOwnProperty.call(local_storage, "display_options"))
       this.$options.display.options = JSON.parse(
-        localStorage.getItem("display_options")
+        local_storage.getItem("display_options")
       );
     this.$options.display.options.year = [
       { type: ">=", value: this.year_window[0] },
@@ -325,6 +325,15 @@ new Vue({
             }
           }
         };
+      if (Object.prototype.hasOwnProperty.call(params, "embed")) {
+        local_storage = store_fallback;
+        this.settings.intro = false;
+        this.settings.plot_area[0] = "100%";
+        this.settings.plot_area[1] = "100%";
+        this.settings.embed = true;
+      } else {
+        window.history.replaceState("", "", this.settings.url);
+      }
       for (k in params) {
         if (Object.prototype.hasOwnProperty.call(params, k)) {
           if (params[k].length) {
@@ -332,7 +341,6 @@ new Vue({
           } else parse_param(k, params[k]);
         }
       }
-      window.history.replaceState("", "", this.settings.url);
     }
     setTimeout(
       function() {
@@ -709,9 +717,7 @@ new Vue({
               right: "center",
               top: "3",
               z: 100,
-              onclick: function() {
-                this.settings.by_year = !this.settings.by_year;
-              }.bind(this),
+              cursor: "default",
               scale: [2, 2],
               style: {
                 text: (s.by_year ? "" : "Average ") + f.value,
@@ -736,22 +742,9 @@ new Vue({
               type: "text",
               id: "y-axis-label",
               z: 100,
+              cursor: "default",
               left: "5",
               top: "middle",
-              onclick: function(e) {
-                var o = this.plot_part_menu;
-                o.x = e.offsetX;
-                o.y = e.offsetY;
-                o.options = this.$options.source.variables.values.values;
-                o.part = "value";
-                this.plot_part_menu.value = this.settings.value;
-                setTimeout(
-                  function() {
-                    this.open = true;
-                  }.bind(o),
-                  0
-                );
-              }.bind(this),
               rotation: 1.58,
               style: {
                 text: f.value,
@@ -763,33 +756,9 @@ new Vue({
               type: "text",
               id: "x-axis-label",
               z: 100,
+              cursor: "default",
               left: "center",
               bottom: "5",
-              onclick: function(e) {
-                var o = this.plot_part_menu;
-                o.x = e.offsetX;
-                o.y = e.offsetY;
-                if (this.settings.by_year) {
-                  o.options = this.$options.source.variables.values.splits[
-                    this.settings.value
-                  ];
-                } else {
-                  o.options = [
-                    "year",
-                    ...this.$options.source.variables.values.splits[
-                      this.settings.value
-                    ],
-                  ];
-                }
-                o.part = "split1";
-                this.plot_part_menu.value = this.settings.split1;
-                setTimeout(
-                  function() {
-                    this.open = true;
-                  }.bind(o),
-                  0
-                );
-              }.bind(this),
               style: {
                 text: s.by_year ? "Year" : f.split1,
                 font: "20px 'Lato', sans-serif",
@@ -801,28 +770,7 @@ new Vue({
               id: "legend-label",
               right: "10",
               top: "70",
-              onclick: function(e) {
-                var o = this.plot_part_menu;
-                o.x = e.offsetX;
-                o.y = e.offsetY;
-                o.options = this.settings.split2
-                  ? this.$options.source.variables[this.settings.split1].splits[
-                      this.settings.value
-                    ]
-                  : this.$options.source.variables.values.splits[
-                      this.settings.value
-                    ];
-                o.part = this.settings.split2 ? "split2" : "split1_by_year";
-                this.plot_part_menu.value = this.settings[
-                  this.settings.split2 ? "split2" : "split1"
-                ];
-                setTimeout(
-                  function() {
-                    this.open = true;
-                  }.bind(o),
-                  0
-                );
-              }.bind(this),
+              cursor: "default",
               style: {
                 text:
                   s.by_year || f.split2 ? (f.split2 ? f.split2 : f.split1) : "",
@@ -832,6 +780,74 @@ new Vue({
               },
             },
           ];
+          if (!this.settings.embed) {
+            d.graphic[0].onclick = function() {
+              this.settings.by_year = !this.settings.by_year;
+            }.bind(this);
+            d.graphic[2].onclick = function(e) {
+              var o = this.plot_part_menu;
+              o.x = e.offsetX;
+              o.y = e.offsetY;
+              o.options = this.$options.source.variables.values.values;
+              o.part = "value";
+              this.plot_part_menu.value = this.settings.value;
+              setTimeout(
+                function() {
+                  this.open = true;
+                }.bind(o),
+                0
+              );
+            }.bind(this);
+            d.graphic[3].onclick = function(e) {
+              var o = this.plot_part_menu;
+              o.x = e.offsetX;
+              o.y = e.offsetY;
+              if (this.settings.by_year) {
+                o.options = this.$options.source.variables.values.splits[
+                  this.settings.value
+                ];
+              } else {
+                o.options = [
+                  "year",
+                  ...this.$options.source.variables.values.splits[
+                    this.settings.value
+                  ],
+                ];
+              }
+              o.part = "split1";
+              this.plot_part_menu.value = this.settings.split1;
+              setTimeout(
+                function() {
+                  this.open = true;
+                }.bind(o),
+                0
+              );
+            }.bind(this);
+            d.graphic[4].onclick = function(e) {
+              var o = this.plot_part_menu;
+              o.x = e.offsetX;
+              o.y = e.offsetY;
+              o.options = this.settings.split2
+                ? this.$options.source.variables[this.settings.split1].splits[
+                    this.settings.value
+                  ]
+                : this.$options.source.variables.values.splits[
+                    this.settings.value
+                  ];
+              o.part = this.settings.split2 ? "split2" : "split1_by_year";
+              this.plot_part_menu.value = this.settings[
+                this.settings.split2 ? "split2" : "split1"
+              ];
+              setTimeout(
+                function() {
+                  this.open = true;
+                }.bind(o),
+                0
+              );
+            }.bind(this);
+            d.graphic[0].cursor = d.graphic[1].cursor = d.graphic[3].cursor = d.graphic[4].cursor =
+              "pointer";
+          }
           if (s.by_year) {
             d.graphic[0].style.text = f.value + " by Year";
             d.xAxis[0].data = sd.year.filtered;
@@ -1042,11 +1058,11 @@ new Vue({
           }
           if (
             d.graphic[0].style.text.length * 12 * d.graphic[0].scale[0] >
-            width - (width > 590) * 270
+            width - (!this.settings.embed && width > 590) * 270
           ) {
             scale = Math.max(
               0.6,
-              (width - (width > 590) * 270) /
+              (width - (!this.settings.embed && width > 590) * 270) /
                 (d.graphic[0].style.text.length * 12)
             );
             d.graphic[0].scale = [scale, scale];

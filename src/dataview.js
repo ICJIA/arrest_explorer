@@ -1115,7 +1115,7 @@ Dataview.prototype = {
           };
         } else if (format.test(arg[0])) {
           par.format_file = { type: "=", value: which_format(arg[0]) };
-        }
+        } else if (arg[0]) par[arg[0]] = { type: "=", value: true };
       } else if (arg.length === 3) {
         arg[2] =
           arg[0] === "value"

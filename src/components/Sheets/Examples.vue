@@ -33,7 +33,10 @@
       <v-row>
         <p>
           See our
-          <a rel="noreferrer" :href="this.$root.settings.repo" target="_blank"
+          <a
+            rel="noreferrer"
+            :href="this.$root.settings.repo + '/tree/master/examples'"
+            target="_blank"
             >example scripts</a
           >
           to reproduce these examples in R or Python using the API.

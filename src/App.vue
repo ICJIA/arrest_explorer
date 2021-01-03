@@ -1,8 +1,18 @@
 <template>
-  <v-app>
+  <v-app v-if="$root.settings.embed">
+    <v-col>
+      <v-row class="data-wrap embeded" no-gutters>
+        <div id="data-container"><DataDisplay /></div>
+      </v-row>
+    </v-col>
+  </v-app>
+  <v-app v-else>
     <Header />
     <v-col>
-      <v-row class="data-wrap" no-gutters>
+      <v-row
+        :class="'data-wrap' + ($root.settings.embed ? ' embeded' : '')"
+        no-gutters
+      >
         <div id="data-container" @click="$root.settings.sheet = ''">
           <DataDisplay />
         </div>
@@ -95,6 +105,12 @@ export default {
 }
 .v-btn--active::before {
   opacity: 0;
+}
+.data-wrap.embeded,
+.data-wrap.embeded #data-container {
+  padding: 0;
+  top: 0;
+  bottom: 0;
 }
 #data-container {
   position: absolute;
