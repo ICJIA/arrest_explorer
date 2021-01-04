@@ -54,6 +54,17 @@
     </v-row>
 
     <v-row>
+      <v-col><v-subheader>Plot Type</v-subheader></v-col>
+      <v-col>
+        <v-select
+          :items="$root.settings.plot_types"
+          v-model="$root.settings.plot_type"
+          hide-details
+        ></v-select>
+      </v-col>
+    </v-row>
+
+    <v-row>
       <v-col><v-subheader>Plot Animation</v-subheader></v-col>
       <v-col>
         <v-select
@@ -92,7 +103,6 @@
             'bounceInOut',
           ]"
           v-model="$root.settings.animation_type"
-          hide-details
         ></v-select>
       </v-col>
       <v-col>
@@ -102,46 +112,7 @@
           v-model="$root.settings.animation_time"
           step="100"
           min="0"
-          hide-details
         ></v-text-field>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col><v-subheader>Plot Type</v-subheader></v-col>
-      <v-col>
-        <v-select
-          :items="$root.settings.plot_types"
-          v-model="$root.settings.plot_type"
-        ></v-select>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col><v-subheader>Plot Width</v-subheader></v-col>
-      <v-col>
-        <v-combobox
-          :items="['100%', '90%', '85%', '70%', '55%']"
-          label="Pixels or Percentage"
-          :rules="valid_dim"
-          v-model="$root.settings.plot_area[1]"
-          dense
-          hide-details
-        ></v-combobox>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col><v-subheader>Plot Height</v-subheader></v-col>
-      <v-col>
-        <v-combobox
-          :items="['100%', '90%', '85%', '70%', '55%']"
-          label="Pixels or Percentage"
-          :rules="valid_dim"
-          v-model="$root.settings.plot_area[0]"
-          dense
-          hide-details
-        ></v-combobox>
       </v-col>
     </v-row>
 

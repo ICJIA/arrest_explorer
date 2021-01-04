@@ -116,6 +116,10 @@
                 </span>
               </a>
             </div>
+            <v-spacer></v-spacer>
+            <v-btn v-if="url.embed" small text @click="copy_embed(url)"
+              >Copy Embed Code</v-btn
+            >
           </v-row>
         </v-col>
       </v-card-text>
@@ -164,6 +168,7 @@ export default {
           base: this.$root.settings.url,
           refresh: this.$root.display_query,
           query: { parts: [], string: "" },
+          embed: true,
         },
         {
           header: "Download through the API:",
@@ -292,6 +297,23 @@ export default {
         });
       }
     },
+    copy_embed: function(url) {
+      navigator.clipboard.writeText(
+        '<iframe title="Plot of Illinois ' +
+          this.$root.$options.display.graphic[0].style.text +
+          '" width="100%" height="' +
+          (this.$root.settings.by_year &&
+          this.$root.settings.split2 &&
+          this.$root.$options.source.view.slot.split2.data.length > 4
+            ? 100 *
+              (this.$root.$options.source.view.slot.split2.data.length + 1)
+            : 435) +
+          '" frameborder="0" src="' +
+          url.base +
+          url.query.string +
+          '&embed"></iframe>'
+      );
+    },
   },
   watch: {
     "$root.settings": {
@@ -333,7 +355,6 @@ export default {
 .image-format {
   margin-right: 5px;
 }
-
 @media screen and (max-width: 750px) {
   .block-row {
     display: block;

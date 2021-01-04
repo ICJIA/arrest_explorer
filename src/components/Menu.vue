@@ -117,10 +117,14 @@ export default {
           event_label: "data",
         });
       }
-      if (!this.$root.settings.as_table && this.$root.$options.plot.instance) {
+      if (
+        w >= 600 &&
+        !this.$root.settings.as_table &&
+        this.$root.$options.plot.instance
+      ) {
         this.$root.$options.plot.element.style.width =
           this.data_container.getBoundingClientRect().width +
-          (this.$root.settings.data_menu_open ? -325 : 315) +
+          (this.$root.settings.data_menu_open ? -340 : 300) +
           "px";
         this.$root.$options.plot.instance.resize();
         this.$root.$options.plot.element.style.width = "100%";

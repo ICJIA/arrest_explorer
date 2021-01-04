@@ -445,15 +445,15 @@ export default {
 }
 .conditions div {
   width: 18%;
-  padding: 0.6em 0 0 0.3em;
+  padding: 0.6em 0 0 0.1em;
   display: inline-block;
 }
 .conditions .v-input:nth-child(1) {
   width: 12%;
-  margin: 0 -6px 0 4px;
+  margin: 0 -6px 0 0;
 }
 .conditions .v-input:nth-child(2) {
-  width: 19%;
+  width: 18%;
 }
 .conditions .v-input:nth-child(3) {
   width: 9%;
