@@ -95,8 +95,8 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="sorter in sort"
-                    :key="sorter.name"
+                    v-for="(sorter, i) in sort"
+                    :key="sorter.name + i"
                     :class="
                       sorter.name === 'year' && !$root.settings.by_year
                         ? 'hide'

@@ -55,7 +55,7 @@
             For more information about how data were prepared, please visit our
             <a
               rel="noreferrer"
-              href="https://icjia-arrest-explorer-docs.netlify.app"
+              href="https://icjia.illinois.gov/arrestexplorer/docs/"
               target="_blank"
               >documentation site</a
             >.
@@ -67,7 +67,7 @@
             Use of this site or its data is subject to our
             <a
               rel="noreferrer"
-              href="https://icjia-arrest-explorer-docs.netlify.app/agreement"
+              href="https://icjia.illinois.gov/arrestexplorer/docs/agreement"
               target="_blank"
               >User Agreement</a
             >.

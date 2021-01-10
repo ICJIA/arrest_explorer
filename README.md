@@ -5,7 +5,7 @@ This repository contains aggregated Illinois arrest data, and a graphical and pr
 The interfaces are hosted by [Netlify](https://www.netlify.com) at [icjia.illinois.gov/arrestexplorer](https://icjia.illinois.gov/arrestexplorer)
 and [icjia.illinois.gov/arrestexplorer/api](https://icjia.illinois.gov/arrestexplorer/api).
 
-See the [documentation site](https://icjia-arrest-explorer-docs.netlify.app) for more about the project and data.
+See the [documentation site](https://icjia.illinois.gov/arrestexplorer/docs) for more about the project and data.
 
 ## Design
 

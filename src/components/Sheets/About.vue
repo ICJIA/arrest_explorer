@@ -34,7 +34,7 @@
             x-large
             target="_blank"
             rel="noreferrer"
-            href="https://icjia-arrest-explorer-docs.netlify.app"
+            href="https://icjia.illinois.gov/arrestexplorer/docs/"
             >About this Project<v-icon right>mdi-open-in-new</v-icon></v-btn
           >
         </v-col>
