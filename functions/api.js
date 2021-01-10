@@ -46,7 +46,6 @@ exports.handler = async function(event) {
       r.body = JSON.stringify(
         data.reformat(
           o.format_table ? o.format_table.value : "mixed",
-          o.format_category ? o.format_category.value === "index" : false,
           o.format_json ? o.format_json.value !== "arrays" : true
         )
       );
@@ -56,10 +55,7 @@ exports.handler = async function(event) {
       r.headers["Content-Disposition"] =
         "attachment; filename=" + make_name(data, o);
       r.body = data.to_string(
-        data.reformat(
-          o.format_table ? o.format_table.value : "mixed",
-          o.format_category ? o.format_category.value === "index" : false
-        ),
+        data.reformat(o.format_table ? o.format_table.value : "mixed"),
         o.format_file.value !== "csv" ? "\t" : ","
       );
     }

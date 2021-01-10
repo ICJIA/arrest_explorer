@@ -1,8 +1,9 @@
 const assert = require("assert"),
   Dataview = require("../src/dataview.js"),
-  rawdata = require("../src/data.json"),
-  levels = require("../src/levels.json"),
-  data = new Dataview(rawdata, levels);
+  data = new Dataview(
+    require("../src/data.json"),
+    require("../src/levels.json")
+  );
 
 describe("When selecting variables...", function() {
   it("default returns total arrests by year", async function() {
@@ -10,7 +11,7 @@ describe("When selecting variables...", function() {
     assert.deepStrictEqual(data.view.total.filtered, data.raw.arrests.total);
   });
   it("different values are returned when requested", async function() {
-    await data.update({ value: "arrestees" });
+    await data.update({ value: { value: "arrestees" } });
     assert.deepStrictEqual(data.view.total.filtered, data.raw.arrestees.total);
   });
   it("a single split works", async function() {
@@ -75,23 +76,16 @@ data
         );
       });
       it("mixed works", function() {
-        for (
-          var header = [
-              "Year",
-              "crime_type",
-              ...data.levels.offense_class.display.sort(),
-            ],
-            i = header.length - 1;
-          i > 1;
-          i--
-        ) {
-          header[i] = "offense_class_" + header[i];
-        }
-        assert.deepStrictEqual(mixed.header, header);
+        assert.deepStrictEqual(mixed.header, [
+          "Year",
+          "crime_type",
+          "offense_class",
+          "arrest_charges",
+        ]);
         assert(
           (function() {
-            for (var i = mixed.rows.length, ncol = header.length; i--; )
-              if (mixed.rows[i].length !== ncol) return false;
+            for (var i = mixed.rows.length; i--; )
+              if (mixed.rows[i].length !== 4) return false;
             return true;
           })()
         );

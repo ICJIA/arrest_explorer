@@ -16,16 +16,10 @@ import Plot from "./Plot.vue";
 
 export default {
   mounted() {
-    window.addEventListener("resize", this.resize);
+    window.addEventListener("resize", this.$root.resize_plot);
   },
   components: {
     Plot,
-  },
-  methods: {
-    resize: function() {
-      if (this.$root.$options.plot.instance)
-        window.requestAnimationFrame(this.$root.$options.plot.instance.resize);
-    },
   },
 };
 </script>

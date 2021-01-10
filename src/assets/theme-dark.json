@@ -23,9 +23,6 @@
     "itemStyle": {
       "borderWidth": 1
     },
-    "lineStyle": {
-      "width": "3"
-    },
     "symbolSize": "7",
     "symbol": "circle",
     "smooth": false
@@ -55,12 +52,6 @@
         "color": "#eeeeee"
       }
     },
-    "axisLabel": {
-      "show": true,
-      "textStyle": {
-        "color": "#eeeeee"
-      }
-    },
     "splitLine": {
       "show": true,
       "lineStyle": {
@@ -87,12 +78,6 @@
         "color": "#eeeeee"
       }
     },
-    "axisLabel": {
-      "show": true,
-      "textStyle": {
-        "color": "#eeeeee"
-      }
-    },
     "splitLine": {
       "show": true,
       "lineStyle": {
@@ -112,15 +97,9 @@
     }
   },
   "tooltip": {
-    "axisPointer": {
-      "lineStyle": {
-        "color": "#f1f1f1",
-        "width": "1"
-      },
-      "crossStyle": {
-        "color": "#f1f1f1",
-        "width": "1"
-      }
+    "backgroundColor": "rgba(0,0,0,0.7)",
+    "textStyle": {
+      "color": "#eeeeee"
     }
   }
 }

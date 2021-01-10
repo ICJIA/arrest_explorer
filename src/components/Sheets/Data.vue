@@ -372,6 +372,7 @@ export default {
 <style>
 .data-menu-advanced {
   z-index: 0;
+  margin: 0 0 3.7em 0;
 }
 .data-menu-advanced .v-expansion-panel-content__wrap {
   padding: 0.3em;

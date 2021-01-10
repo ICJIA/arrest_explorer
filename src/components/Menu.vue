@@ -123,11 +123,10 @@ export default {
         this.$root.$options.plot.instance
       ) {
         this.$root.$options.plot.element.style.width =
-          this.data_container.getBoundingClientRect().width +
-          (this.$root.settings.data_menu_open ? -340 : 300) +
+          this.$root.$el.getBoundingClientRect().width +
+          (this.$root.settings.data_menu_open ? -320 : 0) +
           "px";
-        this.$root.$options.plot.instance.resize();
-        this.$root.$options.plot.element.style.width = "100%";
+        this.$root.resize_plot("100%");
       }
     },
     updatePlotParts(e) {

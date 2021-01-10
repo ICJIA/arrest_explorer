@@ -59,7 +59,7 @@
         </v-col>
       </v-row>
       <span v-show="$root.settings.version"
-        >Data updated {{ $root.settings.version }}.</span
+        >Data updated {{ $root.settings.version }}</span
       >
     </v-card-text>
   </v-card>

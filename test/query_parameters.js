@@ -37,10 +37,10 @@ describe("When parsing a query...", function() {
     assert.deepStrictEqual(
       Dataview.prototype.parse_query("?a!=f&b>45&c<20&d>=1&e<=0"),
       {
-        e: { aspect: undefined, type: "<=", value: 0 },
-        d: { aspect: undefined, type: ">=", value: 1 },
-        c: { aspect: undefined, type: "<", value: 20 },
-        b: { aspect: undefined, type: ">", value: 45 },
+        e: { aspect: "mean", type: "<=", value: 0 },
+        d: { aspect: "mean", type: ">=", value: 1 },
+        c: { aspect: "mean", type: "<", value: 20 },
+        b: { aspect: "mean", type: ">", value: 45 },
         a: { type: "!=", value: "f" },
         ...defaults,
       }
@@ -50,9 +50,9 @@ describe("When parsing a query...", function() {
     assert.deepStrictEqual(
       Dataview.prototype.parse_query("?var>=0&var<=100&var!=50").var,
       [
-        { aspect: undefined, type: "!=", value: 50 },
-        { aspect: undefined, type: "<=", value: 100 },
-        { aspect: undefined, type: ">=", value: 0 },
+        { aspect: "label", type: "!=", value: 50 },
+        { aspect: "mean", type: "<=", value: 100 },
+        { aspect: "mean", type: ">=", value: 0 },
       ]
     );
   });

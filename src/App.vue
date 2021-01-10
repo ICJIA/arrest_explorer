@@ -26,6 +26,9 @@
           class="floating-menu"
         >
           <v-btn-toggle rounded>
+            <v-btn title="refesh data" @click="$root.refresh_data" icon
+              ><v-icon>mdi-reload</v-icon></v-btn
+            >
             <v-btn
               text
               @click="$root.settings.as_table = !$root.settings.as_table"
@@ -85,7 +88,7 @@ export default {
 }
 #side-menu .v-card {
   overflow: hidden;
-  padding: 0 0.4em 3.5em 0.4em;
+  padding: 0 0.4em;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -118,7 +121,8 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 0.3em 0 4em 0;
 }
 .data-wrap {
@@ -127,6 +131,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 2.5em;
+  overflow-x: hidden;
 }
 #data-container,
 #side-menu {
@@ -227,8 +232,9 @@ html {
     width: 100%;
   }
 }
-@media screen and (max-width: 315px) {
-  .menu-bar span {
+@media screen and (max-width: 330px) {
+  .menu-bar span,
+  .floating-menu span {
     font-size: 0.8em;
   }
 }

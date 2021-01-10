@@ -32,13 +32,6 @@ export default {
         textStyle: {
           fontFamily: "Lato",
         },
-        tooltip: {
-          trigger: "axis",
-          transitionDuration: 0,
-          axisPointer: {
-            type: "shadow",
-          },
-        },
         animationEasing: "elasticOut",
         animationDuration: 700,
         animationEasingUpdate: "elasticOut",

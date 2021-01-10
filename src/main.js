@@ -60,7 +60,6 @@ var settings = {
     plot_type: "line",
     value: "arrests",
     by_year: true,
-    flip_axes: false,
     split1: "",
     split2: "",
     sheet: "",
@@ -72,7 +71,6 @@ var settings = {
     format_table: "mixed",
     format_category: "labels",
     format_image: "svg",
-    plot_area: ["80%", "100%"],
     image_dim: ["100%", "100%"],
     animation_time: 700,
     animation_type: "elasticOut",
@@ -126,11 +124,6 @@ var settings = {
             : "canvas";
           if (!this.settings.as_table) this.draw_plot();
         }
-      },
-    ],
-    "settings.plot_area": [
-      function() {
-        if (!this.settings.as_table) this.draw_plot();
       },
     ],
     "settings.plot_type": [
@@ -207,7 +200,7 @@ new Vue({
     graphic: [],
     legend: {
       data: [],
-      top: "90",
+      top: "80",
       align: "right",
       right: "right",
       orient: "vertical",
@@ -216,6 +209,14 @@ new Vue({
       formatter: function(l) {
         return l.length > 16 ? l.substr(0, 14) + "\u2026" : l;
       },
+    },
+    tooltip: {
+      trigger: "axis",
+      transitionDuration: 0,
+      axisPointer: {
+        type: "shadow",
+      },
+      borderWidth: 0,
     },
     xAxis: [
       {
@@ -252,8 +253,6 @@ new Vue({
     if (Object.prototype.hasOwnProperty.call(params, "embed")) {
       local_storage = store_fallback;
       this.settings.intro = false;
-      this.settings.plot_area[0] = "100%";
-      this.settings.plot_area[1] = "100%";
       this.settings.embed = true;
       this.settings.bottom_offset = 0;
     } else {
@@ -358,8 +357,6 @@ new Vue({
     );
   },
   mounted() {
-    settings.plot_area[0] =
-      this.$el.getBoundingClientRect().height - this.settings.bottom_offset;
     for (var i = this.$root.$options.display.options.year.length; i--; ) {
       if (this.$root.$options.display.options.year[i].type === ">=") {
         this.year_window[0] = this.$root.$options.display.options.year[i].value;
@@ -545,20 +542,8 @@ new Vue({
       }
       return r;
     },
-    to_area: function(s) {
-      return String(s)
-        .replace(/[^0-9%pxrem]+/, "")
-        .replace(/(\d)$/, "$1px");
-    },
     queue_update,
     draw_plot: function() {
-      var h = this.to_area(this.settings.plot_area[0]);
-      this.$options.plot.element.style.height = /%$/.test(h)
-        ? (this.$el.getBoundingClientRect().height * parseInt(h)) / 100 + "px"
-        : h;
-      this.$options.plot.element.style.width = this.to_area(
-        this.settings.plot_area[1]
-      );
       if (this.$options.plot.instance) {
         this.$options.plot.instance.dispose();
         this.$options.plot.instance = null;
@@ -570,6 +555,7 @@ new Vue({
       );
       this.$options.plot.options.title = this.$options.display.title;
       this.$options.plot.options.graphic = this.$options.display.graphic;
+      this.$options.plot.options.tooltip = this.$options.display.tooltip;
       this.$options.plot.options.legend = this.$options.display.legend;
       this.$options.plot.options.xAxis = this.$options.display.xAxis;
       this.$options.plot.options.yAxis = this.$options.display.yAxis;
@@ -589,9 +575,9 @@ new Vue({
           top: top
             ? top
             : this.$options.display.graphic[1].style.text
-            ? "80"
-            : "50",
-          left: "85",
+            ? 75
+            : 50,
+          left: 85,
           right: aslegend
             ? String(
                 9 *
@@ -604,7 +590,7 @@ new Vue({
                     9
                   )
               )
-            : "20",
+            : 20,
         },
         dim = this.$el.getBoundingClientRect();
       if (
@@ -625,16 +611,17 @@ new Vue({
       } else {
         r.height = height
           ? height
-          : dim.height - Number(r.top) - (this.settings.embed ? 50 : 250);
+          : this.$options.plot.element.getBoundingClientRect().height -
+            Number(r.top) -
+            50;
       }
       return r;
     },
     update_data: async function() {
       if (this.settings.active) {
         this.settings.active = false;
-        var n = this.$el.getBoundingClientRect().height;
-        this.settings.plot_area[0] = n - this.settings.bottom_offset;
-        var s = this.settings,
+        var dims = this.$el.getBoundingClientRect(),
+          s = this.settings,
           d = this.$options.display,
           f = { value: this.format_name(s.value) },
           dim = this.$el.getBoundingClientRect(),
@@ -644,6 +631,7 @@ new Vue({
           means,
           part,
           i,
+          n,
           l,
           nl,
           sd;
@@ -713,6 +701,7 @@ new Vue({
         if (s.as_table) {
           this.table = this.$options.source.reformat(s.format_table, true);
         } else {
+          this.resize_plot(dims.height - this.settings.bottom_offset + "px");
           d.legend.data = [];
           d.legend.selected = {};
           d.series = [];
@@ -777,7 +766,7 @@ new Vue({
               z: 100,
               cursor: "default",
               left: "center",
-              bottom: "0",
+              bottom: "5",
               style: {
                 text: s.by_year ? "Year" : f.split1,
                 font: "20px 'Lato', sans-serif",
@@ -788,7 +777,7 @@ new Vue({
               type: "text",
               id: "legend-label",
               right: "10",
-              top: "70",
+              top: "60",
               cursor: "default",
               style: {
                 text:
@@ -864,7 +853,7 @@ new Vue({
                 0
               );
             }.bind(this);
-            d.graphic[0].cursor = d.graphic[1].cursor = d.graphic[3].cursor = d.graphic[4].cursor =
+            d.graphic[0].cursor = d.graphic[2].cursor = d.graphic[3].cursor = d.graphic[4].cursor =
               "pointer";
           }
           if (s.by_year) {
@@ -890,7 +879,47 @@ new Vue({
             } else d.xAxis[0].show = false;
           }
           if (s.split1) {
+            if (Object.prototype.hasOwnProperty.call(d.options, s.split1)) {
+              for (part = "", i = d.options[s.split1].length; i--; )
+                if (
+                  d.options[s.split1][i].aspect !== "label" &&
+                  d.options[s.split1][i].enabled
+                ) {
+                  part +=
+                    (part ? " and " : "") +
+                    "(" +
+                    d.options[s.split1][i].aspect +
+                    ") " +
+                    d.options[s.split1][i].type +
+                    " " +
+                    d.options[s.split1][i].display_value;
+                }
+              if (part) {
+                if (d.graphic[1].style.text) d.graphic[1].style.text += " & ";
+                d.graphic[1].style.text += f.split1 + " " + part;
+              }
+            }
             if (s.split2) {
+              if (Object.prototype.hasOwnProperty.call(d.options, s.split2)) {
+                for (part = "", i = d.options[s.split2].length; i--; )
+                  if (
+                    d.options[s.split2][i].aspect !== "label" &&
+                    d.options[s.split2][i].enabled
+                  ) {
+                    part +=
+                      (part ? " and " : "") +
+                      "(" +
+                      d.options[s.split2][i].aspect +
+                      ") " +
+                      d.options[s.split2][i].type +
+                      " " +
+                      d.options[s.split2][i].display_value;
+                  }
+                if (part) {
+                  if (d.graphic[1].style.text) d.graphic[1].style.text += " & ";
+                  d.graphic[1].style.text += f.split2 + " " + part;
+                }
+              }
               d.legend.data = sd[s.split2].display;
               if (s.by_year) {
                 d.graphic[0].style.text +=
@@ -903,25 +932,15 @@ new Vue({
                 pos = d.title[0].top + 30;
                 step = Math.max(
                   100,
-                  (dim.height - (this.settings.bottom_offset + pos + 5)) /
+                  (dim.height - (this.settings.bottom_offset + pos + 10)) /
                     sd[s.split1].display.length
                 );
-                if (
-                  dim.height <
-                    this.$options.plot.element.getBoundingClientRect().height ||
-                  Math.abs(
-                    pos +
-                      step * sd[s.split1].display.length -
-                      (dim.height - this.settings.bottom_offset)
-                  ) > 10
-                ) {
-                  if (this.$options.plot.instance) {
-                    this.$options.plot.instance.dispose();
-                    this.$options.plot.instance = null;
-                  }
-                  this.settings.plot_area[0] =
-                    5 + pos + step * sd[s.split1].display.length;
-                }
+                this.resize_plot(
+                  Math.max(
+                    5 + pos + step * sd[s.split1].display.length,
+                    dims.height - this.settings.bottom_offset
+                  ) + "px"
+                );
                 for (i = 0, n = sd[s.split1].display.length; i < n; i++) {
                   if (i) {
                     d.title.push({
@@ -967,14 +986,6 @@ new Vue({
                   }
                 }
               } else {
-                if (
-                  this.$options.plot.instance &&
-                  dim.height <
-                    this.$options.plot.element.getBoundingClientRect().height
-                ) {
-                  this.$options.plot.instance.dispose();
-                  this.$options.plot.instance = null;
-                }
                 sd = this.$options.source.view[s.split1];
                 d.grid.push(this.make_grid());
                 d.graphic[0].style.text += " between " + f.split2;
@@ -1037,7 +1048,6 @@ new Vue({
                 ) {
                   d.xAxis[0].axisLabel.rotate = 60;
                 }
-                d.legend.data.push(sd.label);
               }
             }
           } else {
@@ -1059,50 +1069,6 @@ new Vue({
               });
             }
           }
-          if (s.split1) {
-            if (Object.prototype.hasOwnProperty.call(d.options, s.split1)) {
-              for (part = "", i = d.options[s.split1].length; i--; )
-                if (
-                  d.options[s.split1][i].aspect !== "label" &&
-                  d.options[s.split1][i].enabled
-                ) {
-                  part +=
-                    (part ? " and " : "") +
-                    "(" +
-                    d.options[s.split1][i].aspect +
-                    ") " +
-                    d.options[s.split1][i].type +
-                    " " +
-                    d.options[s.split1][i].display_value;
-                }
-              if (part) {
-                if (d.graphic[1].style.text) d.graphic[1].style.text += " & ";
-                d.graphic[1].style.text += f.split1 + " " + part;
-              }
-            }
-            if (s.split2) {
-              if (Object.prototype.hasOwnProperty.call(d.options, s.split2)) {
-                for (part = "", i = d.options[s.split2].length; i--; )
-                  if (
-                    d.options[s.split2][i].aspect !== "label" &&
-                    d.options[s.split2][i].enabled
-                  ) {
-                    part +=
-                      (part ? " and " : "") +
-                      "(" +
-                      d.options[s.split2][i].aspect +
-                      ") " +
-                      d.options[s.split2][i].type +
-                      " " +
-                      d.options[s.split2][i].display_value;
-                  }
-                if (part) {
-                  if (d.graphic[1].style.text) d.graphic[1].style.text += " & ";
-                  d.graphic[1].style.text += f.split2 + " " + part;
-                }
-              }
-            }
-          }
           if (
             d.graphic[0].style.text.length * 12 * d.graphic[0].scale[0] >
             dim.width - (!this.settings.embed && dim.width > 590) * 270
@@ -1112,11 +1078,11 @@ new Vue({
               (dim.width - (!this.settings.embed && dim.width > 590) * 270) /
                 (d.graphic[0].style.text.length * 12)
             );
-            d.graphic[0].scale = [scale, scale];
+            d.graphic[0].scale[0] = d.graphic[0].scale[1] = scale;
             d.graphic[1].top = scale * 20 + 10;
           }
           d.legend.type = d.legend.data.length > 9 ? "scroll" : "plain";
-          this.$root.$options.plot.options.tooltip.position =
+          d.tooltip.position =
             screen.width > 500
               ? null
               : function(pos, params, el, elRect, size) {
@@ -1128,7 +1094,7 @@ new Vue({
             this.$options.plot.instance.setOption(
               {
                 textStyle: this.$options.plot.options.textStyle,
-                tooltip: this.$options.plot.options.tooltip,
+                tooltip: d.tooltip,
                 animationDuration: s.animation_time,
                 animationDurationUpdate: s.animation_time,
                 animationEasing: s.animation_type,
@@ -1152,6 +1118,26 @@ new Vue({
     },
     gtag: function() {
       if (this.settings.send_data) window.dataLayer.push(arguments);
+    },
+    refresh_data: function() {
+      this.settings.bottom_offset = screen.height < 550 ? 0 : 190;
+      if (this.$options.plot && this.$options.plot.instance) {
+        this.$options.plot.instance.dispose();
+        this.$options.plot.instance = null;
+      }
+      this.settings.active = true;
+      this.update_data();
+    },
+    resize_plot: function(h) {
+      if (this.$options.plot) {
+        if (typeof h !== "object") {
+          this.$options.plot.element.style.height = h;
+        }
+        if (this.$options.plot.instance) {
+          this.$options.plot.instance.resize();
+          this.$root.$options.plot.element.style.width = "100%";
+        }
+      }
     },
   },
   render: (h) => h(App),

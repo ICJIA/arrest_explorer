@@ -124,6 +124,9 @@
         </v-col>
       </v-card-text>
       <v-card-actions>
+        <span class="note" v-show="$root.settings.version"
+          >Data updated {{ $root.settings.version }}</span
+        >
         <v-spacer></v-spacer>
         <v-btn text @click="$root.settings.export_open = false">
           Close
@@ -354,6 +357,9 @@ export default {
 }
 .image-format {
   margin-right: 5px;
+}
+.note {
+  font-size: 0.7em;
 }
 @media screen and (max-width: 750px) {
   .block-row {
