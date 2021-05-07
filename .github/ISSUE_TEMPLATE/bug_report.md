@@ -27,6 +27,8 @@ Whenever possible and appropriate, please post at least one screenshot that show
  - Device: [e.g. iPhone6]
  - Browser [e.g. stock browser, safari]
 
+**Workarounds**
+Is there a way to clear or avoid the issue and still complete your work?
 
 **Additional context**
 Add any other context about the problem here.
