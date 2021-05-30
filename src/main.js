@@ -1061,7 +1061,7 @@ new Vue({
             } else {
               d.graphic[0].style.text = "Average " + f.value;
               d.xAxis[0].data = [f.value];
-              d.graphic[3].style.text = "Average";
+              d.graphic[3].style.text = "Overall";
               d.series.push({
                 type: s.plot_type,
                 data: [sd.total.mean],
@@ -1140,5 +1140,5 @@ new Vue({
       }
     },
   },
-  render: (h) => h(App),
+  render: h => h(App),
 }).$mount("#app");
