@@ -3,19 +3,31 @@
 </template>
 
 <script>
-import echarts from "echarts/lib/echarts";
-import "echarts/lib/component/tooltip";
-import "echarts/lib/component/title";
-import "echarts/lib/component/legend";
-import "echarts/lib/component/legendScroll";
-import "echarts/lib/component/graphic";
-import "echarts/lib/chart/line";
-import "echarts/lib/chart/bar";
-import "echarts/lib/chart/scatter";
+import * as echarts from "echarts/core";
+import {
+  TooltipComponent,
+  TitleComponent,
+  LegendComponent,
+  LegendScrollComponent,
+  GraphicComponent,
+} from "echarts/components";
+import { LineChart, BarChart, ScatterChart } from "echarts/charts";
+import { CanvasRenderer } from "echarts/renderers";
 import "zrender/lib/svg/svg";
 import theme_dark from "../assets/theme-dark.json";
 import theme_light from "../assets/theme-light.json";
 
+echarts.use([
+  TooltipComponent,
+  TitleComponent,
+  LegendComponent,
+  LegendScrollComponent,
+  GraphicComponent,
+  LineChart,
+  BarChart,
+  ScatterChart,
+  CanvasRenderer,
+]);
 echarts.registerTheme("dark", theme_dark);
 echarts.registerTheme("light", theme_light);
 
@@ -36,6 +48,10 @@ export default {
         animationDuration: 700,
         animationEasingUpdate: "elasticOut",
         animationDurationUpdate: 700,
+        stateAnimation: {
+          duration: 700,
+          easing: "elasticOut",
+        },
       },
     };
   },

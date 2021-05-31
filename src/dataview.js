@@ -410,8 +410,8 @@ Dataview.prototype = {
       if (Object.prototype.hasOwnProperty.call(this.options, k)) {
         if (k === "format_category") {
           switch (
-            typeof this.options[k].value === "string"
-              ? this.options[k].value.substr(0, 1).toLowerCase()
+            typeof this.options[k] === "string"
+              ? this.options[k].substr(0, 1).toLowerCase()
               : ""
           ) {
             case "i":

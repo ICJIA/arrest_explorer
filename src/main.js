@@ -141,7 +141,16 @@ var settings = {
       function() {
         if (this.$options.plot && this.$options.plot.initOptions) {
           this.settings.animation_time = Number(this.settings.animation_time);
-          this.$options.plot.options.animationDurationUpdate = this.$options.plot.options.animationDuration = this.settings.animation_time;
+          this.$options.plot.options.animationDurationUpdate = this.settings.animation_time;
+          this.$options.plot.options.animationDuration = this.settings.animation_time;
+          this.$options.plot.options.stateAnimation.duration = this.settings.animation_time;
+          for (var i = this.$options.plot.options.series.length; i--; ) {
+            this.$options.plot.options.series[
+              i
+            ].animationDuration = this.$options.plot.options.series[
+              i
+            ].animationDurationUpdate = this.settings.animation_time;
+          }
           if (!this.settings.as_table) this.draw_plot();
         }
       },
@@ -149,7 +158,16 @@ var settings = {
     "settings.animation_type": [
       function() {
         if (this.$options.plot && this.$options.plot.initOptions) {
-          this.$options.plot.options.animationEasingUpdate = this.$options.plot.options.animationEasing = this.settings.animation_type;
+          this.$options.plot.options.animationEasingUpdate = this.settings.animation_type;
+          this.$options.plot.options.animationEasing = this.settings.animation_type;
+          this.$options.plot.options.stateAnimation.easing = this.settings.animation_type;
+          for (var i = this.$options.plot.options.series.length; i--; ) {
+            this.$options.plot.options.series[
+              i
+            ].animationEasing = this.$options.plot.options.series[
+              i
+            ].animationEasingUpdate = this.settings.animation_type;
+          }
           if (!this.settings.as_table) this.draw_plot();
         }
       },
@@ -544,10 +562,7 @@ new Vue({
     },
     queue_update,
     draw_plot: function() {
-      if (this.$options.plot.instance) {
-        this.$options.plot.instance.dispose();
-        this.$options.plot.instance = null;
-      }
+      if (this.$options.plot.instance) this.$options.plot.instance.dispose();
       this.$options.plot.instance = this.$options.plot.engine.init(
         this.$options.plot.element,
         this.settings.theme_dark ? "dark" : "light",
@@ -726,7 +741,8 @@ new Vue({
               top: "3",
               z: 100,
               cursor: "default",
-              scale: [2, 2],
+              scaleX: scale,
+              scaleY: scale,
               style: {
                 text: (s.by_year ? "" : "Average ") + f.value,
                 font: "20px 'Lato', sans-serif",
@@ -981,6 +997,9 @@ new Vue({
                       xAxisIndex: i,
                       yAxisIndex: i,
                       animationEasing: this.settings.animation_type,
+                      animationEasingUpdate: this.settings.animation_type,
+                      animationDuration: this.settings.animation_time,
+                      animationDurationUpdate: this.settings.animation_time,
                       showSymbol: false,
                     });
                   }
@@ -1013,6 +1032,9 @@ new Vue({
                     type: s.plot_type,
                     data: means,
                     animationEasing: this.settings.animation_type,
+                    animationEasingUpdate: this.settings.animation_type,
+                    animationDuration: this.settings.animation_time,
+                    animationDurationUpdate: this.settings.animation_time,
                     showSymbol: false,
                   });
                 }
@@ -1028,6 +1050,9 @@ new Vue({
                     type: s.plot_type,
                     data: sd.levels[i].filtered,
                     animationEasing: this.settings.animation_type,
+                    animationEasingUpdate: this.settings.animation_type,
+                    animationDuration: this.settings.animation_time,
+                    animationDurationUpdate: this.settings.animation_time,
                     showSymbol: false,
                   });
                   d.legend.data.push(sd.levels[i].label);
@@ -1040,6 +1065,9 @@ new Vue({
                   type: s.plot_type,
                   data: means,
                   animationEasing: this.settings.animation_type,
+                  animationEasingUpdate: this.settings.animation_type,
+                  animationDuration: this.settings.animation_time,
+                  animationDurationUpdate: this.settings.animation_time,
                   showSymbol: false,
                 });
                 if (
@@ -1066,11 +1094,14 @@ new Vue({
                 type: s.plot_type,
                 data: [sd.total.mean],
                 animationEasing: this.settings.animation_type,
+                animationEasingUpdate: this.settings.animation_type,
+                animationDuration: this.settings.animation_time,
+                animationDurationUpdate: this.settings.animation_time,
               });
             }
           }
           if (
-            d.graphic[0].style.text.length * 12 * d.graphic[0].scale[0] >
+            d.graphic[0].style.text.length * 12 * d.graphic[0].scaleX >
             dim.width - (!this.settings.embed && dim.width > 590) * 270
           ) {
             scale = Math.max(
@@ -1078,7 +1109,7 @@ new Vue({
               (dim.width - (!this.settings.embed && dim.width > 590) * 270) /
                 (d.graphic[0].style.text.length * 12)
             );
-            d.graphic[0].scale[0] = d.graphic[0].scale[1] = scale;
+            d.graphic[0].scaleX = d.graphic[0].scaleY = scale;
             d.graphic[1].top = scale * 20 + 10;
           }
           d.legend.type = d.legend.data.length > 9 ? "scroll" : "plain";
@@ -1099,6 +1130,10 @@ new Vue({
                 animationDurationUpdate: s.animation_time,
                 animationEasing: s.animation_type,
                 animationEasingUpdate: s.animation_type,
+                stateAnimation: {
+                  duration: s.animation_time,
+                  easing: s.animation_type,
+                },
                 title: d.title,
                 legend: d.legend,
                 xAxis: d.xAxis,

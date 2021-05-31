@@ -9,7 +9,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "echarts": "^4.9.0",
+    "echarts": "latest",
     "vue": "latest",
     "vuetify": "latest"
   },
@@ -23,8 +23,8 @@
     "eslint": "latest",
     "eslint-plugin-vue": "latest",
     "mocha": "latest",
-    "sass": "1.32.0",
-    "sass-loader": "10.0.0",
+    "sass": "latest",
+    "sass-loader": "10.2.0",
     "vue-cli-plugin-vuetify": "latest",
     "vue-template-compiler": "latest",
     "vuetify-loader": "latest"
