@@ -54,6 +54,17 @@
     </v-row>
 
     <v-row>
+      <v-col><v-subheader>Standardize Y-Axis Range</v-subheader></v-col>
+      <v-col>
+        <v-switch
+          v-model="$root.settings.standardize_yaxis"
+          inset
+          hide-details
+        ></v-switch>
+      </v-col>
+    </v-row>
+
+    <v-row>
       <v-col><v-subheader>Plot Type</v-subheader></v-col>
       <v-col>
         <v-select

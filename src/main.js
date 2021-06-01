@@ -4,6 +4,7 @@ import vuetify from "./plugins/vuetify";
 import rawdata from "./data.json";
 import levels from "./levels.json";
 import Dataview from "./dataview.js";
+import { intervalScaleNiceTicks } from "echarts/lib/scale/helper";
 
 Vue.config.productionTip = false;
 
@@ -26,6 +27,7 @@ const store_options = [
     "animation_time",
     "animation_type",
     "intro",
+    "standardize_yaxis",
   ],
   update_after = [
     // settings to queue an update on change
@@ -36,6 +38,7 @@ const store_options = [
     "by_year",
     "split1",
     "split2",
+    "standardize_yaxis",
   ],
   store_fallback = { setItem: function() {}, getItem: function() {} },
   store_option = function(k, v) {
@@ -79,6 +82,7 @@ var settings = {
     send_data: false,
     repo: "https://github.com/ICJIA/arrest_explorer",
     bottom_offset: 190,
+    standardize_yaxis: false,
   },
   plot_part_menu = {
     open: false,
@@ -265,6 +269,9 @@ new Vue({
     settings.url = window.location.origin + window.location.pathname;
     if (!/\/$/.test(settings.url)) settings.url += "/";
     local_storage = localStorage || store_fallback;
+    if (this.settings.standardize_yaxis) {
+      this.$options.display.yAxis[0].min = this.get_min;
+    }
     params = window.location.search
       ? (params = this.$options.source.parse_query(window.location.search))
       : {};
@@ -413,6 +420,7 @@ new Vue({
     },
   },
   methods: {
+    intervalScaleNiceTicks: intervalScaleNiceTicks,
     display_query: function(ex, d, all) {
       d = d || this.$options.display.options;
       var api = !all && ex,
@@ -722,7 +730,7 @@ new Vue({
           d.series = [];
           d.grid = [];
           d.title = [{ left: "center", top: "6%" }];
-          d.yAxis = [{ type: "value", scale: true }];
+          d.yAxis = [{ type: "value", scale: true, min: this.get_min }];
           d.xAxis = [
             {
               type: "category",
@@ -970,7 +978,13 @@ new Vue({
                       f.split1 + ": " + sd[s.split1].display[i];
                   }
                   d.grid.push(this.make_grid(pos, step - 40));
-                  d.yAxis.push({ type: "value", gridIndex: i, scale: true });
+                  d.yAxis.push({
+                    type: "value",
+                    gridIndex: i,
+                    scale: true,
+                    min: this.settings.standardize_yaxis ? 0 : void 0,
+                    max: this.get_max,
+                  });
                   d.xAxis.push({
                     type: "category",
                     gridIndex: i,
@@ -1173,6 +1187,57 @@ new Vue({
           this.$root.$options.plot.element.style.width = "100%";
         }
       }
+    },
+    get_min: function() {
+      return this.settings.standardize_yaxis ? 0 : void 0;
+    },
+    get_max: function() {
+      var range = [Infinity, -Infinity],
+        m,
+        j,
+        i,
+        g;
+      if (
+        this.settings.standardize_yaxis &&
+        this.settings.by_year &&
+        this.settings.split1 &&
+        this.settings.split2 &&
+        Object.prototype.hasOwnProperty.call(
+          this.$options.source.view,
+          this.settings.split1
+        ) &&
+        Object.prototype.hasOwnProperty.call(
+          this.$options.source.view[this.settings.split1],
+          "subgroups"
+        ) &&
+        Object.prototype.hasOwnProperty.call(
+          this.$options.source.view[this.settings.split1].subgroups,
+          this.settings.split2
+        )
+      ) {
+        for (
+          j = this.$options.source.view[this.settings.split1].subgroups[
+            this.settings.split2
+          ].length;
+          j--;
+
+        ) {
+          g = this.$options.source.view[this.settings.split1].subgroups[
+            this.settings.split2
+          ][j];
+          for (i = g.levels.length; i--; ) {
+            if (g.levels[i].min < range[0]) range[0] = g.levels[i].min;
+            if (g.levels[i].max > range[1]) range[1] = g.levels[i].max;
+          }
+        }
+        j = range[1];
+        m = range[1] + j * (j > 10 ? 0.02 : 0.2);
+        i = 100;
+        while (m - j > i) i *= 10;
+        m = j > 10 ? Math.ceil(m / i) * i : Math.round(m * i) / i;
+        m = this.intervalScaleNiceTicks([0, m], 5, 0.01, i).niceTickExtent[1];
+      }
+      return m;
     },
   },
   render: h => h(App),
