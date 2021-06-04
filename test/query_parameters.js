@@ -19,11 +19,11 @@ describe("When parsing a query...", function() {
     assert.deepStrictEqual(
       Dataview.prototype.parse_query("?value=charges&format_file=csv"),
       {
+        format_file: { type: "=", value: "csv" },
         value: {
           type: "=",
           value: "arrest_charges",
         },
-        format_file: { type: "=", value: "csv" },
       }
     );
   });
@@ -37,11 +37,11 @@ describe("When parsing a query...", function() {
     assert.deepStrictEqual(
       Dataview.prototype.parse_query("?a!=f&b>45&c<20&d>=1&e<=0"),
       {
-        e: { aspect: "mean", type: "<=", value: 0 },
-        d: { aspect: "mean", type: ">=", value: 1 },
-        c: { aspect: "mean", type: "<", value: 20 },
-        b: { aspect: "mean", type: ">", value: 45 },
-        a: { type: "!=", value: "f" },
+        e: [{ aspect: "mean", type: "<=", value: 0 }],
+        d: [{ aspect: "mean", type: ">=", value: 1 }],
+        c: [{ aspect: "mean", type: "<", value: 20 }],
+        b: [{ aspect: "mean", type: ">", value: 45 }],
+        a: [{ aspect: "label", type: "!=", value: "f" }],
         ...defaults,
       }
     );

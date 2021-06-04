@@ -14,6 +14,17 @@
     </v-row>
 
     <v-row>
+      <v-col><v-subheader>Remember Data View</v-subheader></v-col>
+      <v-col>
+        <v-switch
+          v-model="$root.settings.remember_view"
+          inset
+          hide-details
+        ></v-switch>
+      </v-col>
+    </v-row>
+
+    <v-row>
       <v-col><v-subheader>Share Interaction Data</v-subheader></v-col>
       <v-col>
         <v-switch

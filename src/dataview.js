@@ -72,6 +72,7 @@ function conditions(o) {
 }
 
 function check_value(v, c) {
+  if (!c.length) c = [c];
   for (var i = c.length; i--; ) {
     if (!c[i].fun(v)) return false;
   }
@@ -79,6 +80,7 @@ function check_value(v, c) {
 }
 
 function check_object(o, c) {
+  if (!c.length) c = [c];
   for (var i = c.length; i--; ) {
     if (
       c[i].enabled &&
@@ -385,6 +387,7 @@ Dataview.prototype = {
     o.format = format;
   },
   attach_criteria: function(arr, name) {
+    if (!arr.length) arr = [arr];
     for (var i = arr.length; i--; ) {
       if (!Object.prototype.hasOwnProperty.call(arr[i], "display_value")) {
         arr[i].display_value =
@@ -759,6 +762,10 @@ Dataview.prototype = {
       r.year = this.filter(this.raw.year);
       r.slot.year = { name: "year", data: r.year };
     }
+    if (!Object.prototype.hasOwnProperty.call(this.variables, "values")) {
+      console.log("no values in variables", this.variables);
+      return void 0;
+    }
     if (
       Object.prototype.hasOwnProperty.call(
         this.variables.values.total,
@@ -1094,19 +1101,17 @@ Dataview.prototype = {
         .split(/&+/g),
       arg = [],
       i = arr.length,
-      par = {};
+      par = {},
+      po;
     for (; i--; ) {
       arg = arr[i]
         .replace(greater, ">")
         .replace(lesser, "<")
-        .replace(operators, " $1 ")
-        .split(" ");
+        .replace(operators, "..$1..")
+        .split("..");
       if (arg.length === 1) {
         if (value.test(arg[0])) {
-          par.value = {
-            type: "=",
-            value: which_value(arg.length === 1 ? arg[0] : arg[2]),
-          };
+          par.value = { type: "=", value: which_value(arg[0]) };
         } else if (format.test(arg[0])) {
           par.format_file = { type: "=", value: which_format(arg[0]) };
         } else if (arg[0]) par[arg[0]] = { type: "=", value: true };
@@ -1135,23 +1140,34 @@ Dataview.prototype = {
             aspect: arg[3] || (equality.test(arg[1]) ? "label" : "mean"),
           });
         } else if (arg[0] === "sort") {
-          par.sort = {
-            type: "=",
-            value: {},
-          };
+          par.sort = {};
           this.add_level_spec(par.sort, arg[2]);
-        } else {
-          par[arg[0]] = {
-            type: arg[1],
-            value: arg[2],
-            aspect: arg[3] || (equality.test(arg[1]) ? "label" : "mean"),
-          };
-        }
-        if (
-          typeof par[arg[0]].value === "string" &&
-          equality.test(par[arg[0]].type)
+          par.sort = par.sort.value;
+        } else if (
+          arg[1] !== "=" ||
+          (Object.prototype.hasOwnProperty.call(this, "variables") &&
+            Object.prototype.hasOwnProperty.call(this.variables, arg[0]))
         ) {
-          par[arg[0]].value = {};
+          if (arg[0] === "year" && arg[1] === "=") {
+            par.year = [
+              { type: ">=", value: arg[2] },
+              { type: "<=", value: arg[2] },
+            ];
+          } else {
+            par[arg[0]] = [
+              {
+                type: arg[1],
+                value: arg[2],
+                aspect: arg[3] || (equality.test(arg[1]) ? "label" : "mean"),
+              },
+            ];
+          }
+        } else par[arg[0]] = { type: arg[1], value: arg[2] };
+        po = par[arg[0]].length
+          ? par[arg[0]][par[arg[0]].length - 1]
+          : par[arg[0]];
+        if (typeof po.value === "string" && equality.test(po.type)) {
+          po.value = {};
           seps.lastIndex = 0;
           if (
             seps.test(arg[2]) ||
@@ -1159,13 +1175,16 @@ Dataview.prototype = {
               Object.prototype.hasOwnProperty.call(this.variables, arg[2]))
           ) {
             if (arg[0] === "split") {
-              par[arg[0]].value = arg[2].split(seps);
+              po.value = arg[2].split(seps);
             } else {
-              this.add_level_spec(par[arg[0]], arg[2], arg[0]);
+              this.add_level_spec(po, arg[2], arg[0]);
             }
           } else if (arg[0] === "split") {
-            par[arg[0]].value = [arg[2]];
-          } else par[arg[0]] = { type: arg[1], value: arg[2] };
+            po.value = [arg[2]];
+          } else {
+            po.type = arg[1];
+            po.value = arg[2];
+          }
         }
       }
     }

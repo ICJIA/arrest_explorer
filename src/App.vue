@@ -2,17 +2,17 @@
   <v-app v-if="$root.settings.embed">
     <v-col>
       <v-row class="data-wrap embeded" no-gutters>
-        <div id="data-container"><DataDisplay /></div>
+        <div role="main" id="data-container"><DataDisplay /></div>
       </v-row>
     </v-col>
   </v-app>
   <v-app v-else>
-    <Header />
     <v-col>
       <v-row
         :class="'data-wrap' + ($root.settings.embed ? ' embeded' : '')"
         no-gutters
       >
+        <Header />
         <div id="data-container" @click="$root.settings.sheet = ''">
           <DataDisplay />
         </div>

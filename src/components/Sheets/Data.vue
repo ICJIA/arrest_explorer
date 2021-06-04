@@ -1,5 +1,8 @@
 <template>
   <v-card>
+    <v-btn @click="$root.reset_view" inset block text color="primary"
+      >Reset View</v-btn
+    >
     <v-select
       label="Which values would you like to view?"
       :items="$root.$options.source.variables.values.values"
@@ -290,13 +293,14 @@ export default {
       if (!Object.prototype.hasOwnProperty.call(this.options, v)) {
         this.options[v] = [
           {
-            enabled: false,
+            enabled: true,
             aspect: "mean",
-            type: ">=",
+            type: ">",
             display_value: 0,
             value: 0,
           },
         ];
+        this.refilter();
       }
       get_splits.bind(this)();
     },
@@ -333,11 +337,14 @@ export default {
     refilter: function(e, c) {
       if (c) {
         if (c.aspect === "label") {
+          if (c.type !== "!=") c.type = "=";
           if (!c.display_value.push) c.display_value = "";
           c.value = c.display_value;
         } else {
+          if (c.type !== "<") c.type = ">";
           if (c.display_value.push) c.display_value = 0;
         }
+        c.enabled = true;
       }
       get_splits.bind(this)();
       this.$root.queue_update();

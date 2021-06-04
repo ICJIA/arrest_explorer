@@ -1,22 +1,5 @@
 <template>
   <div class="bottom-menu">
-    <v-menu
-      v-model="$root.plot_part_menu.open"
-      :position-x="$root.plot_part_menu.x"
-      :position-y="$root.plot_part_menu.y"
-    >
-      <v-list>
-        <v-list-item-group>
-          <v-list-item
-            @click="updatePlotParts"
-            v-for="item in $root.plot_part_menu.options"
-            :key="item"
-          >
-            <v-list-item-title v-text="item"></v-list-item-title>
-          </v-list-item>
-        </v-list-item-group>
-      </v-list>
-    </v-menu>
     <div id="menu-sheet-wrap">
       <component
         class="menu-sheet-content"
@@ -128,36 +111,6 @@ export default {
           "px";
         this.$root.resize_plot("100%");
       }
-    },
-    updatePlotParts(e) {
-      this.$root.settings.active = false;
-      switch (this.$root.plot_part_menu.part) {
-        case "value":
-          this.$root.settings.value = e.target.innerText;
-          break;
-        case "split1":
-          if (e.target.innerText === "year") {
-            this.$root.settings.by_year = true;
-          } else {
-            if (
-              this.$root.settings.by_year &&
-              e.target.innerText !== this.$root.settings.split1
-            ) {
-              this.$root.settings.split2 = this.$root.settings.split1;
-            }
-            this.$root.settings.by_year = false;
-            this.$root.settings.split1 = e.target.innerText;
-          }
-          break;
-        case "split1_by_year":
-          this.$root.settings.split1 = e.target.innerText;
-          break;
-        case "split2":
-          this.$root.settings.split2 = e.target.innerText;
-          break;
-        default:
-      }
-      this.$root.settings.active = true;
     },
   },
   watch: watch,

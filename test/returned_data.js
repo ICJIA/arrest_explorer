@@ -103,7 +103,11 @@ data
         ) {
           for (i = n; i--; )
             header[1 + i + j * n] =
-              "crime_type_" + header1[i] + ":" + "offense_class_" + header2[j];
+              "crime_type_" +
+              header1[i].toLowerCase() +
+              ":" +
+              "offense_class_" +
+              header2[j].toLowerCase();
         }
         assert.deepStrictEqual(wide.header, header);
         assert(
@@ -123,3 +127,78 @@ data
       });
     });
   });
+
+describe("When filtering by variables...", function() {
+  it("single year works", async function() {
+    await data.update(data.parse_query("year=2019"));
+    assert.deepStrictEqual(data.view.year.filtered, [2019]);
+  });
+  it("year range works", async function() {
+    await data.update(data.parse_query("year>2015&year<2018"));
+    assert(data.view.total.filtered.length === 2);
+    assert(data.view.year.min === 2016);
+    assert(data.view.year.max === 2017);
+  });
+  it("single variable label works", async function() {
+    await data.update(data.parse_query("split=race&race=african american"));
+    assert.deepStrictEqual(data.view.race.labels, ["african american"]);
+  });
+  it("single variable mean works", async function() {
+    await data.update(data.parse_query("split=race&race[mean]>1e5"));
+    assert.deepStrictEqual(data.view.race.labels, [
+      "african american",
+      "white",
+    ]);
+  });
+  it("multi variable label works", async function() {
+    await data.update(
+      data.parse_query("split=race,gender&race=hispanic&gender=male")
+    );
+    assert.deepStrictEqual(data.view.race.labels, ["hispanic"]);
+    assert.deepStrictEqual(data.view.gender.labels, ["male"]);
+  });
+  it("multi variable mean works", async function() {
+    await data.update(
+      data.parse_query("split=race,gender&race[mean]>1e5&gender[mean]<9e4")
+    );
+    assert.deepStrictEqual(data.view.race.labels, [
+      "african american",
+      "white",
+    ]);
+    assert.deepStrictEqual(data.view.gender.labels, ["female"]);
+  });
+  it("single variable multiple criteria works", async function() {
+    await data.update(
+      data.parse_query("split=race&race[mean]>1e5&race!=african american")
+    );
+    assert.deepStrictEqual(data.view.race.labels, ["white"]);
+  });
+  it("multi variable multiple criteria works", async function() {
+    await data.update(
+      data.parse_query(
+        "split=race,age_group&race[mean]>1e3&race!=african american&" +
+          "age_group<1e5&age_group!=65 - 99"
+      )
+    );
+    assert.deepStrictEqual(data.view.race.labels, [
+      "asian",
+      "hispanic",
+      "white",
+    ]);
+    assert.deepStrictEqual(data.view.age_group.labels, ["18 - 24", "45 - 64"]);
+  });
+  it("(sorted) multi variable multiple criteria works", async function() {
+    await data.update(
+      data.parse_query(
+        "split=race,age_group&race[mean]>1e3&race!=african american&" +
+          "age_group<1e5&age_group!=65 - 99&sort=race[sum],-age_group[min]"
+      )
+    );
+    assert.deepStrictEqual(data.view.race.labels, [
+      "white",
+      "hispanic",
+      "asian",
+    ]);
+    assert.deepStrictEqual(data.view.age_group.labels, ["45 - 64", "18 - 24"]);
+  });
+});
