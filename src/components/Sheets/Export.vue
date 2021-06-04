@@ -91,7 +91,7 @@
             </v-col>
           </v-row>
           <v-row v-for="url in urls" :key="url.header">
-            <h3>{{ url.header }}</h3>
+            <v-subheader>{{ url.header }}</v-subheader>
             <div class="api-display">
               <a :href="url.base + url.query.string" target="_blank">
                 <span class="url-base">{{ url.base }}</span>
