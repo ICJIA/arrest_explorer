@@ -17,10 +17,14 @@ def arrest_explorer(value = 'arrests', split = '', su = '',
   for k in args:
     url += '&' + k + '=' + args[k]
   print('reading in table from:\n', url)
-  return pandas.read_csv(url)
+  res = requests.get(url)
+  if res.status_code != 200:
+    print('request failed:\n', res.text)
+  else:
+    return pandas.read_csv(io.StringIO(res.text))
 
-# load data and plotting packages
-import pandas, matplotlib.pyplot
+# load http, data, and plotting packages
+import requests, io, pandas, matplotlib.pyplot
 
 # examples
 

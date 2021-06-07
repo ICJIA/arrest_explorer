@@ -30,8 +30,7 @@
         <v-row>
           <h1 class="text--primary">Exploring the Data</h1>
           <p class="text--secondary">
-            Use the DATA <v-icon small>mdi-database-cog</v-icon> menu to select
-            which tables and splits to view.
+            Use the DATA MENU to select which tables and splits to view.
             <br />
             All tables can be split by <em>county</em>.
             <br />

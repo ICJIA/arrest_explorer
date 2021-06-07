@@ -3,20 +3,87 @@
     <v-btn @click="$root.reset_view" inset block text color="primary"
       >Reset View</v-btn
     >
+    <v-subheader main class="step-subheader"
+      >(<strong>1</strong>) Which values?</v-subheader
+    >
     <v-select
-      label="Which values would you like to view?"
+      style="padding:0"
+      aria-label="primary value"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
       hint="View arrest_charges for crime-related variables, and others for demographic variables."
       persistent-hint
+      dense
+      solo-inverted
     ></v-select>
-    <v-btn
-      @click="$root.settings.by_year = !$root.settings.by_year"
-      inset
-      block
-      text
-      color="primary"
-      >{{ "View " + ($root.settings.by_year ? "Averages" : "by Year") }}</v-btn
+    <v-subheader class="step-subheader"
+      >(<strong>2</strong>) Over what timeframe?</v-subheader
+    >
+    <v-row>
+      <v-col
+        ><v-subheader
+          ><label for="starting_year">Starting Year</label></v-subheader
+        ></v-col
+      >
+      <v-col>
+        <v-text-field
+          id="starting_year"
+          aria-label="Starting Year"
+          type="number"
+          v-model="min_year"
+          step="1"
+          :min="$root.settings.year.range[0]"
+          :max="max_year"
+          dense
+          solo-inverted
+          :rules="earliest_year"
+          @blur="adjust_years"
+          clearable
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col
+        ><v-subheader
+          ><label for="ending_year">Ending Year</label></v-subheader
+        ></v-col
+      >
+      <v-col>
+        <v-text-field
+          id="ending_year"
+          type="number"
+          v-model="max_year"
+          step="1"
+          :min="min_year"
+          :max="$root.settings.year.range[1]"
+          dense
+          solo-inverted
+          :rules="latest_year"
+          @blur="adjust_years"
+          clearable
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col
+        ><v-subheader
+          ><label for="average_toggle">Average</label></v-subheader
+        ></v-col
+      >
+      <v-col>
+        <v-switch
+          id="average_toggle"
+          v-model="$root.settings.average"
+          inset
+          hide-details
+        ></v-switch>
+      </v-col>
+    </v-row>
+
+    <v-subheader class="step-subheader"
+      >(<strong>3</strong>) Split by which variables?</v-subheader
     >
     <v-select
       label="Split values by"
@@ -27,6 +94,28 @@
       clearable
       hide-details
     ></v-select>
+    <v-row
+      class="filter-results"
+      v-if="$root.settings.split1"
+      @click="$root.settings.filter_showing = $root.settings.split1"
+      title="sort and filter"
+    >
+      <v-col>{{
+        this.split1_spec.displaying +
+          " / " +
+          this.split1_spec.levels +
+          " levels"
+      }}</v-col>
+      <v-col
+        >{{
+          "sorted by " +
+            this.split1_spec.sort.aspect +
+            " (" +
+            (this.split1_spec.sort.increasing ? "increasing" : "decreasing") +
+            ") "
+        }}<v-icon x-small>mdi-cog</v-icon></v-col
+      >
+    </v-row>
     <v-select
       v-if="
         $root.settings.split1 &&
@@ -47,6 +136,28 @@
       clearable
       hide-details
     ></v-select>
+    <v-row
+      class="filter-results"
+      v-if="$root.settings.split2"
+      @click="$root.settings.filter_showing = $root.settings.split2"
+      title="sort and filter"
+    >
+      <v-col>{{
+        this.split2_spec.displaying +
+          " / " +
+          this.split2_spec.levels +
+          " levels"
+      }}</v-col>
+      <v-col
+        >{{
+          "sorted by " +
+            this.split2_spec.sort.aspect +
+            " (" +
+            (this.split2_spec.sort.increasing ? "increasing" : "decreasing") +
+            ") "
+        }}<v-icon x-small>mdi-cog</v-icon></v-col
+      >
+    </v-row>
     <v-btn
       text
       block
@@ -56,222 +167,85 @@
     >
       Flip Splits <v-icon>mdi-shuffle-variant</v-icon>
     </v-btn>
-    <v-divider></v-divider>
-    <v-select
-      v-if="$root.settings.as_table"
-      label="Table Format"
-      :items="$root.settings.table_formats"
-      v-model="$root.settings.format_table"
-    ></v-select>
-    <v-select
-      v-else
-      label="Plot Type"
-      :items="$root.settings.plot_types"
-      v-model="$root.settings.plot_type"
-    ></v-select>
-    <v-expansion-panels class="data-menu-advanced" flat>
-      <v-expansion-panel>
-        <v-expansion-panel-header>Sort &amp; Filter</v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <v-range-slider
-            label="Year Range"
-            thumb-label="always"
-            v-model="$root.year_window"
-            :min="$root.settings.year.range[0]"
-            :max="$root.settings.year.range[1]"
-            :aria-valuetext="
-              $root.year_window[0] + ' to ' + $root.year_window[1]
-            "
-            :aria-valuenow="$root.year_window[0]"
-            inverse-label
-          ></v-range-slider>
-          <v-row v-if="$root.settings.by_year || sort.length > 1">
-            <v-subheader class="sort-header">Sort</v-subheader>
-            <v-card class="sort-container" elevation="4" outlined>
-              <table class="sort-table">
-                <thead>
-                  <tr>
-                    <td></td>
-                    <td>aspect</td>
-                    <td>increasing</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(sorter, i) in sort"
-                    :key="sorter.name + i"
-                    :class="
-                      sorter.name === 'year' && !$root.settings.by_year
-                        ? 'hide'
-                        : ''
-                    "
-                  >
-                    <td>{{ sorter.name }}</td>
-                    <td>
-                      <v-select
-                        aria-label="aspect"
-                        :disabled="sorter.name === 'year'"
-                        :items="['label', 'max', 'min', 'sum', 'mean']"
-                        v-model="sorter.specs.aspect"
-                        @change="refilter"
-                        dense
-                        hide-details
-                      ></v-select>
-                    </td>
-                    <td>
-                      <v-switch
-                        aria-label="increasing"
-                        v-model="sorter.specs.increasing"
-                        @change="refilter"
-                        hide-details
-                      ></v-switch>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </v-card>
-          </v-row>
-          <v-row v-if="$root.settings.split1">
-            <v-subheader class="sort-header">Filter</v-subheader>
-            <v-row class="criteria-row" v-for="(s, i) in this.splits" :key="i">
-              <v-btn
-                v-if="
-                  s &&
-                    !Object.prototype.hasOwnProperty.call(
-                      $root.$options.display.options,
-                      s
-                    )
-                "
-                color="primary"
-                block
-                @click="add_filter(s)"
-                >{{ "Filter " + s }}</v-btn
-              >
-              <v-card v-else-if="s" elevation="4" outlined>
-                <v-app-bar flat height="35" class="criteria-header">
-                  <v-card-title v-text="s"></v-card-title>
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    aria-label="remove filter"
-                    @click="remove_variable(s)"
-                    icon
-                    color="error"
-                    ><v-icon>
-                      mdi-close
-                    </v-icon></v-btn
-                  >
-                </v-app-bar>
-                <v-row
-                  class="conditions"
-                  v-for="(condition, i) in options[s]"
-                  :key="condition.aspect + condition.type + condition.value + i"
-                >
-                  <v-checkbox
-                    aria-label="toggle condition"
-                    v-model="condition.enabled"
-                    hide-details
-                    @change="refilter"
-                  ></v-checkbox>
-                  <v-select
-                    label="aspect"
-                    :items="['label', 'max', 'min', 'sum', 'mean']"
-                    v-model="condition.aspect"
-                    @change="refilter(this, condition)"
-                    dense
-                    hide-details
-                  ></v-select>
-                  <v-select
-                    label="type"
-                    :items="
-                      condition.aspect === 'label' ? ['=', '!='] : ['>', '<']
-                    "
-                    v-model="condition.type"
-                    @change="refilter(this, condition)"
-                    dense
-                    hide-details
-                  ></v-select>
-                  <v-select
-                    v-if="
-                      condition.aspect === 'label' &&
-                        (condition.type === '=' || condition.type === '!=')
-                    "
-                    label="values"
-                    :items="$root.$options.source.levels[s].label"
-                    v-model="condition.display_value"
-                    @blur="refilter(this, condition)"
-                    dense
-                    hide-details
-                    multiple
-                    clearable
-                  >
-                    <template v-slot:selection="{ index }">
-                      <span v-if="index === 0">{{
-                        condition.display_value.length
-                      }}</span>
-                    </template>
-                  </v-select>
-                  <v-text-field
-                    type="number"
-                    v-else
-                    label="value"
-                    v-model="condition.display_value"
-                    @change="refilter"
-                    dense
-                    hide-details
-                  ></v-text-field>
-                  <v-btn
-                    aria-label="remove condition"
-                    class="condition-remove"
-                    icon
-                    small
-                    color="error"
-                    @click="condition_remove(s, condition.type)"
-                    ><v-icon>
-                      mdi-close
-                    </v-icon></v-btn
-                  >
-                </v-row>
-                <v-card-actions class="condition-foot">
-                  <v-btn
-                    aria-label="add condition"
-                    class="add-condition"
-                    icon
-                    color="success"
-                    @click="condition_add(s)"
-                    ><v-icon>
-                      mdi-plus
-                    </v-icon></v-btn
-                  >
-                </v-card-actions>
-              </v-card>
-            </v-row>
-          </v-row>
-        </v-expansion-panel-content>
-      </v-expansion-panel>
-    </v-expansion-panels>
+    <div
+      v-if="
+        $root.settings.as_table ||
+          (!$root.settings.average &&
+            this.$root.year_window[0] !== this.$root.year_window[1]) ||
+          $root.settings.split1
+      "
+    >
+      <v-divider></v-divider>
+      <v-subheader>Display Options</v-subheader>
+      <v-select
+        v-if="$root.settings.split1 !== ''"
+        label="Category Format"
+        :items="$root.settings.category_formats"
+        v-model="$root.settings.format_category"
+      ></v-select>
+
+      <v-select
+        v-if="$root.settings.as_table"
+        label="Table Format"
+        :items="$root.settings.table_formats"
+        v-model="$root.settings.format_table"
+      ></v-select>
+      <div v-else>
+        <v-select
+          label="Plot Type"
+          :items="$root.settings.plot_types"
+          v-model="$root.settings.plot_type"
+        ></v-select>
+        <v-switch
+          label="Unlock Y-Axis Max"
+          :items="$root.settings.unlock_yaxis_max"
+          v-model="$root.settings.unlock_yaxis_max"
+          inset
+        ></v-switch>
+        <v-switch
+          label="Unlock Y-Axis Min"
+          :items="$root.settings.unlock_yaxis_min"
+          v-model="$root.settings.unlock_yaxis_min"
+          inset
+        ></v-switch>
+      </div>
+    </div>
   </v-card>
 </template>
 
 <script>
 function get_splits() {
-  var o = this.$root.$options.display.options,
+  var d = this.$root.$options.display.options,
     s = this.$root.settings;
-  this.splits[0] = this.splits[1] = "";
-  if (!Object.prototype.hasOwnProperty.call(o, "sort")) o.sort = {};
-  if (!Object.prototype.hasOwnProperty.call(o.sort, "year"))
-    o.sort.year = { aspect: "label", increasing: true };
-  this.sort = [{ name: "year", specs: o.sort.year }];
+  this.splits[0] = "";
+  this.splits[1] = "";
   if (s.split1) {
+    this.$root.validate_filter_sort(s.split1);
     this.splits[0] = s.split1;
-    if (!Object.prototype.hasOwnProperty.call(o.sort, s.split1))
-      o.sort[s.split1] = { aspect: "label", increasing: true };
-    this.sort.push({ name: s.split1, specs: o.sort[s.split1] });
-    if (s.split2) {
-      this.splits[1] = s.split2;
-      if (!Object.prototype.hasOwnProperty.call(o.sort, s.split2))
-        o.sort[s.split2] = { aspect: "label", increasing: true };
-      this.sort.push({ name: s.split2, specs: o.sort[s.split2] });
-    }
+    this.split1_spec.sort = d.sort[s.split1];
+    this.split1_spec.levels = this.$root.$options.source.variables[
+      s.split1
+    ].levels.length;
+    this.split1_spec.displaying = Object.prototype.hasOwnProperty.call(
+      this.$root.$options.source.view,
+      s.split1
+    )
+      ? this.$root.$options.source.view[s.split1].levels.length
+      : this.split1_spec.levels;
+  }
+  if (s.split2) {
+    this.$root.validate_filter_sort(s.split2);
+    this.splits[1] = s.split2;
+    this.split2_spec.sort = d.sort[s.split2];
+    this.split2_spec.levels = this.$root.$options.source.variables[
+      s.split2
+    ].levels.length;
+    this.split2_spec.displaying = Object.prototype.hasOwnProperty.call(
+      this.$root.$options.source.view,
+      s.split2
+    )
+      ? this.$root.$options.source.view[s.split2].levels.length
+      : this.split2_spec.levels;
   }
 }
 
@@ -279,11 +253,55 @@ export default {
   data: function() {
     return {
       splits: ["", ""],
-      sort: [],
-      options: this.$root.$options.display.options,
+      split1_spec: { displaying: 0, levels: 0, sort: {} },
+      split2_spec: { displaying: 0, levels: 0, sort: {} },
+      earliest_year: [
+        v =>
+          Number(v) >= this.$root.settings.year.range[0]
+            ? Number(v) <= this.max_year ||
+              "starting year cannot be greater than ending year"
+            : "earliest year is " + this.$root.settings.year.range[0],
+      ],
+      latest_year: [
+        v =>
+          Number(v) <= this.$root.settings.year.range[1]
+            ? Number(v) >= this.min_year ||
+              "ending year cannot be less than starting year"
+            : "latest year is " + this.$root.settings.year.range[1],
+      ],
     };
   },
+  computed: {
+    min_year: {
+      get: function() {
+        return this.$root.year_window[0];
+      },
+      set: function(v) {
+        this.$root.year_window = [Number(v), this.$root.year_window[1]];
+      },
+    },
+    max_year: {
+      get: function() {
+        return this.$root.year_window[1];
+      },
+      set: function(v) {
+        this.$root.year_window = [this.$root.year_window[0], Number(v)];
+      },
+    },
+  },
   methods: {
+    adjust_years: function() {
+      if (
+        this.min_year < this.$root.settings.year.range[0] ||
+        this.min_year > this.max_year
+      )
+        this.min_year = this.$root.settings.year.range[0];
+      if (
+        this.max_year > this.$root.settings.year.range[1] ||
+        this.max_year < this.min_year
+      )
+        this.max_year = this.$root.settings.year.range[1];
+    },
     flip_splits: function() {
       var s = this.$root.settings.split1;
       this.$root.settings.split1 = this.$root.settings.split2;
@@ -351,8 +369,7 @@ export default {
     },
   },
   watch: {
-    "$root.settings.split1": get_splits,
-    "$root.settings.split2": get_splits,
+    "$root.settings.active": get_splits,
     "$root.settings.data_menu_open": get_splits,
   },
   created() {
@@ -372,6 +389,7 @@ export default {
           i
         ];
     }
+    this.adjust_years();
   },
 };
 </script>
@@ -384,19 +402,36 @@ export default {
 .data-menu-advanced .v-expansion-panel-content__wrap {
   padding: 0.3em;
 }
-.v-application--is-ltr .v-input__slider--inverse-label .v-input__slot .v-label {
-  margin-left: 0 !important;
-  margin-right: 12px !important;
-}
 .v-messages__message {
   line-height: 1.2em;
 }
 </style>
 
 <style scoped>
-.v-input--range-slider {
-  margin: 2.5em 1em 0 0;
-  height: 40px;
+.filter-results {
+  font-size: 0.65em;
+  padding: 0.5em 0;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.filter-results .col:first-child {
+  max-width: 100px;
+}
+.filter-results .col:last-child {
+  text-align: right;
+}
+.v-subheader {
+  padding: 0;
+}
+.theme--dark.step-subheader.v-subheader {
+  color: #fff;
+}
+.theme--light.step-subheader.v-subheader {
+  color: #000;
+}
+.step-subheader {
+  font-size: 1rem;
+  opacity: 1;
 }
 .sort-header {
   height: 20px;
@@ -427,15 +462,11 @@ export default {
 .sort-table td {
   padding: 0.1em 0.5em;
 }
-.v-input--switch {
-  width: 65px;
-  margin: auto;
-}
 .sort-table .v-input {
   margin: 0;
 }
 .v-divider {
-  margin: 2em 0.5em 0.5em 0.5em;
+  margin: 3em 0.5em 0.5em 0.5em;
 }
 .criteria-header {
   padding: 0 0.5em;

@@ -12,8 +12,10 @@
         <v-card-title>Arrest Explorer</v-card-title>
         <v-card-subtitle
           >Illinois Criminal Justice Information Authority</v-card-subtitle
-        >
-      </v-col>
+        > </v-col
+      ><v-btn icon title="close" @click="$root.settings.sheet = ''"
+        ><v-icon>mdi-close</v-icon></v-btn
+      >
     </v-row>
     <v-card-text>
       <v-row class="button-blocks">

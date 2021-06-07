@@ -1,6 +1,12 @@
 <template>
   <v-card outlined>
-    <v-card-title>Options</v-card-title>
+    <v-row>
+      <v-card-title>Options</v-card-title>
+      <v-spacer></v-spacer
+      ><v-btn icon title="close" @click="$root.settings.sheet = ''"
+        ><v-icon>mdi-close</v-icon></v-btn
+      ></v-row
+    >
 
     <v-row>
       <v-col
@@ -107,24 +113,6 @@
     <v-row>
       <v-col
         ><v-subheader
-          ><label for="standardize_axis_toggle"
-            >Standardize Y-Axis Range</label
-          ></v-subheader
-        ></v-col
-      >
-      <v-col>
-        <v-switch
-          id="standardize_axis_toggle"
-          v-model="$root.settings.standardize_yaxis"
-          inset
-          hide-details
-        ></v-switch>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col
-        ><v-subheader
           ><label for="plot_type_select">Plot Type</label></v-subheader
         ></v-col
       >
@@ -189,6 +177,42 @@
           step="100"
           min="0"
         ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col
+        ><v-subheader
+          ><label for="unlock_yaxis_max_toggle"
+            >Optimize Y-Axis Upper Bound</label
+          ></v-subheader
+        ></v-col
+      >
+      <v-col>
+        <v-switch
+          id="unlock_yaxis_max_toggle"
+          v-model="$root.settings.unlock_yaxis_max"
+          inset
+          hide-details
+        ></v-switch>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col
+        ><v-subheader
+          ><label for="unlock_yaxis_min_toggle"
+            >Optimize Y-Axis Lower Bound</label
+          ></v-subheader
+        ></v-col
+      >
+      <v-col>
+        <v-switch
+          id="unlock_yaxis_min_toggle"
+          v-model="$root.settings.unlock_yaxis_min"
+          inset
+          hide-details
+        ></v-switch>
       </v-col>
     </v-row>
 

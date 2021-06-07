@@ -1,6 +1,6 @@
 <template>
   <div class="bottom-menu">
-    <div id="menu-sheet-wrap">
+    <div @click="toggle_if_outside" id="menu-sheet-wrap">
       <component
         class="menu-sheet-content"
         :is="$root.settings.sheet"
@@ -21,7 +21,7 @@
       </v-col>
       <v-col class="menu-bar-offset">
         <v-btn @click="toggleDataMenu()" :active="$root.settings.data_menu_open"
-          >Data<v-icon right>mdi-database-cog</v-icon></v-btn
+          >Data Menu</v-btn
         >
       </v-col>
     </v-row>
@@ -69,6 +69,10 @@ export default {
     this.menu_wrap = document.getElementById("menu-sheet-wrap");
   },
   methods: {
+    toggle_if_outside: function(e) {
+      if (e.target && e.target.id === "menu-sheet-wrap")
+        this.$root.settings.sheet = "";
+    },
     toggleSheet: function(sheet) {
       if (sheet && this.$root.settings.sheet !== sheet) {
         this.$root.gtag("event", "click", {
@@ -175,7 +179,6 @@ button[active="true"] {
 .menu-sheet-content {
   margin: 0 auto;
   max-width: 600px;
-  padding: 0.5em;
 }
 .theme--dark .v-card {
   background: #393939;

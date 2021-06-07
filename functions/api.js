@@ -12,7 +12,7 @@ const Dataview = require("../src/dataview.js"),
     format_json: ["raw", "arrays", "objects"],
     format_table: ["tall", "mixed", "wide"],
     format_category: ["labels", "indices", "codes"],
-    by_year: ["true", "false"],
+    average: [true, false],
     sort: 0,
   };
 
@@ -26,7 +26,7 @@ function make_name(d, o) {
     }
   }
   n += "-" + (o.format_table ? o.format_table.value : "mixed");
-  if (o.by_year && o.by_year.value !== "true") n += "-averages";
+  if (o.average && o.average.value !== "true") n += "-averages";
   n += "." + o.format_file.value;
   return n;
 }
@@ -39,7 +39,7 @@ exports.handler = async function(event) {
     o = {},
     r = {
       statusCode: 400,
-      headers: { "Content-Type": "text/plain" },
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
       body: "invalid request",
     };
   try {
@@ -53,6 +53,7 @@ exports.handler = async function(event) {
             ? k
             : k + "=" + event.queryStringParameters[k]);
       }
+    await data.prepare_view();
     o = data.parse_query(query);
     for (k in o)
       if (Object.prototype.hasOwnProperty.call(o, k)) {
@@ -131,7 +132,7 @@ exports.handler = async function(event) {
             }
             if (
               !Object.prototype.hasOwnProperty.call(o, "split") ||
-              o.split.value.indexOf(k) === -1
+              (k !== "year" && o.split.value.indexOf(k) === -1)
             ) {
               r.body =
                 k +
@@ -168,7 +169,7 @@ exports.handler = async function(event) {
       }
     await data.update(o);
     if (o.format_file.value === "json") {
-      r.headers["Content-Type"] = "application/json";
+      r.headers["Content-Type"] = "application/json; charset=utf-8";
       r.body = JSON.stringify(
         data.reformat(
           o.format_table ? o.format_table.value : "mixed",
@@ -177,7 +178,9 @@ exports.handler = async function(event) {
       );
     } else {
       r.headers["Content-Type"] =
-        "text/" + (o.format_file.value === "tsv" ? "plain" : "csv");
+        "text/" +
+        (o.format_file.value === "tsv" ? "plain" : "csv") +
+        "; charset=utf-8";
       r.headers["Content-Disposition"] =
         "attachment; filename=" + make_name(data, o);
       r.body = data.to_string(

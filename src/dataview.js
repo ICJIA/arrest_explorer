@@ -692,15 +692,6 @@ Dataview.prototype = {
         this.options[split],
         split
       );
-      if (!h[split].levels.length) {
-        for (i = this.options[split].length; i--; )
-          this.options[split][i].enabled = false;
-        h[split] = this.filter_levels(
-          this.raw[this.options.value][split].total,
-          void 0,
-          split
-        );
-      }
     }
     if (!Object.prototype.hasOwnProperty.call(h[within], "subgroups"))
       h[within].subgroups = {};
@@ -745,8 +736,7 @@ Dataview.prototype = {
         return void 0;
       }
     this.validate_options();
-    var i,
-      r = { slot: { value: this.options.value } },
+    var r = { slot: { value: this.options.value } },
       split1,
       split2;
     this.view = r;
@@ -783,15 +773,6 @@ Dataview.prototype = {
         this.options[split1],
         split1
       );
-      if (!r[split1].levels.length) {
-        for (i = this.options[split1].length; i--; )
-          this.options[split1][i].enabled = false;
-        r[split1] = this.filter_levels(
-          this.raw[this.options.value][split1].total,
-          void 0,
-          split1
-        );
-      }
       r[split1].label = split1;
       r.slot.split1 = { name: split1, data: r[split1].levels };
       if (
@@ -815,7 +796,7 @@ Dataview.prototype = {
     return r;
   },
   reformat: function(format, to_object) {
-    function init_getter(v, fun, rep, by_year, s2) {
+    function init_getter(v, fun, rep, average, s2) {
       const write = to_object
           ? function(p, n) {
               row[n] = p;
@@ -827,7 +808,7 @@ Dataview.prototype = {
           rep: function() {
             if (this.value) {
               write(
-                this.by_year ? this.value.filtered[this.row] : this.value.mean,
+                this.average ? this.value.mean : this.value.filtered[this.row],
                 header[this.adj]
               );
               if (this.rep === 1) {
@@ -844,9 +825,9 @@ Dataview.prototype = {
               if (!this.anys2)
                 write(
                   this.value[this.group].filtered.length > this.row
-                    ? this.by_year
-                      ? this.value[this.group].filtered[this.row]
-                      : this.value[this.group].mean
+                    ? this.average
+                      ? this.value[this.group].mean
+                      : this.value[this.group].filtered[this.row]
                     : 0,
                   header[nc]
                 );
@@ -874,11 +855,11 @@ Dataview.prototype = {
               write(
                 this.value[this.group].levels[this.level].filtered.length >
                   this.row
-                  ? this.by_year
-                    ? this.value[this.group].levels[this.level].filtered[
+                  ? this.average
+                    ? this.value[this.group].levels[this.level].mean
+                    : this.value[this.group].levels[this.level].filtered[
                         this.row
                       ]
-                    : this.value[this.group].levels[this.level].mean
                   : 0,
                 header[nc]
               );
@@ -895,9 +876,9 @@ Dataview.prototype = {
             for (var i = 0, n = this.groups; i < n; i++) {
               write(
                 this.value[i].filtered.length > this.row
-                  ? this.by_year
-                    ? this.value[i].filtered[this.row]
-                    : this.value[i].mean
+                  ? this.average
+                    ? this.value[i].mean
+                    : this.value[i].filtered[this.row]
                   : 0,
                 header[i + this.adj]
               );
@@ -914,9 +895,9 @@ Dataview.prototype = {
               write(
                 this.value[this.group].levels.length > i &&
                   this.value[this.group].levels[i].filtered.length > this.row
-                  ? this.by_year
-                    ? this.value[this.group].levels[i].filtered[this.row]
-                    : this.value[this.group].levels[i].mean
+                  ? this.average
+                    ? this.value[this.group].levels[i].mean
+                    : this.value[this.group].levels[i].filtered[this.row]
                   : 0,
                 header[i + this.adj]
               );
@@ -933,9 +914,9 @@ Dataview.prototype = {
                   this.value.length > j &&
                     this.value[j].levels.length > i &&
                     this.value[j].levels[i].filtered.length > i
-                    ? this.by_year
-                      ? this.value[j].levels[i].filtered[this.row]
-                      : this.value[j].levels[i].mean
+                    ? this.average
+                      ? this.value[j].levels[i].mean
+                      : this.value[j].levels[i].filtered[this.row]
                     : 0,
                   header[this.adj + j + i * g]
                 );
@@ -962,7 +943,7 @@ Dataview.prototype = {
         },
         s2: is_split2,
         anys2: s2,
-        by_year: by_year,
+        average: average,
         value: v.data,
         rep: rep || 1,
         repped: 0,
@@ -975,17 +956,17 @@ Dataview.prototype = {
           v.name === "year"
             ? 0
             : v.name === "total"
-            ? Number(by_year)
+            ? Number(!average)
             : is_split2
-            ? by_year + (format !== "wide")
-            : Number(by_year),
+            ? !average + (format !== "wide")
+            : Number(!average),
         n: nr,
         get: getter[fun],
       };
     }
     if (format === "mixed" && !s2) format = "tall";
-    if (!Object.prototype.hasOwnProperty.call(this.options, "by_year"))
-      this.options.by_year = true;
+    if (!Object.prototype.hasOwnProperty.call(this.options, "average"))
+      this.options.average = false;
     var j,
       i,
       s1 = Object.prototype.hasOwnProperty.call(this.view.slot, "split1"),
@@ -996,9 +977,9 @@ Dataview.prototype = {
       n1 = s1 ? this.view.slot.split1.data.length : 1,
       n2 = s2 ? this.view.slot.split2.data[0].labels.length : 1,
       rep = format === "wide" ? 1 : n1 * (format === "tall" ? n2 : 1),
-      nr = this.options.by_year
-        ? this.view.slot.year.data.filtered.length * rep
-        : rep,
+      nr = this.options.average
+        ? rep
+        : this.view.slot.year.data.filtered.length * rep,
       nc,
       s1f = format === "wide" ? "across" : "down",
       s2f =
@@ -1013,30 +994,30 @@ Dataview.prototype = {
           this.view.slot.year,
           "rep",
           rep,
-          this.options.by_year
+          this.options.average
         ),
         total: init_getter(
           this.view.slot.total,
           "rep",
           rep,
-          this.options.by_year
+          this.options.average
         ),
         split1: s1
           ? init_getter(
               this.view.slot.split1,
               s1f,
               format === "tall" && s2 ? n2 : 1,
-              this.options.by_year,
+              this.options.average,
               s2
             )
           : null,
         split2: s2
-          ? init_getter(this.view.slot.split2, s2f, 1, this.options.by_year)
+          ? init_getter(this.view.slot.split2, s2f, 1, this.options.average)
           : null,
       };
 
     // push to header row
-    if (this.options.by_year) header.push("Year");
+    if (!this.options.average) header.push("Year");
     if (s1) {
       if (s1f === "across") {
         if (!s2)
@@ -1076,7 +1057,7 @@ Dataview.prototype = {
     // write rows
     for (i = 0; i < nr; i++) {
       matrix.push((row = to_object ? {} : []));
-      if (this.options.by_year) map.year.get();
+      if (!this.options.average) map.year.get();
       if (s2f !== "across_full") map[s1 ? "split1" : "total"].get();
       if (s2) map.split2.get();
     }

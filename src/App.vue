@@ -53,6 +53,7 @@
     </v-col>
     <Intro />
     <Export />
+    <FilterSort />
   </v-app>
 </template>
 
@@ -61,6 +62,7 @@ import Header from "./components/Header";
 import DataDisplay from "./components/DataDisplay";
 import Intro from "./components/Sheets/Intro";
 import Export from "./components/Sheets/Export";
+import FilterSort from "./components/Sheets/FilterSort";
 import Menu from "./components/Menu";
 
 export default {
@@ -72,6 +74,7 @@ export default {
     },
     Intro,
     Export,
+    FilterSort,
     Menu,
   },
 };
@@ -88,7 +91,7 @@ export default {
 }
 #side-menu .v-card {
   overflow: hidden;
-  padding: 0 0.4em;
+  padding: 0 0.4em 3em 0.4em;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;

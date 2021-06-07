@@ -8,6 +8,10 @@
     <v-card>
       <v-card-title>
         <span class="headline">Export Image or Data</span>
+        <v-spacer></v-spacer
+        ><v-btn icon title="close" @click="$root.settings.export_open = false"
+          ><v-icon>mdi-close</v-icon></v-btn
+        >
       </v-card-title>
       <v-card-text>
         <v-col>
@@ -169,7 +173,14 @@ export default {
         {
           header: "Link to this plot:",
           base: this.$root.settings.url,
-          refresh: this.$root.display_query,
+          refresh: this.$root.display_query.bind(this, {
+            value: "arrests",
+            average: false,
+            as_table: false,
+            format_table: "mixed",
+            format_category: "labels",
+            plot_type: "line",
+          }),
           query: { parts: [], string: "" },
           embed: true,
         },
@@ -178,7 +189,7 @@ export default {
           base: this.$root.settings.url + "api/",
           refresh: this.$root.display_query.bind(this, {
             value: "arrests",
-            by_year: true,
+            average: false,
             format_file: "csv",
             format_table: "mixed",
             format_category: "labels",
@@ -199,7 +210,7 @@ export default {
       if (s.split1) n += "-" + s.split1;
       if (s.split2) n += "-" + s.split1;
       if (data_out) n += "-" + s.format_table;
-      if (!s.by_year) n += "-averages";
+      if (s.average) n += "-averages";
       n += "." + format;
       return n;
     },
@@ -305,7 +316,7 @@ export default {
         '<iframe title="Plot of Illinois ' +
           this.$root.$options.display.graphic[0].style.text +
           '" width="100%" height="' +
-          (this.$root.settings.by_year &&
+          (!this.$root.settings.average &&
           this.$root.settings.split2 &&
           this.$root.$options.source.view.slot.split2.data.length > 4
             ? 100 *

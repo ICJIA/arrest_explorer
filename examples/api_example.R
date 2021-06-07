@@ -12,14 +12,15 @@ arrest_explorer = function(value = 'arrests', split = '', su = '', sort = '',
     url = paste0(url, '&', p, '=', args[[p]])
   }
   message('reading in table from:\n', url)
-  read.csv(url)
+  res = GET(url)
+  if(res$status_code != 200){
+    stop('request failed:\n  ', content(res, 'text', encoding = 'utf-8'), call. = FALSE)
+  }else read.csv(text = content(res, 'text', encoding = 'utf-8'))
 }
 
-# load plotting package
-if(!require(splot)){
-  install.packages('splot')
-  library(splot)
-}
+# load http and plotting packages
+library(httr)
+library(splot)
 
 # examples
 

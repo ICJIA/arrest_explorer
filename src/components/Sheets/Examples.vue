@@ -1,6 +1,11 @@
 <template>
   <v-card outlined>
-    <v-card-title>Examples</v-card-title>
+    <v-row
+      ><v-card-title>Examples</v-card-title> <v-spacer></v-spacer
+      ><v-btn icon title="close" @click="$root.settings.sheet = ''"
+        ><v-icon>mdi-close</v-icon></v-btn
+      ></v-row
+    >
     <v-card-text>
       <v-row v-for="content in examples" :key="content.name">
         <p class="title text--primary">{{ content.question }}</p>
@@ -61,7 +66,7 @@ export default {
             {},
             {
               value: "arrests",
-              by_year: false,
+              average: true,
               split: ["gender"],
               plot_type: "bar",
             },
@@ -79,7 +84,6 @@ export default {
             {},
             {
               value: "arrests_per_arrestee",
-              by_year: true,
               split: ["age_group"],
               plot_type: "line",
             },
@@ -96,7 +100,7 @@ export default {
             {},
             {
               value: "arrest_charges",
-              by_year: false,
+              average: true,
               plot_type: "bar",
               split: ["offense_category"],
               offense_category: [
@@ -129,9 +133,6 @@ a {
 }
 .v-card__text .row {
   margin: 0 0 1em 0;
-}
-.menu-sheet-content {
-  padding: 0;
 }
 .v-application .title {
   font-size: 1.2rem !important;
