@@ -17,6 +17,7 @@ const format = /^(?:cs|c$|[jt])/,
   quotes = /%27|%22/g,
   aspect = { has: /\[/, name: /\[.*$/, aspect: /^.*\[|\]/g };
 
+// standardizes the format_file option, defaulting to "csv"
 function which_format(s) {
   switch (s.substr(0, 1).toLowerCase()) {
     case "j":
@@ -28,6 +29,7 @@ function which_format(s) {
   }
 }
 
+// standardizes the value option, defaulting to "arrests"
 function which_value(s) {
   return /per/.test(s)
     ? "arrests_per_arrestee"
@@ -38,6 +40,10 @@ function which_value(s) {
     : "arrests";
 }
 
+// Maps filter types to functions.
+// These are assigned to "fun" in a criteria object (entry in an options.['variable name'] array) by attach_criteria
+// - v: the value associated with a level (as passed to fun in check_value or check_object)
+// - o: the criteria object
 function conditions(o) {
   switch (o.type) {
     case ">":
@@ -71,6 +77,7 @@ function conditions(o) {
   }
 }
 
+// used by filter_levels to check years against a set of criteria
 function check_value(v, c) {
   if (!c.length) c = [c];
   for (var i = c.length; i--; ) {
@@ -79,6 +86,7 @@ function check_value(v, c) {
   return true;
 }
 
+// used by filter_levels to check split levels against a set of criteria
 function check_object(o, c) {
   if (!c.length) c = [c];
   for (var i = c.length; i--; ) {
@@ -93,11 +101,14 @@ function check_object(o, c) {
   return true;
 }
 
-function Dataview(data, levels, options, variables) {
+// used to preprocess data, allowing views to be specified
+// - data: main data object in the format of src/data.json
+// - levels: map of variable levels in the format of src/levels.json
+function Dataview(data, levels) {
   this.raw = data;
   this.dim = { nrow: 0, ncol: 0 };
   this.levels = levels || {};
-  this.options = options || {};
+  this.options = {};
   this.prepare_data = async function(data) {
     var vars = {
         values: { values: [], splits: {}, total: {} },
@@ -318,14 +329,13 @@ function Dataview(data, levels, options, variables) {
     return vars;
   };
   this.filter = this.vector_filter();
-  if (variables) {
-    this.variables = variables;
-  } else this.prepare_view();
+  this.prepare_view();
 }
 
 Dataview.prototype = {
   constructor: Dataview,
   options: {},
+  // resets options, applied any specified, then calls prepare_view
   update: async function(options) {
     var k;
     this.options = {};

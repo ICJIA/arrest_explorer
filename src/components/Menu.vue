@@ -1,27 +1,80 @@
 <template>
   <div class="bottom-menu">
-    <div @click="toggle_if_outside" id="menu-sheet-wrap">
-      <component
-        class="menu-sheet-content"
-        :is="$root.settings.sheet"
-      ></component>
-    </div>
+    <v-dialog
+      fullscreen
+      hide-overlay
+      v-model="$root.settings.app_menu_open"
+      class="menu-sheet-wrap"
+      transition="dialog-bottom-transition"
+    >
+      <v-card>
+        <v-app-bar fixed>
+          <v-tabs centered v-model="$root.settings.sheet">
+            <v-tab v-for="{ name, hint } in sheets" :key="name" :title="hint">{{
+              name
+            }}</v-tab>
+          </v-tabs>
+          <v-spacer></v-spacer>
+          <v-btn
+            plain
+            aria-label="close menu"
+            @click="$root.settings.app_menu_open = false"
+            ><v-icon>mdi-close</v-icon></v-btn
+          >
+        </v-app-bar>
+        <div class="dialog-tab-content">
+          <v-tabs-items v-model="$root.settings.sheet">
+            <v-tab-item v-for="sheet in sheets" :key="sheet.name">
+              <component
+                class="menu-sheet-content"
+                :is="sheet.name"
+              ></component>
+            </v-tab-item>
+          </v-tabs-items>
+        </div>
+      </v-card>
+    </v-dialog>
     <v-row no-gutters class="menu-bar">
       <v-col>
+        <v-btn plain title="menu" @click="$root.settings.app_menu_open = true">
+          <v-icon>mdi-menu</v-icon>
+        </v-btn>
+      </v-col>
+      <v-col>
         <div class="menu-bar-central">
+          <v-btn title="refesh data" @click="$root.refresh_data"
+            ><span class="menu-button-text">Refresh</span
+            ><v-icon right>mdi-reload</v-icon></v-btn
+          >
           <v-btn
-            v-for="{ name, hint } in sheets"
-            :key="name"
-            :title="hint"
-            :active="$root.settings.sheet === name"
-            @click="toggleSheet(name)"
-            >{{ name }}</v-btn
+            text
+            @click="$root.settings.as_table = !$root.settings.as_table"
+          >
+            <span class="menu-button-text">{{
+              $root.settings.as_table ? "Plot" : "Table"
+            }}</span>
+            <v-icon right>{{
+              $root.settings.as_table
+                ? "mdi-chart-" +
+                  ($root.settings.plot_type === "scatter"
+                    ? "scatter-plot"
+                    : $root.settings.plot_type)
+                : "mdi-table-large"
+            }}</v-icon>
+          </v-btn>
+          <v-btn text @click="$root.settings.export_open = true"
+            ><span class="menu-button-text">Export</span
+            ><v-icon right>mdi-download</v-icon></v-btn
           >
         </div>
       </v-col>
       <v-col class="menu-bar-offset">
-        <v-btn @click="toggleDataMenu()" :active="$root.settings.data_menu_open"
-          >Data Menu</v-btn
+        <v-btn
+          color="primary"
+          @click="toggleDataMenu()"
+          :active="$root.settings.data_menu_open"
+          ><span class="menu-button-text">Data Menu</span
+          ><v-icon small>mdi-database-cog</v-icon></v-btn
         >
       </v-col>
     </v-row>
@@ -32,16 +85,6 @@
 import About from "./Sheets/About";
 import Examples from "./Sheets/Examples";
 import Options from "./Sheets/Options";
-
-var watch = {
-  "$root.settings.sheet": {
-    handler: function(s) {
-      if (!this.menu_wrap)
-        this.menu_wrap = document.getElementById("menu-sheet-wrap");
-      if (this.menu_wrap) this.menu_wrap.style.bottom = (s ? 0 : -500) + "px";
-    },
-  },
-};
 
 export default {
   components: {
@@ -66,7 +109,6 @@ export default {
   mounted() {
     this.data_container = document.getElementById("data-container");
     this.data_menu = document.getElementById("side-menu");
-    this.menu_wrap = document.getElementById("menu-sheet-wrap");
   },
   methods: {
     toggle_if_outside: function(e) {
@@ -113,15 +155,36 @@ export default {
           this.$root.$el.getBoundingClientRect().width +
           (this.$root.settings.data_menu_open ? -320 : 0) +
           "px";
-        this.$root.resize_plot("100%");
       }
+      this.$root.resize_plot();
     },
   },
-  watch: watch,
 };
 </script>
 
 <style scoped>
+.v-dialog__content {
+  height: 100%;
+}
+.dialog-tab-content {
+  position: fixed;
+  top: 64px;
+  bottom: 0;
+  width: 100%;
+}
+.dialog-tab-content .v-tabs-items,
+.v-window-item {
+  height: 100%;
+}
+.menu-sheet-content {
+  padding: 1em 0 0 0;
+}
+.v-window-item {
+  overflow-y: auto;
+}
+.v-menu .v-btn {
+  display: block;
+}
 .bottom-menu {
   position: fixed;
   bottom: 0;
@@ -157,20 +220,63 @@ button[active="true"] {
   font-weight: bold;
   color: #8e8e8e;
 }
-#menu-sheet-wrap {
-  position: fixed;
-  max-height: 100%;
-  overflow-y: auto;
-  left: 0;
-  right: 320px;
-  bottom: -500px;
-  padding: 0 0 2.5em 0;
-  transition: bottom 0.3s cubic-bezier(0, 1.4, 0.01, 0.91);
-  -webkit-transition: bottom 0.3s cubic-bezier(0, 1.4, 0.01, 0.91);
+.v-bottom-sheet {
+  height: 100%;
 }
-@media screen and (max-width: 590px) {
+.v-bottom-sheet > .row > .col:first-of-type {
+  max-width: 200px;
+}
+.v-bottom-sheet > .row > .col > .v-list {
+  padding: 0;
+  position: absolute;
+  bottom: 0;
+}
+.row > .v-input {
+  margin-right: 4px;
+}
+.row > .v-input:last-of-type {
+  margin-right: 0px;
+}
+.menu-bar .col:first-of-type {
+  max-width: 70px;
+}
+@media screen and (max-width: 600px) {
+  .dialog-tab-content {
+    top: 56px;
+  }
+  .menu-button-text {
+    display: none;
+  }
+  .v-btn__content .v-icon--right {
+    margin: 0;
+  }
+  .menu-bar button.v-btn {
+    padding: 0;
+  }
+  .menu-bar button.v-btn,
   .menu-bar-offset {
-    max-width: 24%;
+    max-width: 70px;
+  }
+  .menu-bar-central {
+    margin: auto;
+  }
+  .col {
+    display: inline-flex;
+  }
+}
+@media screen and (max-width: 326px) {
+  .menu-bar button.v-btn,
+  .menu-bar-offset {
+    min-width: 30px;
+  }
+  .menu-bar .col:first-of-type,
+  .menu-bar .col:last-of-type {
+    max-width: 40px;
+  }
+  .menu-bar-central {
+    min-width: 90px;
+    width: 100%;
+    margin: auto;
   }
 }
 </style>
@@ -183,10 +289,6 @@ button[active="true"] {
 .theme--dark .v-card {
   background: #393939;
 }
-.theme--light .menu-sheet-content,
-.theme--light #side-menu .v-card {
-  background: #f9f9f9;
-}
 .theme--dark .menu-bar,
 .theme--dark .sort-table thead {
   background: #272727;
@@ -198,12 +300,6 @@ button[active="true"] {
   width: 100%;
   margin: 0;
 }
-.row > .v-input {
-  margin-right: 4px;
-}
-.row > .v-input:last-of-type {
-  margin-right: 0px;
-}
 .button-row > .col {
   padding: 0.5em;
 }
@@ -213,5 +309,16 @@ button[active="true"] {
 }
 .theme--light.v-expansion-panels > div.v-expansion-panel {
   background: #f5f5f5;
+}
+@media screen and (max-width: 380px) {
+  .v-slide-group__prev--disabled,
+  .v-slide-group__next--disabled {
+    display: none !important;
+  }
+  .v-tab {
+    padding: 0 !important;
+    font-size: 0.5em !important;
+    min-width: 70px !important;
+  }
 }
 </style>

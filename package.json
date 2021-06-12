@@ -16,12 +16,7 @@
   "devDependencies": {
     "@mdi/font": "latest",
     "@mdi/js": "latest",
-    "@vue/cli-plugin-babel": "latest",
-    "@vue/cli-plugin-eslint": "latest",
     "@vue/cli-service": "latest",
-    "babel-eslint": "latest",
-    "eslint": "latest",
-    "eslint-plugin-vue": "latest",
     "mocha": "latest",
     "sass": "latest",
     "sass-loader": "10.2.0",

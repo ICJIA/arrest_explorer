@@ -32,6 +32,7 @@
                   <v-row class="input-row">
                     <v-combobox
                       label="Width"
+                      aria-label="image width"
                       :items="['500%', '4096', '2560', '1920', '100%']"
                       :rules="valid_dim"
                       v-model="$root.settings.image_dim[0]"
@@ -40,6 +41,7 @@
                     <v-icon slot="append">mdi-close</v-icon>
                     <v-combobox
                       label="Height"
+                      aria-label="image height"
                       :items="['500%', '2160', '1440', '1080', '100%']"
                       :rules="valid_dim"
                       v-model="$root.settings.image_dim[1]"
@@ -131,10 +133,6 @@
         <span class="note" v-show="$root.settings.version"
           >Data updated {{ $root.settings.version }}</span
         >
-        <v-spacer></v-spacer>
-        <v-btn text @click="$root.settings.export_open = false">
-          Close
-        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

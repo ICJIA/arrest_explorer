@@ -1,6 +1,12 @@
 "use-strict";
 const Dataview = require("../src/dataview.js"),
   numcomp = /^[<>]/,
+  multispace = /\s{2,}/,
+  hyphen = /\s*-\s*/,
+  firstletter = /\b(\w)/g,
+  capitalize = function(m) {
+    return m.toUpperCase();
+  },
   data = new Dataview(
     require("../src/data.json"),
     require("../src/levels.json")
@@ -29,6 +35,13 @@ function make_name(d, o) {
   if (o.average && o.average.value !== "true") n += "-averages";
   n += "." + o.format_file.value;
   return n;
+}
+
+function standardize_level(l) {
+  return l
+    .replace(hyphen, " - ")
+    .replace(multispace, " ")
+    .replace(firstletter, capitalize);
 }
 
 exports.handler = async function(event) {
@@ -147,7 +160,11 @@ exports.handler = async function(event) {
                 }
               } else {
                 if ("string" === typeof o[k][i].value) {
-                  if (data.variables[k].levels.indexOf(o[k][i].value) === -1) {
+                  if (
+                    data.variables[k].levels.indexOf(
+                      standardize_level(o[k][i].value)
+                    ) === -1
+                  ) {
                     r.body =
                       "invalid level specified for " + k + ": " + o[k][i].value;
                     return r;
@@ -157,7 +174,11 @@ exports.handler = async function(event) {
                     if (
                       Object.prototype.hasOwnProperty.call(o[k][i].value, l)
                     ) {
-                      if (data.variables[k].levels.indexOf(l) === -1) {
+                      if (
+                        data.variables[k].levels.indexOf(
+                          standardize_level(l)
+                        ) === -1
+                      ) {
                         r.body = "invalid level specified for " + k + ": " + l;
                         return r;
                       }

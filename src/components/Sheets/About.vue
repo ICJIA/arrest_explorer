@@ -1,5 +1,5 @@
 <template>
-  <v-card outlined>
+  <div>
     <v-row>
       <v-col cols="4">
         <v-img
@@ -12,10 +12,8 @@
         <v-card-title>Arrest Explorer</v-card-title>
         <v-card-subtitle
           >Illinois Criminal Justice Information Authority</v-card-subtitle
-        > </v-col
-      ><v-btn icon title="close" @click="$root.settings.sheet = ''"
-        ><v-icon>mdi-close</v-icon></v-btn
-      >
+        >
+      </v-col>
     </v-row>
     <v-card-text>
       <v-row class="button-blocks">
@@ -64,7 +62,7 @@
         >Data updated {{ $root.settings.version }}</span
       >
     </v-card-text>
-  </v-card>
+  </div>
 </template>
 
 <style scoped>

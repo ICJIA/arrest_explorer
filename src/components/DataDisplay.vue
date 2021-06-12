@@ -38,10 +38,10 @@
           : "Between " +
             $root.year_window[0] +
             " and " +
-            $root.year_window[1]) + " there where"
+            $root.year_window[1]) + " there were"
       }}
     </p>
-    <p class="primary--text text-h2">
+    <p class="primary--text text-h4">
       {{ format_number($root.settings.value_mean) }}
     </p>
     <p class="text-h4">
@@ -82,9 +82,6 @@ export default {
   width: 100%;
   text-align: center;
   padding: 0.5em 0 0 0;
-}
-.average-display .text-h2 {
-  padding: 0.5em;
 }
 .text-subtitle-1 {
   text-align: center;

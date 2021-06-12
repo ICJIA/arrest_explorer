@@ -4,11 +4,10 @@
       >Reset View</v-btn
     >
     <v-subheader main class="step-subheader"
-      >(<strong>1</strong>) Which values?</v-subheader
+      >(<strong>1</strong>) Which data?</v-subheader
     >
     <v-select
-      style="padding:0"
-      aria-label="primary value"
+      aria-label="primary data"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
       hint="View arrest_charges for crime-related variables, and others for demographic variables."
@@ -69,7 +68,7 @@
     <v-row>
       <v-col
         ><v-subheader
-          ><label for="average_toggle">Average</label></v-subheader
+          ><label for="average_toggle">Average over Years</label></v-subheader
         ></v-col
       >
       <v-col>
@@ -85,82 +84,12 @@
     <v-subheader class="step-subheader"
       >(<strong>3</strong>) Split by which variables?</v-subheader
     >
-    <v-select
-      label="Split values by"
-      :items="
-        $root.$options.source.variables.values.splits[$root.settings.value]
-      "
-      v-model="$root.settings.split1"
-      clearable
-      hide-details
-    ></v-select>
-    <v-row
-      class="filter-results"
-      v-if="$root.settings.split1"
-      @click="$root.settings.filter_showing = $root.settings.split1"
-      title="sort and filter"
-    >
-      <v-col>{{
-        this.split1_spec.displaying +
-          " / " +
-          this.split1_spec.levels +
-          " levels"
-      }}</v-col>
-      <v-col
-        >{{
-          "sorted by " +
-            this.split1_spec.sort.aspect +
-            " (" +
-            (this.split1_spec.sort.increasing ? "increasing" : "decreasing") +
-            ") "
-        }}<v-icon x-small>mdi-cog</v-icon></v-col
-      >
-    </v-row>
-    <v-select
-      v-if="
-        $root.settings.split1 &&
-          $root.$options.source.variables[$root.settings.split1].splits[
-            $root.settings.value
-          ] &&
-          $root.$options.source.variables[$root.settings.split1].splits[
-            $root.settings.value
-          ].length
-      "
-      label="and by"
-      :items="
-        $root.$options.source.variables[$root.settings.split1].splits[
-          $root.settings.value
-        ]
-      "
-      v-model="$root.settings.split2"
-      clearable
-      hide-details
-    ></v-select>
-    <v-row
-      class="filter-results"
-      v-if="$root.settings.split2"
-      @click="$root.settings.filter_showing = $root.settings.split2"
-      title="sort and filter"
-    >
-      <v-col>{{
-        this.split2_spec.displaying +
-          " / " +
-          this.split2_spec.levels +
-          " levels"
-      }}</v-col>
-      <v-col
-        >{{
-          "sorted by " +
-            this.split2_spec.sort.aspect +
-            " (" +
-            (this.split2_spec.sort.increasing ? "increasing" : "decreasing") +
-            ") "
-        }}<v-icon x-small>mdi-cog</v-icon></v-col
-      >
-    </v-row>
+    <DataSplitDisplay :which="'split1'" />
+    <DataSplitDisplay :which="'split2'" />
     <v-btn
       text
       block
+      large
       v-if="$root.settings.split2"
       @click="flip_splits"
       color="primary"
@@ -214,47 +143,14 @@
 </template>
 
 <script>
-function get_splits() {
-  var d = this.$root.$options.display.options,
-    s = this.$root.settings;
-  this.splits[0] = "";
-  this.splits[1] = "";
-  if (s.split1) {
-    this.$root.validate_filter_sort(s.split1);
-    this.splits[0] = s.split1;
-    this.split1_spec.sort = d.sort[s.split1];
-    this.split1_spec.levels = this.$root.$options.source.variables[
-      s.split1
-    ].levels.length;
-    this.split1_spec.displaying = Object.prototype.hasOwnProperty.call(
-      this.$root.$options.source.view,
-      s.split1
-    )
-      ? this.$root.$options.source.view[s.split1].levels.length
-      : this.split1_spec.levels;
-  }
-  if (s.split2) {
-    this.$root.validate_filter_sort(s.split2);
-    this.splits[1] = s.split2;
-    this.split2_spec.sort = d.sort[s.split2];
-    this.split2_spec.levels = this.$root.$options.source.variables[
-      s.split2
-    ].levels.length;
-    this.split2_spec.displaying = Object.prototype.hasOwnProperty.call(
-      this.$root.$options.source.view,
-      s.split2
-    )
-      ? this.$root.$options.source.view[s.split2].levels.length
-      : this.split2_spec.levels;
-  }
-}
+import DataSplitDisplay from "./DataSplitDisplay.vue";
 
 export default {
+  components: {
+    DataSplitDisplay,
+  },
   data: function() {
     return {
-      splits: ["", ""],
-      split1_spec: { displaying: 0, levels: 0, sort: {} },
-      split2_spec: { displaying: 0, levels: 0, sort: {} },
       earliest_year: [
         v =>
           Number(v) >= this.$root.settings.year.range[0]
@@ -307,70 +203,6 @@ export default {
       this.$root.settings.split1 = this.$root.settings.split2;
       this.$root.settings.split2 = s;
     },
-    add_filter: function(v) {
-      if (!Object.prototype.hasOwnProperty.call(this.options, v)) {
-        this.options[v] = [
-          {
-            enabled: true,
-            aspect: "mean",
-            type: ">",
-            display_value: 0,
-            value: 0,
-          },
-        ];
-        this.refilter();
-      }
-      get_splits.bind(this)();
-    },
-    remove_variable: function(v) {
-      if (Object.prototype.hasOwnProperty.call(this.options, v)) {
-        delete this.options[v];
-        get_splits.bind(this)();
-        this.$root.queue_update();
-      }
-    },
-    condition_remove: function(variable, type) {
-      if (Object.prototype.hasOwnProperty.call(this.options, variable)) {
-        for (var i = this.options[variable].length; i--; )
-          if (this.options[variable][i].type === type) {
-            this.options[variable].splice(i, 1);
-            break;
-          }
-        get_splits.bind(this)();
-        this.$root.queue_update();
-      }
-    },
-    condition_add: function(variable) {
-      if (Object.prototype.hasOwnProperty.call(this.options, variable)) {
-        for (var i = this.options[variable].length; i--; )
-          if (this.options[variable][i].type === "") return;
-        this.options[variable].push({
-          aspect: "",
-          type: "",
-          display_value: "",
-        });
-        get_splits.bind(this)();
-      }
-    },
-    refilter: function(e, c) {
-      if (c) {
-        if (c.aspect === "label") {
-          if (c.type !== "!=") c.type = "=";
-          if (!c.display_value.push) c.display_value = "";
-          c.value = c.display_value;
-        } else {
-          if (c.type !== "<") c.type = ">";
-          if (c.display_value.push) c.display_value = 0;
-        }
-        c.enabled = true;
-      }
-      get_splits.bind(this)();
-      this.$root.queue_update();
-    },
-  },
-  watch: {
-    "$root.settings.active": get_splits,
-    "$root.settings.data_menu_open": get_splits,
   },
   created() {
     for (var i = this.$root.$options.source.raw.year.length; i--; ) {
@@ -408,17 +240,11 @@ export default {
 </style>
 
 <style scoped>
-.filter-results {
-  font-size: 0.65em;
-  padding: 0.5em 0;
-  cursor: pointer;
-  opacity: 0.7;
+.v-text-field {
+  margin-top: 0;
 }
-.filter-results .col:first-child {
-  max-width: 100px;
-}
-.filter-results .col:last-child {
-  text-align: right;
+#side-menu .row + .row {
+  margin-top: 0;
 }
 .v-subheader {
   padding: 0;
@@ -465,48 +291,8 @@ export default {
 .sort-table .v-input {
   margin: 0;
 }
-.v-divider {
-  margin: 3em 0.5em 0.5em 0.5em;
-}
-.criteria-header {
-  padding: 0 0.5em;
-}
-.criteria-row {
-  margin: 0.3em 0;
-  padding: 0;
-}
-.criteria-row .v-card {
-  width: 100%;
-}
 .v-card__title {
   padding: 0;
   font-weight: normal;
-}
-.conditions div {
-  width: 18%;
-  padding: 0.6em 0 0 0.1em;
-  display: inline-block;
-}
-.conditions .v-input:nth-child(1) {
-  width: 12%;
-  margin: 0 -6px 0 0;
-}
-.conditions .v-input:nth-child(2) {
-  width: 18%;
-}
-.conditions .v-input:nth-child(3) {
-  width: 9%;
-}
-.v-input--checkbox {
-  margin: 0;
-}
-.add-condition {
-  margin: auto;
-}
-.condition-foot {
-  padding: 0;
-}
-.condition-remove {
-  margin: 0.8em 0 0 0;
 }
 </style>

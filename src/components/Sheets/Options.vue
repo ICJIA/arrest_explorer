@@ -1,13 +1,6 @@
 <template>
-  <v-card outlined>
-    <v-row>
-      <v-card-title>Options</v-card-title>
-      <v-spacer></v-spacer
-      ><v-btn icon title="close" @click="$root.settings.sheet = ''"
-        ><v-icon>mdi-close</v-icon></v-btn
-      ></v-row
-    >
-
+  <div>
+    <p>Site Settings</p>
     <v-row>
       <v-col
         ><v-subheader
@@ -63,6 +56,25 @@
     <v-row>
       <v-col
         ><v-subheader
+          ><label for="renderer_toggle">Plot as SVG</label></v-subheader
+        ></v-col
+      >
+      <v-col>
+        <v-switch
+          id="renderer_toggle"
+          v-model="$root.settings.svg"
+          inset
+          hide-details
+        ></v-switch>
+      </v-col>
+    </v-row>
+
+    <v-divider></v-divider>
+    <p>Display Settings</p>
+
+    <v-row>
+      <v-col
+        ><v-subheader
           ><label for="category_format_select"
             >Category Format</label
           ></v-subheader
@@ -81,6 +93,22 @@
     <v-row>
       <v-col
         ><v-subheader
+          ><label for="table_toggle">Display as Table</label></v-subheader
+        ></v-col
+      >
+      <v-col>
+        <v-switch
+          id="table_toggle"
+          v-model="$root.settings.as_table"
+          inset
+          hide-details
+        ></v-switch>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col
+        ><v-subheader
           ><label for="table_format_select">Table Format</label></v-subheader
         ></v-col
       >
@@ -91,22 +119,6 @@
           v-model="$root.settings.format_table"
           hide-details
         ></v-select>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col
-        ><v-subheader
-          ><label for="renderer_toggle">Plot as SVG</label></v-subheader
-        ></v-col
-      >
-      <v-col>
-        <v-switch
-          id="renderer_toggle"
-          v-model="$root.settings.svg"
-          inset
-          hide-details
-        ></v-switch>
       </v-col>
     </v-row>
 
@@ -184,7 +196,7 @@
       <v-col
         ><v-subheader
           ><label for="unlock_yaxis_max_toggle"
-            >Optimize Y-Axis Upper Bound</label
+            >Unlock Y-Axis Max</label
           ></v-subheader
         ></v-col
       >
@@ -202,7 +214,7 @@
       <v-col
         ><v-subheader
           ><label for="unlock_yaxis_min_toggle"
-            >Optimize Y-Axis Lower Bound</label
+            >Unlock Y-Axis Min</label
           ></v-subheader
         ></v-col
       >
@@ -219,7 +231,7 @@
     <v-row>
       <v-btn block @click="reset" class="error">Reset Options</v-btn>
     </v-row>
-  </v-card>
+  </div>
 </template>
 
 <script>

@@ -1,11 +1,5 @@
 <template>
-  <v-card outlined>
-    <v-row
-      ><v-card-title>Examples</v-card-title> <v-spacer></v-spacer
-      ><v-btn icon title="close" @click="$root.settings.sheet = ''"
-        ><v-icon>mdi-close</v-icon></v-btn
-      ></v-row
-    >
+  <div>
     <v-card-text>
       <v-row v-for="content in examples" :key="content.name">
         <p class="title text--primary">{{ content.question }}</p>
@@ -48,7 +42,7 @@
         </p>
       </v-row>
     </v-card-text>
-  </v-card>
+  </div>
 </template>
 
 <script>

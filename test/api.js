@@ -51,7 +51,7 @@ describe("When entering invalid queries...", async function() {
   });
   it("invalid filter level fails", async function() {
     res = await api({
-      queryStringParameters: { split: "race", race: "Asian,white,wdw" },
+      queryStringParameters: { split: "race", race: "wdw,Asian,white" },
     });
     assert(res.body === "invalid level specified for race: wdw");
   });

@@ -17,37 +17,6 @@
           <DataDisplay />
         </div>
         <div id="side-menu"><DataSheet /></div>
-        <v-card
-          elevation="4"
-          floating
-          dense
-          bottom
-          absolute
-          class="floating-menu"
-        >
-          <v-btn-toggle rounded>
-            <v-btn title="refesh data" @click="$root.refresh_data" icon
-              ><v-icon>mdi-reload</v-icon></v-btn
-            >
-            <v-btn
-              text
-              @click="$root.settings.as_table = !$root.settings.as_table"
-            >
-              {{ $root.settings.as_table ? "Plot" : "Table" }}
-              <v-icon right>{{
-                $root.settings.as_table
-                  ? "mdi-chart-" +
-                    ($root.settings.plot_type === "scatter"
-                      ? "scatter-plot"
-                      : $root.settings.plot_type)
-                  : "mdi-table-large"
-              }}</v-icon>
-            </v-btn>
-            <v-btn text @click="$root.settings.export_open = true"
-              >Export<v-icon right>mdi-download</v-icon></v-btn
-            >
-          </v-btn-toggle>
-        </v-card>
       </v-row>
       <v-row no-gutters><Menu /></v-row>
     </v-col>
@@ -91,20 +60,13 @@ export default {
 }
 #side-menu .v-card {
   overflow: hidden;
-  padding: 0 0.4em 3em 0.4em;
+  padding: 0 0.4em 0.4em 0.4em;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
 .v-input--switch {
   margin: 0;
-}
-.floating-menu {
-  position: absolute;
-  height: 48px;
-  right: 20px;
-  bottom: 1em;
-  border-radius: 25px;
 }
 .v-btn-toggle > .v-btn.v-btn--active {
   opacity: 0.8;
@@ -126,7 +88,7 @@ export default {
   bottom: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0.3em 0 4em 0;
+  padding: 0.3em 0 0 0;
 }
 .data-wrap {
   position: fixed;
@@ -157,6 +119,12 @@ html {
 }
 .col {
   padding: 0;
+}
+.v-divider {
+  margin: 2em 0 0 0;
+}
+.theme--light.v-select .v-select__selections {
+  color: #000;
 }
 .api-display {
   text-align: center;
@@ -233,12 +201,6 @@ html {
 @media screen and (max-width: 590px) {
   #menu-sheet-wrap {
     width: 100%;
-  }
-}
-@media screen and (max-width: 330px) {
-  .menu-bar span,
-  .floating-menu span {
-    font-size: 0.8em;
   }
 }
 </style>

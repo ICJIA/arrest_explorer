@@ -8,38 +8,52 @@
     <v-card>
       <v-card-title>
         <span class="headline"
-          >Sort and Filter
+          >Sort &amp; Filter
           <strong>{{ $root.settings.filter_showing }}</strong></span
         >
-        <v-spacer></v-spacer
+        <v-spacer></v-spacer><v-btn text @click="reset_filter"> Reset </v-btn
         ><v-btn icon title="close" @click="$root.settings.filter_open = false"
           ><v-icon>mdi-close</v-icon></v-btn
         >
       </v-card-title>
-      <v-card-text v-if="filter.length">
+      <v-card-text v-if="$root.settings.filter_showing && filter.length">
         <v-row>
           <v-subheader class="inline-subheader">Sort by</v-subheader>
-          <v-btn
-            label="sort direction"
-            @click="sort.increasing = !sort.increasing"
-            text
-            >{{ sort.increasing ? "increasing" : "decreasing" }}</v-btn
-          >
           <v-select
             aria-label="sort aspect"
-            :items="['label', 'mean']"
-            v-model="sort.aspect"
-            @change="$root.update_data"
+            :items="sort.aspects"
+            v-model="sort.aspect_proxy"
+            @change="update_direction"
             dense
             hide-details
-            solo-inverted
-            >{{ sort.aspect }}</v-select
+            style="max-width: 255px"
+            >{{ sort.aspect_proxy }}</v-select
           >
+          <v-select
+            aria-label="sort direction"
+            :items="
+              sort.aspect === 'label'
+                ? ['alphabetical', 'reverse alphabetical']
+                : ['increasing', 'decreasing']
+            "
+            v-model="sort.direction"
+            @change="update_increasing"
+            dense
+            hide-details
+            style="max-width: 255px"
+          ></v-select>
         </v-row>
         <v-row class="levels-row">
           <v-col>
             <v-combobox
-              label="include levels"
+              :label="
+                'Include only ' +
+                  (selected_levels.length === 1 ? 'this ' : 'these ') +
+                  $root.variable_parts[$root.settings.filter_showing][
+                    selected_levels.length === 1 ? 'single' : 'multi'
+                  ] +
+                  ':'
+              "
               v-model="selected_levels"
               :items="levels"
               chips
@@ -60,29 +74,37 @@
           >
         </v-row>
         <v-subheader>{{
-          "Exclude levels based on average " +
+          "Then exclude those " +
+            $root.variable_parts[$root.settings.filter_showing][
+              selected_levels.length === 1 ? "single" : "multi"
+            ] +
+            " based on " +
+            (selected_levels.length === 1 ? "its" : "their") +
+            " average " +
             $root.settings.value +
-            " per year:"
+            ":"
         }}</v-subheader>
         <v-row>
           <v-text-field
-            label="min average per year"
+            label="min average"
             v-model="min"
             type="number"
             dense
             clearable
             :step="step_size"
             @change="refilter"
+            style="max-width: 150px"
           ></v-text-field>
           <v-spacer></v-spacer>
           <v-text-field
-            label="max average per year"
+            label="max average"
             v-model="max"
             type="number"
             dense
             clearable
             :step="step_size"
             @change="refilter"
+            style="max-width: 150px"
           ></v-text-field>
         </v-row>
         <v-row class="level-average-hist">
@@ -124,15 +146,6 @@
           </v-row>
         </v-row>
       </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn text @click="reset_filter">
-          Reset
-        </v-btn>
-        <v-btn text @click="$root.settings.filter_showing = ''">
-          Close
-        </v-btn>
-      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
@@ -191,7 +204,10 @@ export default {
     reset_filter: function() {
       this.min = void 0;
       this.max = void 0;
-      this.selected_levels =
+      this.selected_levels = this.$root.get_filter(
+        this.$root.settings.filter_showing,
+        "="
+      ).display_value =
         this.$root.settings.filter_showing === "county"
           ? [
               "cook chicago",
@@ -244,6 +260,27 @@ export default {
         if (e && e.lastElementChild) e.lastElementChild.scrollIntoView();
       }, 1);
     },
+    update_direction: function(label) {
+      this.sort.aspect =
+        this.sort.aspects.indexOf(this.sort.aspect_proxy) === 0
+          ? "label"
+          : "mean";
+      this.sort.direction =
+        this.sort.aspect === "label"
+          ? this.sort.increasing
+            ? "alphabetical"
+            : "reverse alphabetical"
+          : this.sort.increasing
+          ? "increasing"
+          : "decreasing";
+      if ("string" === typeof label) this.$root.update_data();
+    },
+    update_increasing: function() {
+      this.sort.increasing =
+        this.sort.direction === "increasing" ||
+        this.sort.direction === "alphabetical";
+      this.$root.update_data();
+    },
   },
   watch: {
     "$root.settings.filter_showing": function() {
@@ -255,10 +292,10 @@ export default {
         this.filter = this.$root.$options.display.options[
           this.$root.settings.filter_showing
         ];
-
         this.sort = this.$root.$options.display.options.sort[
           this.$root.settings.filter_showing
         ];
+        this.update_direction();
         this.levels = [];
         for (
           var i = this.$root.$options.source.variables[
@@ -291,17 +328,30 @@ export default {
     selected_levels: function() {
       this.refilter();
     },
-    sort: {
-      handler: function() {
-        this.$root.update_data();
-      },
-      deep: true,
-    },
   },
 };
 </script>
 
 <style scoped>
+.v-input--dense.v-select:last-of-type {
+  margin-left: 0.5em;
+}
+.v-card {
+  max-height: 100%;
+}
+.v-card__text {
+  max-height: 70%;
+  overflow-y: auto;
+}
+.v-application .text-h5 {
+  line-height: 2.25rem;
+}
+.v-chip.v-size--default {
+  white-space: break-spaces;
+  height: auto;
+  min-height: 32px;
+  display: inline-grid;
+}
 .theme--dark .mean-bar {
   background: #999;
 }
@@ -320,10 +370,11 @@ export default {
 .level-mean-display .row {
   text-align: center;
   display: block;
+  margin: 0;
 }
 .level-mean-bar {
   position: relative;
-  height: 15em;
+  height: 10em;
 }
 .level-mean-bar div {
   width: 100%;
@@ -332,7 +383,7 @@ export default {
   bottom: 0;
 }
 .v-subheader {
-  padding: 0;
+  padding: 0.3em 0.5em 0 0;
 }
 .inline-subheader {
   padding-bottom: 1em;
@@ -348,12 +399,16 @@ export default {
 .level-average-hist {
   padding: 0.3em 1em;
   border-radius: 10px;
-  min-height: 330px;
+  min-height: 230px;
 }
 .theme--dark .level-average-hist {
   background: #272727;
 }
 .theme--light .level-average-hist {
   background: #e0e0e0;
+}
+.row,
+.row + .row {
+  margin: 0.5em 0 0 0;
 }
 </style>

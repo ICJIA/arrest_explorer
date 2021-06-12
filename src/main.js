@@ -58,6 +58,18 @@ const data_options = [
         ],
       },
     ],
+  },
+  variable_parts = {
+    county: { single: "county", multi: "counties" },
+    race: { single: "race group", multi: "race groups" },
+    age_group: { single: "age group", multi: "age groups" },
+    gender: { single: "gender group", multi: "gender groups" },
+    crime_type: { single: "crime type", multi: "crime types" },
+    offense_category: {
+      single: "offense category",
+      multi: "offense categories",
+    },
+    offense_class: { single: "offense class", multi: "offense classes" },
   };
 
 var store_options = [
@@ -93,6 +105,7 @@ var store_options = [
     split2: "",
     sheet: "",
     data_menu_open: false,
+    app_menu_open: false,
     as_table: false,
     value_mean: 0,
     theme_dark: false,
@@ -100,7 +113,7 @@ var store_options = [
     format_json: "arrays",
     format_table: "mixed",
     format_category: "labels",
-    format_image: "svg",
+    format_image: "png",
     image_dim: ["100%", "100%"],
     animation_time: 700,
     animation_type: "elasticOut",
@@ -108,7 +121,7 @@ var store_options = [
     version: rawdata.version,
     send_data: false,
     repo: "https://github.com/ICJIA/arrest_explorer",
-    bottom_offset: 190,
+    bottom_offset: 120,
     unlock_yaxis_min: false,
     unlock_yaxis_max: false,
     remember_view: false,
@@ -235,6 +248,24 @@ new Vue({
         return l.length > 16 ? l.substr(0, 14) + "\u2026" : l;
       },
     },
+    specs: {
+      split1: {
+        entry: "split1",
+        name: "",
+        displaying: 0,
+        levels: 0,
+        vars: [],
+        sort: {},
+      },
+      split2: {
+        entry: "split2",
+        name: "",
+        displaying: 0,
+        levels: 0,
+        vars: [],
+        sort: {},
+      },
+    },
     tooltip: {
       trigger: "axis",
       transitionDuration: 0,
@@ -271,6 +302,7 @@ new Vue({
     grid: [],
   },
   data: {
+    variable_parts,
     settings,
     table: {},
   },
@@ -457,19 +489,11 @@ new Vue({
     intervalScaleNiceTicks: intervalScaleNiceTicks,
     display_query: function(ex, d, all) {
       d = d || this.$options.display.options;
-      var api = !all && ex,
-        parts = api
-          ? []
-          : [
-              {
-                slot: "plot_type",
-                type: "=",
-                value: Object.prototype.hasOwnProperty.call(d, "plot_type")
-                  ? d.plot_type
-                  : this.settings.plot_type,
-              },
-            ],
-        string = api ? "" : "?plot_type=" + parts[0].value,
+      var api =
+          !all &&
+          (!ex || !Object.prototype.hasOwnProperty.call(ex, "plot_type")),
+        parts = [],
+        string = "",
         k,
         l,
         i;
@@ -496,6 +520,10 @@ new Vue({
             this.settings.format_json !== "raw")
         )
           add_settings_param("format_table", this.settings.format_table);
+      } else {
+        if (this.settings.plot_type !== "line")
+          add_settings_param("plot_type", this.settings.plot_type);
+        if (this.settings.svg) add_settings_param("svg", true);
       }
       ex = ex || {};
       for (k in d)
@@ -555,9 +583,10 @@ new Vue({
                       (all ||
                         ((k === this.$root.settings.split1 ||
                           k === this.$root.settings.split2) &&
-                          d[k][i].display_value.length <
-                            this.$root.$options.source.variables[k].levels
-                              .length) ||
+                          (d[k][i].aspect !== "label" ||
+                            d[k][i].display_value.length <
+                              this.$root.$options.source.variables[k].levels
+                                .length)) ||
                         !Object.prototype.hasOwnProperty.call(
                           this.$root.$options.source.variables,
                           k
@@ -779,6 +808,9 @@ new Vue({
               }
             }
           };
+        d.specs.split1.vars = this.$options.source.variables.values.splits[
+          s.value
+        ];
         // validate splits
         if (s.split1) {
           if (
@@ -973,9 +1005,12 @@ new Vue({
           }
           if (s.split1) {
             this.validate_filter_sort(s.split1);
+            this.fill_spec("split1");
             add_to_subheading(1);
+            d.specs.split2.vars = vars[s.split1].splits[s.value];
             if (s.split2) {
               this.validate_filter_sort(s.split2);
+              this.fill_spec("split2");
               add_to_subheading(2);
               d.legend.data = sd[s.split2].display;
               if (!s.average) {
@@ -991,7 +1026,7 @@ new Vue({
                   : 50;
                 pos = d.title[0].top + 33;
                 step = Math.max(
-                  130,
+                  150,
                   (dim.height - (this.settings.bottom_offset + pos + 10)) /
                     sd[s.split1].display.length
                 );
@@ -1004,7 +1039,7 @@ new Vue({
                 for (i = 0, n = sd[s.split1].display.length; i < n; i++) {
                   if (i) {
                     d.title.push({
-                      left: "center",
+                      left: "85",
                       subtext: f.split1 + ": " + sd[s.split1].display[i],
                       top: pos - 23,
                       itemGap: 0,
@@ -1013,6 +1048,7 @@ new Vue({
                       },
                     });
                   } else {
+                    d.title[0].left = "85";
                     d.title[0].subtext =
                       f.split1 + ": " + sd[s.split1].display[i];
                   }
@@ -1097,6 +1133,7 @@ new Vue({
                 }
               }
             } else {
+              this.$options.display.specs.split2.name = "";
               d.grid.push(this.make_grid());
               sd = this.$options.source.view[s.split1];
               if (!s.average) {
@@ -1137,6 +1174,7 @@ new Vue({
               }
             }
           } else {
+            this.$options.display.specs.split1.name = "";
             d.grid.push(this.make_grid());
             if (!s.average) {
               d.graphic[0].style.text += " by Year";
@@ -1214,7 +1252,7 @@ new Vue({
       if (this.settings.send_data) window.dataLayer.push(arguments);
     },
     refresh_data: function() {
-      this.settings.bottom_offset = screen.height < 550 ? 0 : 190;
+      this.settings.bottom_offset = screen.height < 550 ? 0 : 120;
       if (this.$options.plot && this.$options.plot.instance) {
         this.$options.plot.instance.dispose();
         this.$options.plot.instance = null;
@@ -1314,6 +1352,36 @@ new Vue({
           } else delete this.$options.display.options[k];
         }
       this.update_data();
+    },
+    fill_spec: function(id) {
+      var s = this.$options.display.specs[id];
+      s.name = this.settings[id];
+      if (s.name) {
+        this.validate_filter_sort(this.settings[id]);
+        s.sort = this.$options.display.options.sort[this.settings[id]];
+        s.sort.direction =
+          s.sort.aspect === "label"
+            ? s.sort.increasing
+              ? "alphabetical"
+              : "reverse alphabetical"
+            : s.sort.increasing
+            ? "increasing"
+            : "decreasing";
+        s.sort.aspects = [
+          this.variable_parts[s.name].multi,
+          "average " + this.settings.value,
+        ];
+        s.sort.aspect_proxy = s.sort.aspects[Number(s.sort.aspect !== "label")];
+        s.levels = this.$options.source.variables[
+          this.settings[id]
+        ].levels.length;
+        s.displaying = Object.prototype.hasOwnProperty.call(
+          this.$options.source.view,
+          this.settings[id]
+        )
+          ? this.$options.source.view[this.settings[id]].levels.length
+          : s.levels;
+      }
     },
   },
   render: h => h(App),
