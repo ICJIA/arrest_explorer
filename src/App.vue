@@ -1,29 +1,33 @@
 <template>
-  <v-app v-if="$root.settings.embed">
-    <v-col>
-      <v-row class="data-wrap embeded" no-gutters>
-        <div role="main" id="data-container"><DataDisplay /></div>
-      </v-row>
-    </v-col>
-  </v-app>
-  <v-app v-else>
-    <v-col>
-      <v-row
-        :class="'data-wrap' + ($root.settings.embed ? ' embeded' : '')"
-        no-gutters
-      >
-        <Header />
-        <div id="data-container" @click="$root.settings.sheet = ''">
-          <DataDisplay />
-        </div>
-        <div id="side-menu"><DataSheet /></div>
-      </v-row>
-      <v-row no-gutters><Menu /></v-row>
-    </v-col>
-    <Intro />
-    <Export />
-    <FilterSort />
-  </v-app>
+  <div>
+    <v-app v-if="$root.settings.embed">
+      <v-col>
+        <v-row class="data-wrap embeded" no-gutters>
+          <div role="main" id="data-container"><DataDisplay /></div>
+        </v-row>
+      </v-col>
+    </v-app>
+    <v-app v-else>
+      <v-col>
+        <v-row
+          :class="'data-wrap' + ($root.settings.embed ? ' embeded' : '')"
+          no-gutters
+        >
+          <Header />
+          <div id="data-container" @click="$root.settings.sheet = ''">
+            <DataDisplay />
+          </div>
+          <div id="side-menu" style="display: none">
+            <DataSheet />
+          </div>
+        </v-row>
+        <v-row no-gutters><Menu /></v-row>
+      </v-col>
+      <Intro />
+      <Export />
+      <FilterSort />
+    </v-app>
+  </div>
 </template>
 
 <script>

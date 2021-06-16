@@ -12,7 +12,6 @@
           id="theme_dark_toggle"
           v-model="$root.settings.theme_dark"
           inset
-          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -30,7 +29,6 @@
           id="remember_data_toggle"
           v-model="$root.settings.remember_view"
           inset
-          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -48,7 +46,6 @@
           id="share_data_toggle"
           v-model="$root.settings.send_data"
           inset
-          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -64,7 +61,6 @@
           id="renderer_toggle"
           v-model="$root.settings.svg"
           inset
-          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -85,7 +81,6 @@
           id="category_format_select"
           :items="$root.settings.category_formats"
           v-model="$root.settings.format_category"
-          hide-details
         ></v-select>
       </v-col>
     </v-row>
@@ -101,7 +96,6 @@
           id="table_toggle"
           v-model="$root.settings.as_table"
           inset
-          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -117,7 +111,6 @@
           id="table_format_select"
           :items="$root.settings.table_formats"
           v-model="$root.settings.format_table"
-          hide-details
         ></v-select>
       </v-col>
     </v-row>
@@ -133,7 +126,6 @@
           id="plot_type_select"
           :items="$root.settings.plot_types"
           v-model="$root.settings.plot_type"
-          hide-details
         ></v-select>
       </v-col>
     </v-row>
@@ -205,7 +197,6 @@
           id="unlock_yaxis_max_toggle"
           v-model="$root.settings.unlock_yaxis_max"
           inset
-          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -223,7 +214,6 @@
           id="unlock_yaxis_min_toggle"
           v-model="$root.settings.unlock_yaxis_min"
           inset
-          hide-details
         ></v-switch>
       </v-col>
     </v-row>
@@ -253,6 +243,9 @@ export default {
       localStorage.clear();
       window.location.replace(this.$root.settings.url);
     },
+  },
+  mounted() {
+    this.$nextTick(this.$root.addListenersToSelects.bind(this));
   },
 };
 </script>

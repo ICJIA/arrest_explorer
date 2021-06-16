@@ -1,17 +1,23 @@
 <template>
   <v-system-bar role="heading" aria-level="1" height="35">
     <v-img
-      eager
       contain
-      alt="ICJIA logo"
+      alt="Illinois Criminal Justice Information Authority logo"
       src="https://icjia.illinois.gov/researchhub/icjia-logo.png"
       before
     />
-    <v-btn plain @click="$root.reset_view">Arrest Explorer</v-btn>
+    <v-btn text title="reset view" @click="$root.reset_view"
+      >Arrest Explorer</v-btn
+    >
   </v-system-bar>
 </template>
 
 <style scoped>
+.keyboard-menu {
+  position: fixed;
+  overflow: hidden;
+  height: 0;
+}
 .v-system-bar {
   padding: 0;
   width: 100%;

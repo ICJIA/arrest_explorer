@@ -5,6 +5,7 @@ import rawdata from "./data.json";
 import levels from "./levels.json";
 import Dataview from "./dataview.js";
 import { intervalScaleNiceTicks } from "echarts/lib/scale/helper";
+import { addListenersToSelects } from "./plugins/select_labeler.js";
 
 Vue.config.productionTip = false;
 
@@ -448,7 +449,7 @@ new Vue({
     );
   },
   mounted() {
-    for (var i = this.$root.$options.display.options.year.length; i--; ) {
+    for (var i = this.$root.$options.display.options.year.length, e; i--; ) {
       if (this.$root.$options.display.options.year[i].type === ">=") {
         this.year_window[0] = this.$root.$options.display.options.year[i].value;
       } else if (this.$root.$options.display.options.year[i].type === "<=")
@@ -486,6 +487,7 @@ new Vue({
     },
   },
   methods: {
+    addListenersToSelects: addListenersToSelects,
     intervalScaleNiceTicks: intervalScaleNiceTicks,
     display_query: function(ex, d, all) {
       d = d || this.$options.display.options;
@@ -1382,6 +1384,44 @@ new Vue({
           ? this.$options.source.view[this.settings[id]].levels.length
           : s.levels;
       }
+    },
+    toggleDataMenu: function() {
+      var w = document.body.getBoundingClientRect().width,
+        data_container = document.getElementById("data-container"),
+        data_menu = document.getElementById("side-menu");
+      if (this.$root.settings.data_menu_open) {
+        data_menu.style.display = "none";
+        data_container.style.right = "0px";
+        data_menu.style.right = "-320px";
+        data_menu.style.width = "320px";
+        this.$root.settings.data_menu_open = false;
+      } else {
+        data_menu.style.display = "";
+        data_menu.style.right = "0px";
+        if (w < 600) {
+          data_menu.style.width = "100%";
+        } else {
+          data_container.style.right = "320px";
+          data_menu.style.width = "320px";
+        }
+        this.$root.settings.data_menu_open = true;
+        data_menu.firstElementChild.firstElementChild.focus();
+        this.$root.gtag("event", "click", {
+          event_category: "open_menu",
+          event_label: "data",
+        });
+      }
+      if (
+        w >= 600 &&
+        !this.$root.settings.as_table &&
+        this.$root.$options.plot.instance
+      ) {
+        this.$root.$options.plot.element.style.width =
+          this.$root.$el.getBoundingClientRect().width +
+          (this.$root.settings.data_menu_open ? -320 : 0) +
+          "px";
+      }
+      this.$root.resize_plot();
     },
   },
   render: h => h(App),

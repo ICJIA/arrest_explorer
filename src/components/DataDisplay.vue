@@ -1,5 +1,5 @@
 <template>
-  <div v-if="$root.settings.as_table">
+  <div role="table" v-if="$root.settings.as_table">
     <p class="text-subtitle-1" v-if="$root.settings.average">
       {{
         $root.year_window[0] === $root.year_window[1]
@@ -24,6 +24,7 @@
     ></v-data-table>
   </div>
   <Plot
+    role="figure"
     v-else-if="
       $root.settings.split1 ||
         (!$root.settings.average &&

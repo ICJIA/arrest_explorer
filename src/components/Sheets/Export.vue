@@ -1,5 +1,6 @@
 <template>
   <v-dialog
+    role="dialog"
     v-model="$root.settings.export_open"
     open-delay="0"
     overlay-opacity=".8"
@@ -7,7 +8,7 @@
   >
     <v-card>
       <v-card-title>
-        <span class="headline">Export Image or Data</span>
+        <h1 role="heading" class="headline">Export Image or Data</h1>
         <v-spacer></v-spacer
         ><v-btn icon title="close" @click="$root.settings.export_open = false"
           ><v-icon>mdi-close</v-icon></v-btn
@@ -25,7 +26,6 @@
                     label="Image Format"
                     class="image-format"
                     v-model="$root.settings.format_image"
-                    hide-details
                   ></v-select>
                 </v-col>
                 <v-col v-if="$root.settings.format_image !== 'svg'">
@@ -36,7 +36,6 @@
                       :items="['500%', '4096', '2560', '1920', '100%']"
                       :rules="valid_dim"
                       v-model="$root.settings.image_dim[0]"
-                      hide-details
                     ></v-combobox>
                     <v-icon slot="append">mdi-close</v-icon>
                     <v-combobox
@@ -45,7 +44,6 @@
                       :items="['500%', '2160', '1440', '1080', '100%']"
                       :rules="valid_dim"
                       v-model="$root.settings.image_dim[1]"
-                      hide-details
                     ></v-combobox>
                   </v-row>
                 </v-col>
@@ -59,7 +57,6 @@
                     :items="['csv', 'json', 'tsv']"
                     label="File Format"
                     v-model="$root.settings.format_file"
-                    hide-details
                   ></v-select>
                 </v-col>
                 <v-col v-if="$root.settings.format_file === 'json'">
@@ -67,7 +64,6 @@
                     :items="['raw', 'arrays', 'objects']"
                     label="JSON Format"
                     v-model="$root.settings.format_json"
-                    hide-details
                   ></v-select> </v-col
                 ><v-col
                   v-if="
@@ -79,7 +75,6 @@
                     :items="['tall', 'mixed', 'wide']"
                     label="Table Format"
                     v-model="$root.settings.format_table"
-                    hide-details
                   ></v-select> </v-col
                 ><v-col>
                   <v-select
@@ -90,7 +85,6 @@
                     :items="['labels', 'indices', 'codes']"
                     label="Category Format"
                     v-model="$root.settings.format_category"
-                    hide-details
                   ></v-select>
                 </v-col>
               </v-row>
@@ -99,7 +93,11 @@
           <v-row v-for="url in urls" :key="url.header">
             <v-subheader>{{ url.header }}</v-subheader>
             <div class="api-display">
-              <a :href="url.base + url.query.string" target="_blank">
+              <a
+                :title="url.description"
+                :href="url.base + url.query.string"
+                target="_blank"
+              >
                 <span class="url-base">{{ url.base }}</span>
                 <span v-if="url.query.parts.length" class="url-param-inital"
                   >?</span
@@ -170,6 +168,7 @@ export default {
       urls: [
         {
           header: "Link to this plot:",
+          description: "link the the current data view",
           base: this.$root.settings.url,
           refresh: this.$root.display_query.bind(this, {
             value: "arrests",
@@ -184,6 +183,8 @@ export default {
         },
         {
           header: "Download through the API:",
+          description:
+            "link to download the current data view through the programing interface",
           base: this.$root.settings.url + "api/",
           refresh: this.$root.display_query.bind(this, {
             value: "arrests",
@@ -344,6 +345,9 @@ export default {
       },
       deep: true,
     },
+  },
+  updated() {
+    this.$nextTick(this.$root.addListenersToSelects.bind(this));
   },
 };
 </script>

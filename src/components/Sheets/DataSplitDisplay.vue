@@ -2,9 +2,11 @@
   <v-row>
     <v-select
       v-if="which === 'split1' || $root.settings.split1"
-      :label="spec.entry === 'split1' ? 'Split data by' : 'and by'"
+      :label="spec.entry === 'split2' ? 'and by' : 'Split data by'"
       :aria-label="
-        'select ' + (spec.entry === 'split1' ? 'first' : 'second') + ' split'
+        'step 3. split by which variables? ' +
+          (spec.entry === 'split2' ? 'second' : 'first') +
+          ' split?'
       "
       :items="spec.vars"
       v-model="$root.settings[spec.entry]"

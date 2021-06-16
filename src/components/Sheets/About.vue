@@ -5,7 +5,7 @@
         <v-img
           height="100%"
           contain
-          alt="ICJIA logo"
+          alt="Illinois Criminal Justice Information Authority logo"
           src="https://icjia.illinois.gov/researchhub/icjia-logo.png"
         /> </v-col
       ><v-col>

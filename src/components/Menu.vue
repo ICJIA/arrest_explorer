@@ -16,8 +16,8 @@
           </v-tabs>
           <v-spacer></v-spacer>
           <v-btn
-            plain
-            aria-label="close menu"
+            text
+            title="close menu"
             @click="$root.settings.app_menu_open = false"
             ><v-icon>mdi-close</v-icon></v-btn
           >
@@ -36,18 +36,24 @@
     </v-dialog>
     <v-row no-gutters class="menu-bar">
       <v-col>
-        <v-btn plain title="menu" @click="$root.settings.app_menu_open = true">
+        <v-btn
+          text
+          title="info and settings"
+          @click="$root.settings.app_menu_open = true"
+        >
           <v-icon>mdi-menu</v-icon>
         </v-btn>
       </v-col>
       <v-col>
         <div class="menu-bar-central">
-          <v-btn title="refesh data" @click="$root.refresh_data"
+          <v-btn title="reprocess data" @click="$root.refresh_data"
             ><span class="menu-button-text">Refresh</span
             ><v-icon right>mdi-reload</v-icon></v-btn
           >
           <v-btn
-            text
+            :title="
+              'display data as ' + ($root.settings.as_table ? 'plot' : 'table')
+            "
             @click="$root.settings.as_table = !$root.settings.as_table"
           >
             <span class="menu-button-text">{{
@@ -62,7 +68,9 @@
                 : "mdi-table-large"
             }}</v-icon>
           </v-btn>
-          <v-btn text @click="$root.settings.export_open = true"
+          <v-btn
+            title="download image or data"
+            @click="$root.settings.export_open = true"
             ><span class="menu-button-text">Export</span
             ><v-icon right>mdi-download</v-icon></v-btn
           >
@@ -70,9 +78,11 @@
       </v-col>
       <v-col class="menu-bar-offset">
         <v-btn
+          title="change data and variables"
           color="primary"
-          @click="toggleDataMenu()"
+          @click="$root.toggleDataMenu()"
           :active="$root.settings.data_menu_open"
+          aria-owns="side-menu"
           ><span class="menu-button-text">Data Menu</span
           ><v-icon small>mdi-database-cog</v-icon></v-btn
         >
@@ -102,19 +112,11 @@ export default {
           hint: "Find more information about this site and API.",
         },
         { name: "Examples", hint: "View preset plots for specific questions." },
-        { name: "Options", hint: "Adjust site options and download data." },
+        { name: "Options", hint: "Adjust site and data display options." },
       ],
     };
   },
-  mounted() {
-    this.data_container = document.getElementById("data-container");
-    this.data_menu = document.getElementById("side-menu");
-  },
   methods: {
-    toggle_if_outside: function(e) {
-      if (e.target && e.target.id === "menu-sheet-wrap")
-        this.$root.settings.sheet = "";
-    },
     toggleSheet: function(sheet) {
       if (sheet && this.$root.settings.sheet !== sheet) {
         this.$root.gtag("event", "click", {
@@ -124,39 +126,6 @@ export default {
       }
       this.$root.settings.sheet =
         this.$root.settings.sheet === sheet ? "" : sheet;
-    },
-    toggleDataMenu: function() {
-      var w = document.body.getBoundingClientRect().width;
-      if (this.$root.settings.data_menu_open) {
-        this.data_container.style.right = "0px";
-        this.data_menu.style.right = "-320px";
-        this.data_menu.style.width = "320px";
-        this.$root.settings.data_menu_open = false;
-      } else {
-        this.data_menu.style.right = "0px";
-        if (w < 600) {
-          this.data_menu.style.width = "100%";
-        } else {
-          this.data_container.style.right = "320px";
-          this.data_menu.style.width = "320px";
-        }
-        this.$root.settings.data_menu_open = true;
-        this.$root.gtag("event", "click", {
-          event_category: "open_menu",
-          event_label: "data",
-        });
-      }
-      if (
-        w >= 600 &&
-        !this.$root.settings.as_table &&
-        this.$root.$options.plot.instance
-      ) {
-        this.$root.$options.plot.element.style.width =
-          this.$root.$el.getBoundingClientRect().width +
-          (this.$root.settings.data_menu_open ? -320 : 0) +
-          "px";
-      }
-      this.$root.resize_plot();
     },
   },
 };

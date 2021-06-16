@@ -1,13 +1,18 @@
 <template>
   <v-card>
-    <v-btn @click="$root.reset_view" inset block text color="primary"
+    <v-btn
+      title="revert to default data view"
+      @click="$root.reset_view"
+      block
+      text
+      color="primary"
       >Reset View</v-btn
     >
     <v-subheader main class="step-subheader"
       >(<strong>1</strong>) Which data?</v-subheader
     >
     <v-select
-      aria-label="primary data"
+      aria-label="step 1. which data?"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
       hint="View arrest_charges for crime-related variables, and others for demographic variables."
@@ -27,7 +32,7 @@
       <v-col>
         <v-text-field
           id="starting_year"
-          aria-label="Starting Year"
+          aria-label="step 2a. over what timeframe? starting year?"
           type="number"
           v-model="min_year"
           step="1"
@@ -51,6 +56,7 @@
       <v-col>
         <v-text-field
           id="ending_year"
+          aria-label="step 2b. over what timeframe? ending year?"
           type="number"
           v-model="max_year"
           step="1"
@@ -74,6 +80,7 @@
       <v-col>
         <v-switch
           id="average_toggle"
+          aria-label="step 2c. average over years?"
           v-model="$root.settings.average"
           inset
           hide-details
@@ -222,6 +229,9 @@ export default {
         ];
     }
     this.adjust_years();
+  },
+  updated() {
+    this.$nextTick(this.$root.addListenersToSelects.bind(this));
   },
 };
 </script>

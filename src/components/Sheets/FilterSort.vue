@@ -6,12 +6,12 @@
     max-width="1200px"
   >
     <v-card>
-      <v-card-title>
-        <span class="headline"
-          >Sort &amp; Filter
-          <strong>{{ $root.settings.filter_showing }}</strong></span
-        >
-        <v-spacer></v-spacer><v-btn text @click="reset_filter"> Reset </v-btn
+      <v-card-title role="header" aria-level="2">
+        <h1 class="headline">
+          Sort &amp; Filter <strong>{{ $root.settings.filter_showing }}</strong>
+        </h1>
+        <v-spacer></v-spacer>
+        <v-btn text @click="reset_filter"> Reset </v-btn
         ><v-btn icon title="close" @click="$root.settings.filter_open = false"
           ><v-icon>mdi-close</v-icon></v-btn
         >
@@ -20,17 +20,22 @@
         <v-row>
           <v-subheader class="inline-subheader">Sort by</v-subheader>
           <v-select
-            aria-label="sort aspect"
+            :aria-label="
+              'sort by ' + sort.aspects[0] + ' or ' + sort.aspects[1] + '?'
+            "
             :items="sort.aspects"
             v-model="sort.aspect_proxy"
             @change="update_direction"
-            dense
-            hide-details
             style="max-width: 255px"
-            >{{ sort.aspect_proxy }}</v-select
-          >
+          ></v-select>
           <v-select
-            aria-label="sort direction"
+            :aria-label="
+              'sort in ' +
+                (sort.aspect === 'label'
+                  ? 'alphabetical or reverse alphabetical'
+                  : 'increasing or decreasing') +
+                ' order'
+            "
             :items="
               sort.aspect === 'label'
                 ? ['alphabetical', 'reverse alphabetical']
@@ -38,8 +43,6 @@
             "
             v-model="sort.direction"
             @change="update_increasing"
-            dense
-            hide-details
             style="max-width: 255px"
           ></v-select>
         </v-row>
@@ -54,23 +57,54 @@
                   ] +
                   ':'
               "
+              :aria-label="
+                'Include only ' +
+                  (selected_levels.length === 1 ? 'this ' : 'these ') +
+                  $root.variable_parts[$root.settings.filter_showing][
+                    selected_levels.length === 1 ? 'single' : 'multi'
+                  ] +
+                  '; ' +
+                  selected_levels.length +
+                  ' selected.'
+              "
               v-model="selected_levels"
               :items="levels"
               chips
               clearable
+              counter
+              deletable-chips
               hide-selected
               multiple
               @click:clear="clear_selection"
             >
-              <template v-slot:selection="{ item }">
-                <v-chip close @click:close="remove_level(item)">{{
-                  item
-                }}</v-chip>
+              <template v-slot:selection="{ item, attrs }">
+                <v-chip
+                  :aria-label="item"
+                  v-bind="attrs"
+                  :input-value="item"
+                  close
+                  :close-label="
+                    'exclude ' +
+                      $root.variable_parts[$root.settings.filter_showing]
+                        .single +
+                      ' ' +
+                      item
+                  "
+                  @click:close="remove_level(item)"
+                  >{{ item }}</v-chip
+                >
               </template>
             </v-combobox></v-col
           >
           <v-col
-            ><v-btn @click="selected_levels = [...levels]">All</v-btn></v-col
+            ><v-btn
+              :title="
+                'include all ' +
+                  $root.variable_parts[$root.settings.filter_showing].multi
+              "
+              @click="selected_levels = [...levels]"
+              >All</v-btn
+            ></v-col
           >
         </v-row>
         <v-subheader>{{
@@ -87,6 +121,13 @@
         <v-row>
           <v-text-field
             label="min average"
+            :aria-label="
+              'exclude selected ' +
+                $root.variable_parts[$root.settings.filter_showing].multi +
+                ' with average ' +
+                $root.settings.value +
+                ' under this amount'
+            "
             v-model="min"
             type="number"
             dense
@@ -98,6 +139,13 @@
           <v-spacer></v-spacer>
           <v-text-field
             label="max average"
+            :aria-label="
+              'exclude selected ' +
+                $root.variable_parts[$root.settings.filter_showing].multi +
+                ' with average ' +
+                $root.settings.value +
+                ' over this amount'
+            "
             v-model="max"
             type="number"
             dense
@@ -329,6 +377,9 @@ export default {
       this.refilter();
     },
   },
+  updated() {
+    this.$nextTick(this.$root.addListenersToSelects.bind(this));
+  },
 };
 </script>
 
@@ -383,7 +434,7 @@ export default {
   bottom: 0;
 }
 .v-subheader {
-  padding: 0.3em 0.5em 0 0;
+  padding: 2.3em 0.5em 0 0;
 }
 .inline-subheader {
   padding-bottom: 1em;

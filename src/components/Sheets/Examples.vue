@@ -5,7 +5,10 @@
         <p class="title text--primary">{{ content.question }}</p>
         <p class="body-1">{{ content.decription }}</p>
         <div class="api-display">
-          <a :href="content.url.string">
+          <a
+            aria-label="parameters for this example"
+            :href="content.url.string"
+          >
             <span class="url-base">{{ content.base_url }}</span>
             <span v-if="content.url.parts.length" class="url-param-inital"
               >?</span
