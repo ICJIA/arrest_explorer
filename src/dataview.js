@@ -111,6 +111,8 @@ function Dataview(data, levels) {
   this.options = {};
   this.prepare_data = async function(data) {
     var vars = {
+        // stores information about each variable;
+        // filled in by make_entry, make_covars
         values: { values: [], splits: {}, total: {} },
       },
       val,
@@ -122,6 +124,11 @@ function Dataview(data, levels) {
       l,
       i;
     function make_entry(name, vars, dim, levels) {
+      // adds a template for a variable to vars
+      // - name: variable's name
+      // - vars: output object
+      // - dim: overall dimension object -- increments the column count
+      // - levels: variable's entry from the overall levels object
       levels.display = [];
       for (var n = levels.label.length, i = 0; i < n; i++) {
         levels.display.push(levels.label[i]);
@@ -135,6 +142,11 @@ function Dataview(data, levels) {
       dim.ncol++;
     }
     function add_covars(value, v1, v2) {
+      // adds to an array of covariates (variables that can be split by one another),
+      // and to an array of values (data, table; e.g., "arrests") in which the variable appears
+      // - value: name of the value
+      // - v1: name of first variable; the array added to
+      // - v2: name of second variable; the entry in v1's array
       if (!Object.prototype.hasOwnProperty.call(vars[v1].splits, value)) {
         vars[v1].splits[value] = [];
         vars[v1].values.push(value);
@@ -147,7 +159,10 @@ function Dataview(data, levels) {
         vars[v1].splits[value].push(v2);
       }
     }
-    function calculate_totals(s, l, o) {
+    function calculate_totals(s, o) {
+      // calculates totals from splits (sums across splits)
+      // - s: split data; data[value][split1][total] or data[value][split1][split2][level]
+      // - o: output object; vars.values[total][value] or vars[value][split1][total]
       var i = 0,
         n = 0,
         k;
@@ -162,6 +177,11 @@ function Dataview(data, levels) {
         }
     }
     function calculate_part(k, o, a, b) {
+      // calculates a vector of arrests / arrestees
+      // - k: variable or level name
+      // - o: output; the entry in data.arrests_per_arrestee
+      // - a: arrests vector (e.g., data.arrests, data.arrests[split1][split2])
+      // - b: arrestees vector
       o[k] = [];
       for (var i = a[k].length; i--; )
         o[k][i] =
@@ -197,11 +217,7 @@ function Dataview(data, levels) {
               if (Object.prototype.hasOwnProperty.call(data[val][s1], s2)) {
                 if (s2 === "total") {
                   if (ckt) vars.values.total[val] = [];
-                  calculate_totals(
-                    data[val][s1].total,
-                    s1,
-                    vars.values.total[val]
-                  );
+                  calculate_totals(data[val][s1].total, vars.values.total[val]);
                   ckt = false;
                 } else {
                   if (
@@ -229,7 +245,6 @@ function Dataview(data, levels) {
                         data[val][s1].total[k] = [];
                         calculate_totals(
                           data[val][s1][s2][k],
-                          s1,
                           data[val][s1].total[k]
                         );
                         if (ckot)
@@ -974,7 +989,11 @@ Dataview.prototype = {
         get: getter[fun],
       };
     }
-    if (format === "mixed" && !s2) format = "tall";
+    if (
+      format === "mixed" &&
+      !Object.prototype.hasOwnProperty.call(this.view.slot, "split2")
+    )
+      format = "tall";
     if (!Object.prototype.hasOwnProperty.call(this.options, "average"))
       this.options.average = false;
     var j,

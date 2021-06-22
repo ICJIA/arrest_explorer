@@ -61,16 +61,33 @@ const data_options = [
     ],
   },
   variable_parts = {
-    county: { single: "county", multi: "counties" },
-    race: { single: "race group", multi: "race groups" },
-    age_group: { single: "age group", multi: "age groups" },
-    gender: { single: "gender group", multi: "gender groups" },
-    crime_type: { single: "crime type", multi: "crime types" },
+    county: { single: "county", multi: "counties", label: "county name" },
+    race: {
+      single: "racial group",
+      multi: "racial groups",
+      label: "racial label",
+    },
+    age_group: { single: "age group", multi: "age groups", label: "age group" },
+    gender: {
+      single: "gender group",
+      multi: "gender groups",
+      label: "gender label",
+    },
+    crime_type: {
+      single: "crime type",
+      multi: "crime types",
+      label: "crime type name",
+    },
     offense_category: {
       single: "offense category",
       multi: "offense categories",
+      label: "offense category name",
     },
-    offense_class: { single: "offense class", multi: "offense classes" },
+    offense_class: {
+      single: "offense class",
+      multi: "offense classes",
+      label: "offense class name",
+    },
   };
 
 var store_options = [
@@ -97,7 +114,7 @@ var store_options = [
     filter_showing: "",
     category_formats: ["labels", "indices", "codes"],
     table_formats: ["tall", "mixed", "wide"],
-    plot_types: ["line", "bar", "scatter"],
+    plot_types: ["line", "bar"],
     svg: false,
     plot_type: "line",
     value: "arrests",
@@ -694,7 +711,7 @@ new Vue({
         this.settings.split1 &&
         this.$options.source.view[this.settings.split1].display_info.sumlen *
           12 >
-          dim.width - 450
+          dim.width - 470
       ) {
         r.bottom =
           Math.min(
@@ -1370,7 +1387,7 @@ new Vue({
             ? "increasing"
             : "decreasing";
         s.sort.aspects = [
-          this.variable_parts[s.name].multi,
+          this.variable_parts[s.name].label,
           "average " + this.settings.value,
         ];
         s.sort.aspect_proxy = s.sort.aspects[Number(s.sort.aspect !== "label")];

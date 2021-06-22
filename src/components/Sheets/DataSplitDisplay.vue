@@ -2,11 +2,11 @@
   <v-row>
     <v-select
       v-if="which === 'split1' || $root.settings.split1"
-      :label="spec.entry === 'split2' ? 'and by' : 'Split data by'"
+      :label="spec.entry === 'split2' ? 'and by' : 'Break data by'"
       :aria-label="
-        'step 3. split by which variables? ' +
+        'step 3. Break by ' +
           (spec.entry === 'split2' ? 'second' : 'first') +
-          ' split?'
+          ' variable:'
       "
       :items="spec.vars"
       v-model="$root.settings[spec.entry]"
@@ -38,13 +38,13 @@
       </v-row>
       <v-row>
         <v-btn
-          :title="'edit ' + $root.variable_parts[spec.name].multi"
+          :title="'edit ' + spec.name + ' filter'"
           text
           block
           color="primary"
           @click="$root.settings.filter_showing = spec.name"
         >
-          <span>{{ "Edit " + $root.variable_parts[spec.name].multi }}</span
+          <span>{{ "Edit " + spec.name + " filter" }}</span
           ><v-icon x-small>mdi-cog</v-icon>
         </v-btn>
       </v-row>

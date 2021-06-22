@@ -1,17 +1,27 @@
 <template>
-  <div role="table" v-if="$root.settings.as_table">
-    <p class="text-subtitle-1" v-if="$root.settings.average">
+  <div v-if="$root.settings.as_table">
+    <p class="text-subtitle-1">
       {{
-        $root.year_window[0] === $root.year_window[1]
-          ? $root.format_name($root.settings.value) +
-            " in " +
-            $root.year_window[0]
-          : "Average " +
-            $root.format_name($root.settings.value) +
-            " between " +
-            $root.year_window[0] +
-            " and " +
-            $root.year_window[1]
+        $root.settings.average
+          ? $root.year_window[0] === $root.year_window[1]
+            ? $root.format_name($root.settings.value) +
+              " in " +
+              $root.year_window[0]
+            : "Average " +
+              $root.format_name($root.settings.value) +
+              " between " +
+              $root.year_window[0] +
+              " and " +
+              $root.year_window[1]
+          : $root.format_name($root.settings.value) +
+            " by " +
+            ($root.settings.split1
+              ? $root.format_name($root.settings.split1) +
+                ($root.settings.split2
+                  ? ", " + $root.format_name($root.settings.split2)
+                  : "") +
+                (($root.settings.split2 ? "," : "") + " and Year")
+              : " Year")
       }}
     </p>
     <v-data-table
@@ -24,7 +34,6 @@
     ></v-data-table>
   </div>
   <Plot
-    role="figure"
     v-else-if="
       $root.settings.split1 ||
         (!$root.settings.average &&

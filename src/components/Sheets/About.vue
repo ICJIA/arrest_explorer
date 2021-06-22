@@ -25,7 +25,7 @@
               $root.settings.sheet = '';
               $root.settings.intro = true;
             "
-            >Show Introduction</v-btn
+            >Show Initial Landing Screen Again</v-btn
           >
         </v-col>
         <v-col>
@@ -35,7 +35,7 @@
             target="_blank"
             rel="noreferrer"
             href="https://icjia.illinois.gov/arrestexplorer/docs/"
-            >About this Project<v-icon right>mdi-open-in-new</v-icon></v-btn
+            >About Arrest Explorer<v-icon right>mdi-open-in-new</v-icon></v-btn
           >
         </v-col>
         <v-col>
@@ -45,7 +45,7 @@
             target="_blank"
             rel="noreferrer"
             href="http://www.icjia.state.il.us"
-            >About the ICJIA<v-icon right>mdi-open-in-new</v-icon></v-btn
+            >About ICJIA<v-icon right>mdi-open-in-new</v-icon></v-btn
           ></v-col
         ><v-col>
           <v-btn

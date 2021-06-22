@@ -28,6 +28,7 @@
             @change="update_direction"
             style="max-width: 255px"
           ></v-select>
+          <p class="inline-p">in</p>
           <v-select
             :aria-label="
               'sort in ' +
@@ -45,25 +46,20 @@
             @change="update_increasing"
             style="max-width: 255px"
           ></v-select>
+          <p class="inline-p">order.</p>
         </v-row>
         <v-row class="levels-row">
           <v-col>
             <v-combobox
               :label="
-                'Include only ' +
-                  (selected_levels.length === 1 ? 'this ' : 'these ') +
-                  $root.variable_parts[$root.settings.filter_showing][
-                    selected_levels.length === 1 ? 'single' : 'multi'
-                  ] +
-                  ':'
+                'Select ' +
+                  $root.variable_parts[$root.settings.filter_showing].multi +
+                  ' from this list:'
               "
               :aria-label="
-                'Include only ' +
-                  (selected_levels.length === 1 ? 'this ' : 'these ') +
-                  $root.variable_parts[$root.settings.filter_showing][
-                    selected_levels.length === 1 ? 'single' : 'multi'
-                  ] +
-                  '; ' +
+                'Select ' +
+                  $root.variable_parts[$root.settings.filter_showing].multi +
+                  ' from this list; ' +
                   selected_levels.length +
                   ' selected.'
               "
@@ -108,15 +104,11 @@
           >
         </v-row>
         <v-subheader>{{
-          "Then exclude those " +
-            $root.variable_parts[$root.settings.filter_showing][
-              selected_levels.length === 1 ? "single" : "multi"
-            ] +
-            " based on " +
-            (selected_levels.length === 1 ? "its" : "their") +
-            " average " +
+          "Then further filter the above selected " +
+            $root.variable_parts[$root.settings.filter_showing].multi +
+            " if their associated average " +
             $root.settings.value +
-            ":"
+            " also meet the following criteria:"
         }}</v-subheader>
         <v-row>
           <v-text-field
@@ -155,6 +147,12 @@
             style="max-width: 150px"
           ></v-text-field>
         </v-row>
+        <p class="caption">
+          Note that each variable is filtered independently, even when the
+          dataset is broken by two variables. For example, if you break by
+          county then race, minimum and maximum averages for race are overall
+          (as shown), not within counties.
+        </p>
         <v-row class="level-average-hist">
           <p class="text-h5">
             {{
@@ -437,7 +435,11 @@ export default {
   padding: 2.3em 0.5em 0 0;
 }
 .inline-subheader {
-  padding-bottom: 1em;
+  padding-bottom: 1.2em;
+}
+.inline-p {
+  padding: 0;
+  margin: 1.5em 0.5em 0 0.5em;
 }
 .levels-row .col:last-child {
   max-width: 60px;

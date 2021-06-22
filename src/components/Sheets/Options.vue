@@ -71,23 +71,6 @@
     <v-row>
       <v-col
         ><v-subheader
-          ><label for="category_format_select"
-            >Category Format</label
-          ></v-subheader
-        ></v-col
-      >
-      <v-col>
-        <v-select
-          id="category_format_select"
-          :items="$root.settings.category_formats"
-          v-model="$root.settings.format_category"
-        ></v-select>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col
-        ><v-subheader
           ><label for="table_toggle">Display as Table</label></v-subheader
         ></v-col
       >
@@ -188,7 +171,7 @@
       <v-col
         ><v-subheader
           ><label for="unlock_yaxis_max_toggle"
-            >Unlock Y-Axis Max</label
+            >Scale vertical axes per group</label
           ></v-subheader
         ></v-col
       >
@@ -196,23 +179,6 @@
         <v-switch
           id="unlock_yaxis_max_toggle"
           v-model="$root.settings.unlock_yaxis_max"
-          inset
-        ></v-switch>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col
-        ><v-subheader
-          ><label for="unlock_yaxis_min_toggle"
-            >Unlock Y-Axis Min</label
-          ></v-subheader
-        ></v-col
-      >
-      <v-col>
-        <v-switch
-          id="unlock_yaxis_min_toggle"
-          v-model="$root.settings.unlock_yaxis_min"
           inset
         ></v-switch>
       </v-col>

@@ -9,10 +9,10 @@
       >Reset View</v-btn
     >
     <v-subheader main class="step-subheader"
-      >(<strong>1</strong>) Which data?</v-subheader
+      >(<strong>1</strong>) Dataset to view</v-subheader
     >
     <v-select
-      aria-label="step 1. which data?"
+      aria-label="step 1. Dataset to view"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
       hint="View arrest_charges for crime-related variables, and others for demographic variables."
@@ -21,7 +21,7 @@
       solo-inverted
     ></v-select>
     <v-subheader class="step-subheader"
-      >(<strong>2</strong>) Over what timeframe?</v-subheader
+      >(<strong>2</strong>) Timeframe</v-subheader
     >
     <v-row>
       <v-col
@@ -32,7 +32,7 @@
       <v-col>
         <v-text-field
           id="starting_year"
-          aria-label="step 2a. over what timeframe? starting year?"
+          aria-label="step 2a. Timeframe: starting year"
           type="number"
           v-model="min_year"
           step="1"
@@ -56,7 +56,7 @@
       <v-col>
         <v-text-field
           id="ending_year"
-          aria-label="step 2b. over what timeframe? ending year?"
+          aria-label="step 2b. Timeframe: ending year"
           type="number"
           v-model="max_year"
           step="1"
@@ -71,25 +71,8 @@
       </v-col>
     </v-row>
 
-    <v-row>
-      <v-col
-        ><v-subheader
-          ><label for="average_toggle">Average over Years</label></v-subheader
-        ></v-col
-      >
-      <v-col>
-        <v-switch
-          id="average_toggle"
-          aria-label="step 2c. average over years?"
-          v-model="$root.settings.average"
-          inset
-          hide-details
-        ></v-switch>
-      </v-col>
-    </v-row>
-
     <v-subheader class="step-subheader"
-      >(<strong>3</strong>) Split by which variables?</v-subheader
+      >(<strong>3</strong>) Break by variables</v-subheader
     >
     <DataSplitDisplay :which="'split1'" />
     <DataSplitDisplay :which="'split2'" />
@@ -98,11 +81,24 @@
       block
       large
       v-if="$root.settings.split2"
-      @click="flip_splits"
+      @click="swap_order"
       color="primary"
     >
-      Flip Splits <v-icon>mdi-shuffle-variant</v-icon>
+      Swap Order <v-icon>mdi-shuffle-variant</v-icon>
     </v-btn>
+    <v-switch
+      id="average_toggle"
+      :label="
+        'Average ' +
+          $root.settings.value +
+          ' over years' +
+          ($root.settings.split1 ? ' by grouping variables' : '')
+      "
+      v-model="$root.settings.average"
+      inset
+      hide-details
+    ></v-switch>
+
     <div
       v-if="
         $root.settings.as_table ||
@@ -113,13 +109,6 @@
     >
       <v-divider></v-divider>
       <v-subheader>Display Options</v-subheader>
-      <v-select
-        v-if="$root.settings.split1 !== ''"
-        label="Category Format"
-        :items="$root.settings.category_formats"
-        v-model="$root.settings.format_category"
-      ></v-select>
-
       <v-select
         v-if="$root.settings.as_table"
         label="Table Format"
@@ -133,15 +122,10 @@
           v-model="$root.settings.plot_type"
         ></v-select>
         <v-switch
-          label="Unlock Y-Axis Max"
+          v-if="$root.settings.split2 && !$root.settings.average"
+          label="Scale vertical axes per group"
           :items="$root.settings.unlock_yaxis_max"
           v-model="$root.settings.unlock_yaxis_max"
-          inset
-        ></v-switch>
-        <v-switch
-          label="Unlock Y-Axis Min"
-          :items="$root.settings.unlock_yaxis_min"
-          v-model="$root.settings.unlock_yaxis_min"
           inset
         ></v-switch>
       </div>
@@ -205,7 +189,7 @@ export default {
       )
         this.max_year = this.$root.settings.year.range[1];
     },
-    flip_splits: function() {
+    swap_order: function() {
       var s = this.$root.settings.split1;
       this.$root.settings.split1 = this.$root.settings.split2;
       this.$root.settings.split2 = s;
