@@ -4,6 +4,8 @@
     open-delay="0"
     overlay-opacity=".8"
     max-width="1200px"
+    scrollable
+    v-if="$root.settings.filter_showing && filter.length"
   >
     <v-card>
       <v-card-title role="header" aria-level="2">
@@ -16,7 +18,7 @@
           ><v-icon>mdi-close</v-icon></v-btn
         >
       </v-card-title>
-      <v-card-text v-if="$root.settings.filter_showing && filter.length">
+      <v-card-text>
         <v-row>
           <v-subheader class="inline-subheader">Sort by</v-subheader>
           <v-select
@@ -146,13 +148,13 @@
             @change="refilter"
             style="max-width: 150px"
           ></v-text-field>
+          <p class="caption">
+            Note that each variable is filtered independently, even when the
+            dataset is broken by two variables. For example, if you break by
+            county then race, minimum and maximum averages for race are overall
+            (as shown), not within counties.
+          </p>
         </v-row>
-        <p class="caption">
-          Note that each variable is filtered independently, even when the
-          dataset is broken by two variables. For example, if you break by
-          county then race, minimum and maximum averages for race are overall
-          (as shown), not within counties.
-        </p>
         <v-row class="level-average-hist">
           <p class="text-h5">
             {{
@@ -385,13 +387,6 @@ export default {
 .v-input--dense.v-select:last-of-type {
   margin-left: 0.5em;
 }
-.v-card {
-  max-height: 100%;
-}
-.v-card__text {
-  max-height: 70%;
-  overflow-y: auto;
-}
 .v-application .text-h5 {
   line-height: 2.25rem;
 }
@@ -439,7 +434,7 @@ export default {
 }
 .inline-p {
   padding: 0;
-  margin: 1.5em 0.5em 0 0.5em;
+  margin: 1.55em 0.5em 0 0.5em;
 }
 .levels-row .col:last-child {
   max-width: 60px;

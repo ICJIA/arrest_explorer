@@ -14,16 +14,17 @@
           no-gutters
         >
           <Header />
-          <div id="data-container" @click="$root.settings.sheet = ''">
+          <div role="main" id="data-container">
             <DataDisplay />
           </div>
-          <div id="side-menu" style="display: none">
+          <div id="data-menu" style="visibility: hidden">
             <DataSheet />
           </div>
         </v-row>
         <v-row no-gutters><Menu /></v-row>
       </v-col>
       <Intro />
+      <Examples />
       <Export />
       <FilterSort />
     </v-app>
@@ -34,6 +35,7 @@
 import Header from "./components/Header";
 import DataDisplay from "./components/DataDisplay";
 import Intro from "./components/Sheets/Intro";
+import Examples from "./components/Sheets/Examples";
 import Export from "./components/Sheets/Export";
 import FilterSort from "./components/Sheets/FilterSort";
 import Menu from "./components/Menu";
@@ -46,6 +48,7 @@ export default {
       return import("./components/Sheets/Data");
     },
     Intro,
+    Examples,
     Export,
     FilterSort,
     Menu,
@@ -54,7 +57,7 @@ export default {
 </script>
 
 <style scoped>
-#side-menu {
+#data-menu {
   position: absolute;
   width: 320px;
   height: 100%;
@@ -62,37 +65,22 @@ export default {
   right: -320px;
   bottom: 2.5em;
 }
-#side-menu .v-card {
+#data-menu .v-card {
   overflow: hidden;
   padding: 0 0.4em 0.4em 0.4em;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
-.v-input--switch {
-  margin: 0;
-}
-.v-btn-toggle > .v-btn.v-btn--active {
-  opacity: 0.8;
-}
-.v-btn--active::before {
-  opacity: 0;
-}
-.data-wrap.embeded,
-.data-wrap.embeded #data-container {
-  padding: 0;
-  top: 0;
-  bottom: 0;
-}
 #data-container {
   position: absolute;
   top: 35px;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 6px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0.3em 0 0 0;
+  padding: 0.5em 0;
 }
 .data-wrap {
   position: fixed;
@@ -101,11 +89,6 @@ export default {
   right: 0;
   bottom: 2.5em;
   overflow-x: hidden;
-}
-#data-container,
-#side-menu {
-  transition: right 0.3s cubic-bezier(0, 1.4, 0.01, 0.91);
-  -webkit-transition: right 0.3s cubic-bezier(0, 1.4, 0.01, 0.91);
 }
 </style>
 
@@ -123,12 +106,6 @@ html {
 }
 .col {
   padding: 0;
-}
-.v-divider {
-  margin: 2em 0 0 0;
-}
-.theme--light.v-select .v-select__selections {
-  color: #000;
 }
 .api-display {
   text-align: center;
@@ -201,7 +178,35 @@ html {
 .theme--light .url-param-sep {
   color: #796310;
 }
-
+.v-input__slider .v-input__slot,
+.v-input--switch .v-input__slot {
+  flex-direction: row-reverse;
+}
+.theme--dark.step-subheader.v-subheader {
+  color: #fff;
+}
+.theme--light.step-subheader.v-subheader {
+  color: #000;
+}
+.theme--dark .v-card {
+  background: #393939;
+}
+.theme--light.v-bottom-navigation .data-menu-button,
+.theme--light.v-bottom-navigation .data-menu-button:not(.v-btn--active) {
+  color: #fbfbfb !important;
+}
+.v-expansion-panel {
+  padding: 0 0.5em;
+}
+.v-expansion-panel .v-expansion-panel-content__wrap {
+  padding: 0 0 0.5em 0;
+}
+.v-expansion-panel .v-expansion-panel-header {
+  padding: 0;
+}
+.v-application--is-ltr .v-input--selection-controls__input {
+  margin-right: 0;
+}
 @media screen and (max-width: 590px) {
   #menu-sheet-wrap {
     width: 100%;

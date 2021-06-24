@@ -70,13 +70,6 @@ export default {
 };
 </script>
 
-<style>
-.split-level-select {
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-</style>
-
 <style scoped>
 .filter-results {
   font-size: 0.65em;

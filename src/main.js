@@ -96,12 +96,11 @@ var store_options = [
     "theme_dark",
     "format_file",
     "format_image",
-    "animation_time",
-    "animation_type",
     "intro",
     "unlock_yaxis_min",
     "unlock_yaxis_max",
     "remember_view",
+    "disable_plot_animation",
   ],
   settings = {
     year: {
@@ -109,6 +108,8 @@ var store_options = [
       window: [{ start: 0, end: 100, show: false }],
     },
     active: false,
+    examples_open: false,
+    options_open: false,
     export_open: false,
     filter_open: false,
     filter_showing: "",
@@ -121,7 +122,6 @@ var store_options = [
     average: false,
     split1: "",
     split2: "",
-    sheet: "",
     data_menu_open: false,
     app_menu_open: false,
     as_table: false,
@@ -143,6 +143,7 @@ var store_options = [
     unlock_yaxis_min: false,
     unlock_yaxis_max: false,
     remember_view: false,
+    disable_plot_animation: false,
   },
   local_storage = store_fallback,
   watch = {
@@ -193,39 +194,11 @@ var store_options = [
           });
       },
     ],
-    "settings.animation_time": [
+    "settings.disable_plot_animation": [
       function() {
-        if (this.$options.plot && this.$options.plot.initOptions) {
-          this.settings.animation_time = Number(this.settings.animation_time);
-          this.$options.plot.options.animationDurationUpdate = this.settings.animation_time;
-          this.$options.plot.options.animationDuration = this.settings.animation_time;
-          this.$options.plot.options.stateAnimation.duration = this.settings.animation_time;
-          for (var i = this.$options.plot.options.series.length; i--; ) {
-            this.$options.plot.options.series[
-              i
-            ].animationDuration = this.$options.plot.options.series[
-              i
-            ].animationDurationUpdate = this.settings.animation_time;
-          }
-          if (!this.settings.as_table) this.draw_plot();
-        }
-      },
-    ],
-    "settings.animation_type": [
-      function() {
-        if (this.$options.plot && this.$options.plot.initOptions) {
-          this.$options.plot.options.animationEasingUpdate = this.settings.animation_type;
-          this.$options.plot.options.animationEasing = this.settings.animation_type;
-          this.$options.plot.options.stateAnimation.easing = this.settings.animation_type;
-          for (var i = this.$options.plot.options.series.length; i--; ) {
-            this.$options.plot.options.series[
-              i
-            ].animationEasing = this.$options.plot.options.series[
-              i
-            ].animationEasingUpdate = this.settings.animation_type;
-          }
-          if (!this.settings.as_table) this.draw_plot();
-        }
+        this.settings.animation_time = this.settings.disable_plot_animation
+          ? 0
+          : 700;
       },
     ],
   };
@@ -676,6 +649,12 @@ new Vue({
       this.$options.plot.options.grid = this.$options.display.grid.length
         ? this.$options.display.grid
         : null;
+      this.$options.plot.options.animationDuration = this.settings.animation_time;
+      this.$options.plot.options.animationDurationUpdate = this.settings.animation_time;
+      this.$options.plot.options.animationEasing = this.settings.animation_type;
+      this.$options.plot.options.animationEasingUpdate = this.settings.animation_type;
+      this.$options.plot.options.stateAnimation.duration = this.settings.animation_time;
+      this.$options.plot.options.stateAnimation.easing = this.settings.animation_type;
       this.$options.plot.instance.setOption(this.$options.plot.options);
     },
     make_grid: function(top, height) {
@@ -1405,15 +1384,15 @@ new Vue({
     toggleDataMenu: function() {
       var w = document.body.getBoundingClientRect().width,
         data_container = document.getElementById("data-container"),
-        data_menu = document.getElementById("side-menu");
+        data_menu = document.getElementById("data-menu");
       if (this.$root.settings.data_menu_open) {
-        data_menu.style.display = "none";
+        data_menu.style.visibility = "hidden";
         data_container.style.right = "0px";
         data_menu.style.right = "-320px";
         data_menu.style.width = "320px";
         this.$root.settings.data_menu_open = false;
       } else {
-        data_menu.style.display = "";
+        data_menu.style.visibility = "";
         data_menu.style.right = "0px";
         if (w < 600) {
           data_menu.style.width = "100%";

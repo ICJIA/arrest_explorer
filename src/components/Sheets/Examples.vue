@@ -1,51 +1,64 @@
 <template>
-  <div>
-    <v-card-text>
-      <v-row v-for="content in examples" :key="content.name">
-        <p class="title text--primary">{{ content.question }}</p>
-        <p class="body-1">{{ content.decription }}</p>
-        <div class="api-display">
-          <a
-            aria-label="parameters for this example"
-            :href="content.url.string"
-          >
-            <span class="url-base">{{ content.base_url }}</span>
-            <span v-if="content.url.parts.length" class="url-param-inital"
-              >?</span
-            >
-            <span
-              v-for="(part, index) in content.url.parts"
-              :key="part.slot + part.type"
-            >
-              <span class="url-param-key">{{ part.slot }}</span>
-              <span v-if="part.aspect" class="url-param-aspect">{{
-                "[" + part.aspect + "]"
-              }}</span>
-              <span class="url-param-type">{{ part.type }}</span>
-              <span class="url-param-value">{{ part.value }}</span>
-              <span
-                v-if="index !== content.url.parts.length - 1"
-                class="url-param-sep"
-                >&</span
+  <v-dialog
+    role="dialog"
+    v-model="$root.settings.examples_open"
+    open-delay="0"
+    overlay-opacity=".8"
+    max-width="600px"
+    scrollable
+  >
+    <v-card>
+      <v-card-title>
+        <h1 role="heading" class="headline">Examples</h1>
+        <v-spacer></v-spacer
+        ><v-btn icon title="close" @click="$root.settings.examples_open = false"
+          ><v-icon>mdi-close</v-icon></v-btn
+        >
+      </v-card-title>
+      <v-card-text>
+        <v-row v-for="content in examples" :key="content.name">
+          <p class="title text--primary">{{ content.question }}</p>
+          <p class="body-1">{{ content.decription }}</p>
+          <div class="api-display">
+            <a :href="content.url.string">
+              <span class="url-base">{{ content.base_url }}</span>
+              <span v-if="content.url.parts.length" class="url-param-inital"
+                >?</span
               >
-            </span>
-          </a>
-        </div>
-      </v-row>
-      <v-row>
-        <p>
-          See our
-          <a
-            rel="noreferrer"
-            :href="this.$root.settings.repo + '/tree/master/examples'"
-            target="_blank"
-            >example scripts</a
-          >
-          to reproduce these examples in R or Python using the API.
-        </p>
-      </v-row>
-    </v-card-text>
-  </div>
+              <span
+                v-for="(part, index) in content.url.parts"
+                :key="part.slot + part.type"
+              >
+                <span class="url-param-key">{{ part.slot }}</span>
+                <span v-if="part.aspect" class="url-param-aspect">{{
+                  "[" + part.aspect + "]"
+                }}</span>
+                <span class="url-param-type">{{ part.type }}</span>
+                <span class="url-param-value">{{ part.value }}</span>
+                <span
+                  v-if="index !== content.url.parts.length - 1"
+                  class="url-param-sep"
+                  >&</span
+                >
+              </span>
+            </a>
+          </div>
+        </v-row>
+        <v-row>
+          <p>
+            See our
+            <a
+              rel="noreferrer"
+              :href="this.$root.settings.repo + '/tree/master/examples'"
+              target="_blank"
+              >example scripts</a
+            >
+            to reproduce these examples in R or Python using the API.
+          </p>
+        </v-row>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -124,18 +137,14 @@ export default {
 </script>
 
 <style scoped>
-a {
-  text-decoration: none;
-  color: "primary";
-}
-.v-card__text .row {
+.row {
   margin: 0 0 1em 0;
 }
-.v-application .title {
+.title {
   font-size: 1.2rem !important;
   margin: 0;
 }
-.v-application .body-1 {
+.body-1 {
   font-size: 0.91rem !important;
 }
 </style>

@@ -76,16 +76,25 @@ data
         );
       });
       it("mixed works", function() {
-        assert.deepStrictEqual(mixed.header, [
-          "Year",
-          "crime_type",
-          "offense_class",
-          "arrest_charges",
-        ]);
+        for (
+          var header = ["Year", "crime_type"],
+            header1 = data.levels.offense_class.display.sort(),
+            i = header1.length;
+          i--;
+
+        ) {
+          header[2 + i] = "offense_class_" + header1[i].toLowerCase();
+        }
+        assert.deepStrictEqual(mixed.header, header);
         assert(
           (function() {
-            for (var i = mixed.rows.length; i--; )
-              if (mixed.rows[i].length !== 4) return false;
+            for (
+              var i = mixed.rows.length,
+                l = 2 + data.levels.offense_class.display.length;
+              i--;
+
+            )
+              if (mixed.rows[i].length !== l) return false;
             return true;
           })()
         );
