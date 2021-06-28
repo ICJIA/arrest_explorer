@@ -100,7 +100,7 @@
                 target="_blank"
               >
                 <span class="url-base">{{ url.base }}</span>
-                <span v-if="url.query.parts.length" class="url-param-inital"
+                <span v-if="url.query.parts.length" class="url-param-initial"
                   >?</span
                 >
                 <span

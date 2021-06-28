@@ -1,34 +1,32 @@
 <template>
-  <div>
-    <v-app v-if="$root.settings.embed">
-      <v-col>
-        <v-row class="data-wrap embeded" no-gutters>
-          <div role="main" id="data-container"><DataDisplay /></div>
-        </v-row>
-      </v-col>
-    </v-app>
-    <v-app v-else>
-      <v-col>
-        <v-row
-          :class="'data-wrap' + ($root.settings.embed ? ' embeded' : '')"
-          no-gutters
-        >
-          <Header />
-          <div role="main" id="data-container">
-            <DataDisplay />
-          </div>
-          <div id="data-menu" style="visibility: hidden">
-            <DataSheet />
-          </div>
-        </v-row>
-        <v-row no-gutters><Menu /></v-row>
-      </v-col>
-      <Intro />
-      <Examples />
-      <Export />
-      <FilterSort />
-    </v-app>
-  </div>
+  <v-app v-if="$root.settings.embed">
+    <v-col>
+      <v-row class="data-wrap embedded" no-gutters>
+        <div role="main" id="data-container"><DataDisplay /></div>
+      </v-row>
+    </v-col>
+  </v-app>
+  <v-app v-else>
+    <v-col>
+      <v-row
+        :class="'data-wrap' + ($root.settings.embed ? ' embedded' : '')"
+        no-gutters
+      >
+        <Header />
+        <div role="main" id="data-container">
+          <DataDisplay />
+        </div>
+        <div id="data-menu" style="visibility: hidden">
+          <DataSheet />
+        </div>
+      </v-row>
+      <v-row no-gutters><Menu /></v-row>
+    </v-col>
+    <Intro />
+    <Examples />
+    <Export />
+    <FilterSort />
+  </v-app>
 </template>
 
 <script>
@@ -90,6 +88,12 @@ export default {
   bottom: 2.5em;
   overflow-x: hidden;
 }
+.data-wrap.embedded,
+.data-wrap.embedded #data-container {
+  padding: 0;
+  top: 0;
+  bottom: 0;
+}
 </style>
 
 <style>
@@ -146,7 +150,7 @@ html {
   color: #d6d6d6;
   background: #2f2f2f;
 }
-.theme--dark .url-param-inital {
+.theme--dark .url-param-initial {
   color: #ffbdbd;
 }
 .theme--dark .url-param-key {
@@ -168,7 +172,7 @@ html {
   color: #5d5d5d;
   background: #f3f3f3;
 }
-.theme--light .url-param-inital {
+.theme--light .url-param-initial {
   color: #902f2f;
 }
 .theme--light .url-param-key {

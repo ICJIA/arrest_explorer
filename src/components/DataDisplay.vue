@@ -24,18 +24,15 @@
     v-else-if="
       $root.settings.split1 ||
         (!$root.settings.average &&
-          $root.year_window[0] !== $root.year_window[1])
+          $root.settings.year.window[0] !== $root.settings.year.window[1])
     "
   />
   <div class="average-display" v-else>
     <p class="text-h4">
       {{
-        ($root.year_window[0] === $root.year_window[1]
-          ? "In " + $root.year_window[0]
-          : "Between " +
-            $root.year_window[0] +
-            " and " +
-            $root.year_window[1]) + " there were"
+        (year[0] === year[1]
+          ? "In " + year[0]
+          : "Between " + year[0] + " and " + year[1]) + " there were"
       }}
     </p>
     <p class="primary--text text-h4">
@@ -43,7 +40,7 @@
     </p>
     <p class="text-h4">
       {{
-        $root.year_window[0] === $root.year_window[1]
+        year[0] === year[1]
           ? $root.format_name($root.settings.value).toLowerCase() + "."
           : "average " +
             $root.format_name($root.settings.value).toLowerCase() +
@@ -58,6 +55,16 @@ import Plot from "./Plot.vue";
 const number_breaks = /^(\d{3})/g;
 
 export default {
+  computed: {
+    year: function() {
+      if (this.$root.settings.year.range[0] === Infinity) {
+        this.$root.$options.source.update(this.$root.$options.display.options);
+        this.$root.settings.year.window[0] = this.$root.$options.source.view.year.min;
+        this.$root.settings.year.window[1] = this.$root.$options.source.view.year.max;
+      }
+      return this.$root.settings.year.window;
+    },
+  },
   methods: {
     format_number: function(x) {
       return String(

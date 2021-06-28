@@ -38,7 +38,7 @@
             v-model="min_year"
             step="1"
             :min="$root.settings.year.range[0]"
-            :max="max_year"
+            :max="$root.settings.year.window[1]"
             dense
             solo-inverted
             :rules="earliest_year"
@@ -61,7 +61,7 @@
             type="number"
             v-model="max_year"
             step="1"
-            :min="min_year"
+            :min="$root.settings.year.window[0]"
             :max="$root.settings.year.range[1]"
             dense
             solo-inverted
@@ -88,9 +88,9 @@
       Swap Order <v-icon>mdi-shuffle-variant</v-icon>
     </v-btn>
     <v-switch
-      label="Average"
+      label="Aggregate"
       :hint="
-        'Aggregate ' +
+        'Average ' +
           $root.settings.value +
           ' over years' +
           ($root.settings.split1 ? ' by grouping variables.' : '.')
@@ -104,7 +104,7 @@
       v-if="
         $root.settings.as_table ||
           (!$root.settings.average &&
-            this.$root.year_window[0] !== this.$root.year_window[1]) ||
+            $root.settings.year.window[0] !== $root.settings.year.window[1]) ||
           $root.settings.split1
       "
     >
@@ -166,14 +166,14 @@ export default {
       earliest_year: [
         v =>
           Number(v) >= this.$root.settings.year.range[0]
-            ? Number(v) <= this.max_year ||
+            ? Number(v) <= this.$root.settings.year.window[1] ||
               "starting year cannot be greater than ending year"
             : "earliest year is " + this.$root.settings.year.range[0],
       ],
       latest_year: [
         v =>
           Number(v) <= this.$root.settings.year.range[1]
-            ? Number(v) >= this.min_year ||
+            ? Number(v) >= this.$root.settings.year.window[0] ||
               "ending year cannot be less than starting year"
             : "latest year is " + this.$root.settings.year.range[1],
       ],
@@ -182,33 +182,41 @@ export default {
   computed: {
     min_year: {
       get: function() {
-        return this.$root.year_window[0];
+        return this.$root.settings.year.window[0];
       },
       set: function(v) {
-        this.$root.year_window = [Number(v), this.$root.year_window[1]];
+        this.$root.settings.year.window = [
+          v === null ? this.$root.settings.year.range[0] : Number(v),
+          this.$root.settings.year.window[1],
+        ];
       },
     },
     max_year: {
       get: function() {
-        return this.$root.year_window[1];
+        return this.$root.settings.year.window[1];
       },
       set: function(v) {
-        this.$root.year_window = [this.$root.year_window[0], Number(v)];
+        this.$root.settings.year.window = [
+          this.$root.settings.year.window[0],
+          v === null ? this.$root.settings.year.range[1] : Number(v),
+        ];
       },
     },
   },
   methods: {
     adjust_years: function() {
       if (
-        this.min_year < this.$root.settings.year.range[0] ||
-        this.min_year > this.max_year
+        this.$root.settings.year.window[0] <
+          this.$root.settings.year.range[0] ||
+        this.$root.settings.year.window[0] > this.$root.settings.year.window[1]
       )
-        this.min_year = this.$root.settings.year.range[0];
+        this.$root.settings.year.window[0] = this.$root.settings.year.range[0];
       if (
-        this.max_year > this.$root.settings.year.range[1] ||
-        this.max_year < this.min_year
+        this.$root.settings.year.window[1] >
+          this.$root.settings.year.range[1] ||
+        this.$root.settings.year.window[1] < this.$root.settings.year.window[0]
       )
-        this.max_year = this.$root.settings.year.range[1];
+        this.$root.settings.year.window[1] = this.$root.settings.year.range[1];
     },
     swap_order: function() {
       var s = this.$root.settings.split1;

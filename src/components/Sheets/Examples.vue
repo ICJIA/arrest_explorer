@@ -22,7 +22,7 @@
           <div class="api-display">
             <a :href="content.url.string">
               <span class="url-base">{{ content.base_url }}</span>
-              <span v-if="content.url.parts.length" class="url-param-inital"
+              <span v-if="content.url.parts.length" class="url-param-initial"
                 >?</span
               >
               <span
