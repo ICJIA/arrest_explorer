@@ -171,14 +171,19 @@ export default {
           header: "Link to this plot:",
           description: "link the the current data view",
           base: this.$root.settings.url,
-          refresh: this.$root.display_query.bind(this, {
-            value: "arrests",
-            average: false,
-            as_table: false,
-            format_table: "mixed",
-            format_category: "labels",
-            plot_type: "line",
-          }),
+          refresh: this.$root.display_query.bind(
+            null,
+            this.$root.$options.display.options,
+            "plot",
+            {
+              value: "arrests",
+              average: false,
+              as_table: false,
+              format_table: "mixed",
+              format_category: "labels",
+              plot_type: "line",
+            }
+          ),
           query: { parts: [], string: "" },
           embed: true,
         },
@@ -187,13 +192,18 @@ export default {
           description:
             "link to download the current data view through the programing interface",
           base: this.$root.settings.url + "api/",
-          refresh: this.$root.display_query.bind(this, {
-            value: "arrests",
-            average: false,
-            format_file: "csv",
-            format_table: "mixed",
-            format_category: "labels",
-          }),
+          refresh: this.$root.display_query.bind(
+            null,
+            this.$root.$options.display.options,
+            "api",
+            {
+              value: "arrests",
+              average: false,
+              format_file: "csv",
+              format_table: "mixed",
+              format_category: "labels",
+            }
+          ),
           query: { parts: [], string: "" },
         },
       ],

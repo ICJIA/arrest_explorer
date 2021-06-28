@@ -29,6 +29,7 @@
             v-model="sort.aspect_proxy"
             @change="update_direction"
             style="max-width: 255px"
+            id="filter_first_input"
           ></v-select>
           <p class="inline-p">in</p>
           <v-select
@@ -52,47 +53,32 @@
         </v-row>
         <v-row class="levels-row">
           <v-col>
-            <v-combobox
+            <v-select
               :label="
                 'Select ' +
                   $root.variable_parts[$root.settings.filter_showing].multi +
                   ' from this list:'
               "
-              :aria-label="
-                'Select ' +
-                  $root.variable_parts[$root.settings.filter_showing].multi +
-                  ' from this list; ' +
-                  selected_levels.length +
-                  ' selected.'
-              "
               v-model="selected_levels"
               :items="levels"
-              chips
               clearable
-              counter
-              deletable-chips
-              hide-selected
               multiple
-              @click:clear="clear_selection"
+              @click:deselect="clear_selection"
             >
-              <template v-slot:selection="{ item, attrs }">
-                <v-chip
-                  :aria-label="item"
-                  v-bind="attrs"
-                  :input-value="item"
-                  close
-                  :close-label="
-                    'exclude ' +
-                      $root.variable_parts[$root.settings.filter_showing]
-                        .single +
-                      ' ' +
-                      item
-                  "
-                  @click:close="remove_level(item)"
-                  >{{ item }}</v-chip
-                >
+              <template v-slot:selection="{ index }">
+                <span v-if="index === 0">{{
+                  selected_levels.length +
+                    " of " +
+                    $root.$options.source.levels[$root.settings.filter_showing]
+                      .label.length +
+                    " " +
+                    $root.variable_parts[$root.settings.filter_showing][
+                      selected_levels.length === 1 ? "single" : "multi"
+                    ] +
+                    " selected"
+                }}</span>
               </template>
-            </v-combobox></v-col
+            </v-select></v-col
           >
           <v-col
             ><v-btn
@@ -105,13 +91,15 @@
             ></v-col
           >
         </v-row>
-        <v-subheader>{{
-          "Then further filter the above selected " +
-            $root.variable_parts[$root.settings.filter_showing].multi +
-            " if their associated average " +
-            $root.settings.value +
-            " also meet the following criteria:"
-        }}</v-subheader>
+        <v-row>
+          {{
+            "Then further filter the above selected " +
+              $root.variable_parts[$root.settings.filter_showing].multi +
+              " if their associated average " +
+              $root.settings.value +
+              " also meet the following criteria:"
+          }}
+        </v-row>
         <v-row>
           <v-text-field
             label="min average"
@@ -216,24 +204,21 @@ export default {
   },
   methods: {
     refilter: function() {
-      var f = this.$root.get_filter(this.$root.settings.filter_showing, "="),
-        i;
-      if ("object" === typeof f.display_value && f.display_value.length) {
-        for (i = f.display_value.length; i--; )
-          if (this.selected_levels.indexOf(f.display_value[i]) === -1)
-            this.selected_levels.splice(0, 0, f.display_value[i]);
-      }
-      f.display_value = this.selected_levels;
+      var f = this.$root.get_filter(this.$root.settings.filter_showing, "=");
+      f.display_value = [...this.selected_levels];
       f.value = {};
-      f.enabled = true;
+      f.enabled =
+        this.selected_levels.length !==
+        this.$root.$options.source.levels[this.$root.settings.filter_showing]
+          .label.length;
       f = this.$root.get_filter(this.$root.settings.filter_showing, "<");
       f.display_value =
         "string" === typeof this.max ? Number(this.max) : this.max;
-      f.enabled = Number.isFinite(f.display_value);
+      f.enabled = "number" === typeof f.display_value;
       f = this.$root.get_filter(this.$root.settings.filter_showing, ">");
       f.display_value =
         "string" === typeof this.min ? Number(this.min) : this.min;
-      f.enabled = Number.isFinite(f.display_value);
+      f.enabled = "number" === typeof f.display_value;
       this.step_size =
         this.$root.settings.value === "arrests_per_arrestee" ? 0.001 : 1;
       this.$root.update_data();
@@ -268,45 +253,57 @@ export default {
           : [...this.levels];
     },
     get_levels_info: function() {
-      this.limit[0] = Infinity;
-      this.limit[1] = -Infinity;
-      this.level_info = [];
-      for (
-        var l = this.$root.$options.source.view[
-            this.$root.settings.filter_showing
-          ].levels,
-          i = l.length,
-          c,
-          f;
-        i--;
-
+      if (
+        Object.prototype.hasOwnProperty.call(
+          this.$root.$options.source.view,
+          this.$root.settings.filter_showing
+        )
       ) {
-        if (l[i].mean < this.limit[0]) this.limit[0] = l[i].mean;
-        if (l[i].mean > this.limit[1]) this.limit[1] = l[i].mean;
-        if (!this.level_info.length || l[i].mean < this.level_info[0]) {
-          this.level_info.splice(0, 0, l[i]);
-        } else {
-          for (c = this.level_info.length; c--; ) {
-            if (l[i].mean > this.level_info[c].mean) {
-              this.level_info.splice(c + 1, 0, l[i]);
-              break;
+        this.limit[0] = Infinity;
+        this.limit[1] = -Infinity;
+        this.level_info = [];
+        for (
+          var l = this.$root.$options.source.view[
+              this.$root.settings.filter_showing
+            ].levels.sort(),
+            i = l.length,
+            c,
+            f;
+          i--;
+
+        ) {
+          if (l[i].mean < this.limit[0]) this.limit[0] = l[i].mean;
+          if (l[i].mean > this.limit[1]) this.limit[1] = l[i].mean;
+          if (!this.level_info.length || l[i].mean < this.level_info[0]) {
+            this.level_info.splice(0, 0, l[i]);
+          } else {
+            for (c = this.level_info.length; c--; ) {
+              if (l[i].mean > this.level_info[c].mean) {
+                this.level_info.splice(c + 1, 0, l[i]);
+                break;
+              }
+              if (!c) this.level_info.splice(0, 0, l[i]);
             }
-            if (!c) this.level_info.splice(0, 0, l[i]);
           }
         }
+        f = this.$root.get_filter(this.$root.settings.filter_showing, ">");
+        if (f.enabled) {
+          this.min = f.value;
+        }
+        f = this.$root.get_filter(this.$root.settings.filter_showing, "<");
+        if (f.enabled) {
+          this.max = f.value;
+        }
+        setTimeout(function() {
+          var e = document.getElementById("level_mean_display");
+          if (e && e.lastElementChild) {
+            e.lastElementChild.scrollIntoViewIfNeeded();
+            document
+              .getElementById("filter_first_input")
+              .scrollIntoViewIfNeeded();
+          }
+        }, 1);
       }
-      f = this.$root.get_filter(this.$root.settings.filter_showing, ">");
-      if (f.value) {
-        this.min = f.value;
-      }
-      f = this.$root.get_filter(this.$root.settings.filter_showing, "<");
-      if (f.value) {
-        this.max = f.value;
-      }
-      setTimeout(function() {
-        var e = document.getElementById("level_mean_display");
-        if (e && e.lastElementChild) e.lastElementChild.scrollIntoView();
-      }, 1);
     },
     update_direction: function(label) {
       this.sort.aspect =
@@ -344,28 +341,13 @@ export default {
           this.$root.settings.filter_showing
         ];
         this.update_direction();
-        this.levels = [];
-        for (
-          var i = this.$root.$options.source.variables[
+        this.levels = [
+          ...this.$root.$options.source.levels[
             this.$root.settings.filter_showing
-          ].levels.length;
-          i--;
-
-        )
-          this.levels[i] = this.$root.$options.source.variables[
-            this.$root.settings.filter_showing
-          ].levels[i].toLowerCase();
-        this.selected_levels = [];
-        for (
-          i = this.$root.$options.source.view[
-            this.$root.settings.filter_showing
-          ].labels.length;
-          i--;
-
-        )
-          this.selected_levels[i] = this.$root.$options.source.view[
-            this.$root.settings.filter_showing
-          ].labels[i].toLowerCase();
+          ].label,
+        ].sort();
+        var f = this.$root.get_filter(this.$root.settings.filter_showing, "=");
+        this.selected_levels = [...(f.display_value || this.levels)].sort();
         this.get_levels_info();
       }
     },

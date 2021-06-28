@@ -17,10 +17,13 @@
     <v-sheet class="filter-results" v-if="spec.name && $root.settings[which]">
       <v-row class="compact-row">{{
         spec.displaying +
-          " / " +
+          " of " +
           spec.levels +
           " " +
-          $root.variable_parts[spec.name].multi
+          $root.variable_parts[spec.name][
+            spec.displaying == 1 ? "single" : "multi"
+          ] +
+          " selected"
       }}</v-row>
       <v-row class="compact-row"
         >{{
@@ -38,7 +41,6 @@
       </v-row>
       <v-row>
         <v-btn
-          :title="'edit ' + spec.name + ' filter'"
           text
           block
           color="primary"

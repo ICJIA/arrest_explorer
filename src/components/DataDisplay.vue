@@ -1,29 +1,16 @@
 <template>
   <div v-if="$root.settings.as_table">
-    <p class="text-subtitle-1">
-      {{
-        $root.settings.average
-          ? $root.year_window[0] === $root.year_window[1]
-            ? $root.format_name($root.settings.value) +
-              " in " +
-              $root.year_window[0]
-            : "Average " +
-              $root.format_name($root.settings.value) +
-              " between " +
-              $root.year_window[0] +
-              " and " +
-              $root.year_window[1]
-          : $root.format_name($root.settings.value) +
-            " by " +
-            ($root.settings.split1
-              ? $root.format_name($root.settings.split1) +
-                ($root.settings.split2
-                  ? ", " + $root.format_name($root.settings.split2)
-                  : "") +
-                (($root.settings.split2 ? "," : "") + " and Year")
-              : " Year")
-      }}
-    </p>
+    <div v-if="$root.$options.display.graphic.length !== 0">
+      <p class="text-h4">
+        {{ $root.$options.display.graphic[0].style.text }}
+      </p>
+      <p
+        class="text-subtitle-1"
+        v-if="$root.$options.display.graphic[1].style.text"
+      >
+        {{ $root.$options.display.graphic[1].style.text }}
+      </p>
+    </div>
     <v-data-table
       :headers="$root.table.header"
       :items="$root.table.rows"
@@ -93,7 +80,11 @@ export default {
   text-align: center;
   padding: 0.5em 0 0 0;
 }
+.text-h4,
 .text-subtitle-1 {
   text-align: center;
+}
+.text-h4 {
+  margin: 0;
 }
 </style>

@@ -166,11 +166,9 @@ var store_options = [
     "settings.theme_dark": [
       function() {
         this.$vuetify.theme.dark = this.settings.theme_dark;
-        if (!this.settings.as_table) {
-          for (var i = this.$options.display.graphic.length; i--; )
-            this.$options.display.graphic[i].style.fill = this.color;
-          this.draw_plot();
-        }
+        for (var i = this.$options.display.graphic.length; i--; )
+          this.$options.display.graphic[i].style.fill = this.color;
+        if (!this.settings.as_table) this.draw_plot();
       },
     ],
     "settings.svg": [
@@ -264,6 +262,11 @@ new Vue({
         type: "shadow",
       },
       borderWidth: 0,
+      order: "valueDesc",
+      textStyle: {
+        fontWeight: "normal",
+      },
+      confine: true,
     },
     xAxis: [
       {
@@ -405,22 +408,22 @@ new Vue({
             if (!params[k].length) params[k] = [params[k]];
             for (i = params[k].length; i--; ) {
               if (params[k][i].type === "=") {
-                this.$root.$options.display.options.year[0].value =
+                this.$options.display.options.year[0].value =
                   params[k][i].value;
-                this.$root.$options.display.options.year[1].value =
+                this.$options.display.options.year[1].value =
                   params[k][i].value;
                 break;
               } else if (
                 params[k][i].type === ">" ||
                 params[k][i].type === ">="
               ) {
-                this.$root.$options.display.options.year[0].value =
+                this.$options.display.options.year[0].value =
                   params[k][i].value;
               } else if (
                 params[k][i].type === "<" ||
                 params[k][i].type === "<="
               ) {
-                this.$root.$options.display.options.year[1].value =
+                this.$options.display.options.year[1].value =
                   params[k][i].value;
               }
             }
@@ -439,11 +442,11 @@ new Vue({
     );
   },
   mounted() {
-    for (var i = this.$root.$options.display.options.year.length, e; i--; ) {
-      if (this.$root.$options.display.options.year[i].type === ">=") {
-        this.year_window[0] = this.$root.$options.display.options.year[i].value;
-      } else if (this.$root.$options.display.options.year[i].type === "<=")
-        this.year_window[1] = this.$root.$options.display.options.year[i].value;
+    for (var i = this.$options.display.options.year.length, e; i--; ) {
+      if (this.$options.display.options.year[i].type === ">=") {
+        this.year_window[0] = this.$options.display.options.year[i].value;
+      } else if (this.$options.display.options.year[i].type === "<=")
+        this.year_window[1] = this.$options.display.options.year[i].value;
     }
     window.dataLayer = window.dataLayer || [];
     this.gtag("js", new Date());
@@ -479,11 +482,16 @@ new Vue({
   methods: {
     addListenersToSelects: addListenersToSelects,
     intervalScaleNiceTicks: intervalScaleNiceTicks,
-    display_query: function(ex, d, all) {
-      d = d || this.$options.display.options;
-      var api =
-          !all &&
-          (!ex || !Object.prototype.hasOwnProperty.call(ex, "plot_type")),
+    display_query: function(args, type, defaults) {
+      // converts an object containing settings to a query string
+      // - args: Object with settings to be displayed.
+      // - type: string indicating whether display ('plot') or file ('api')
+      //   related settings from this.settings should be added
+      // - defaults: Object with default settings to be excluded.
+      defaults = defaults || {};
+      var api = type === "api",
+        plot = type === "plot",
+        all = !api && !plot,
         parts = [],
         string = "",
         k,
@@ -513,30 +521,43 @@ new Vue({
         )
           add_settings_param("format_table", this.settings.format_table);
       } else {
-        if (this.settings.plot_type !== "line")
-          add_settings_param("plot_type", this.settings.plot_type);
         if (this.settings.svg) add_settings_param("svg", true);
+        if (!Object.prototype.hasOwnProperty.call(defaults, "plot_type"))
+          defaults.plot_type = "line";
+        if (
+          (args.plot_type || this.settings.plot_type) !== defaults.plot_type
+        ) {
+          add_settings_param(
+            "plot_type",
+            args.plot_type || this.settings.plot_type
+          );
+        }
       }
-      ex = ex || {};
-      for (k in d)
-        if (Object.prototype.hasOwnProperty.call(d, k) && k !== "plot_type") {
-          if (!Object.prototype.hasOwnProperty.call(ex, k) || ex[k] !== d[k]) {
+      for (k in args)
+        if (
+          Object.prototype.hasOwnProperty.call(args, k) &&
+          k !== "plot_type"
+        ) {
+          if (
+            !Object.prototype.hasOwnProperty.call(defaults, k) ||
+            args[k] !== defaults[k]
+          ) {
             if (k === "split") {
-              if (d[k][0]) {
+              if (args[k][0]) {
                 parts.push({
                   slot: k,
                   type: "=",
-                  value: d[k][0] + (d[k][1] ? "," + d[k][1] : ""),
+                  value: args[k][0] + (args[k][1] ? "," + args[k][1] : ""),
                 });
                 string +=
                   (string ? "&" : "?") +
                   k +
                   "=" +
-                  d[k][0] +
-                  (d[k][1] ? "," + d[k][1] : "");
+                  args[k][0] +
+                  (args[k][1] ? "," + args[k][1] : "");
               }
             } else {
-              if (typeof d[k] === "object") {
+              if (typeof args[k] === "object") {
                 if (k === "sort") {
                   i = parts.length;
                   parts.push({
@@ -545,76 +566,78 @@ new Vue({
                     type: "=",
                     value: "",
                   });
-                  for (l in d[k])
-                    if (Object.prototype.hasOwnProperty.call(d[k], l)) {
+                  for (l in args[k])
+                    if (Object.prototype.hasOwnProperty.call(args[k], l)) {
                       if (
                         (all ||
-                          l === this.$root.settings.split1 ||
-                          l === this.$root.settings.split2) &&
-                        (!d[k][l].increasing || d[k][l].aspect !== "label")
+                          l === this.settings.split1 ||
+                          l === this.settings.split2) &&
+                        (!args[k][l].increasing ||
+                          args[k][l].aspect !== "label")
                       )
                         parts[i].value +=
                           (parts[i].value ? "," : "") +
-                          (d[k][l].increasing ? "-" : "") +
+                          (args[k][l].increasing ? "-" : "") +
                           l +
-                          (d[k][l].aspect === "label"
+                          (args[k][l].aspect === "label"
                             ? ""
-                            : "[" + d[k][l].aspect + "]");
+                            : "[" + args[k][l].aspect + "]");
                     }
                   if (parts[i].value) {
                     string += (string ? "&" : "?") + "sort=" + parts[i].value;
                   } else parts.splice(i, 1);
                 } else {
-                  for (i = d[k].length; i--; ) {
+                  for (i = args[k].length; i--; ) {
                     if (
                       Object.prototype.hasOwnProperty.call(
-                        d[k][i],
+                        args[k][i],
                         "display_value"
                       ) &&
-                      d[k][i].enabled &&
+                      args[k][i].enabled &&
                       (all ||
-                        ((k === this.$root.settings.split1 ||
-                          k === this.$root.settings.split2) &&
-                          (d[k][i].aspect !== "label" ||
-                            d[k][i].display_value.length <
-                              this.$root.$options.source.variables[k].levels
+                        ((k === this.settings.split1 ||
+                          k === this.settings.split2) &&
+                          (args[k][i].aspect !== "label" ||
+                            args[k][i].display_value.length <
+                              this.$options.source.variables[k].levels
                                 .length)) ||
-                        !Object.prototype.hasOwnProperty.call(
-                          this.$root.$options.source.variables,
-                          k
-                        ) ||
+                        (this.$options.source.variables &&
+                          !Object.prototype.hasOwnProperty.call(
+                            this.$options.source.variables,
+                            k
+                          )) ||
                         (k === "year" &&
-                          isFinite(d.year[0].value) &&
-                          d.year[0].value !== 1000 &&
-                          d[k][i].value !==
-                            this.$root.settings.year.range[
-                              d[k][i].type === ">=" ? 0 : 1
+                          isFinite(args.year[0].value) &&
+                          args.year[0].value !== 1000 &&
+                          args[k][i].value !==
+                            this.settings.year.range[
+                              args[k][i].type === ">=" ? 0 : 1
                             ]))
                     ) {
                       parts.push({
                         slot: k,
-                        aspect: k === "year" ? "" : d[k][i].aspect,
-                        type: d[k][i].type,
-                        value: d[k][i].display_value.join
-                          ? d[k][i].display_value.join(",")
-                          : d[k][i].display_value,
+                        aspect: k === "year" ? "" : args[k][i].aspect,
+                        type: args[k][i].type,
+                        value: args[k][i].display_value.join
+                          ? args[k][i].display_value.join(",")
+                          : args[k][i].display_value,
                       });
                       string +=
                         (string ? "&" : "?") +
                         k +
-                        (k !== "year" && d[k][i].aspect
-                          ? "[" + d[k][i].aspect + "]"
+                        (k !== "year" && args[k][i].aspect
+                          ? "[" + args[k][i].aspect + "]"
                           : "") +
-                        d[k][i].type +
-                        (d[k][i].display_value.join
-                          ? d[k][i].display_value.join(",")
-                          : d[k][i].display_value);
+                        args[k][i].type +
+                        (args[k][i].display_value.join
+                          ? args[k][i].display_value.join(",")
+                          : args[k][i].display_value);
                     }
                   }
                 }
               } else {
-                parts.push({ slot: k, type: "=", value: d[k] });
-                string += (string ? "&" : "?") + k + "=" + d[k];
+                parts.push({ slot: k, type: "=", value: args[k] });
+                string += (string ? "&" : "?") + k + "=" + args[k];
               }
             }
           }
@@ -633,29 +656,31 @@ new Vue({
     },
     queue_update,
     draw_plot: function() {
-      if (this.$options.plot.instance) this.$options.plot.instance.dispose();
-      this.$options.plot.instance = this.$options.plot.engine.init(
-        this.$options.plot.element,
-        this.settings.theme_dark ? "dark" : "light",
-        this.$options.plot.initOptions
-      );
-      this.$options.plot.options.title = this.$options.display.title;
-      this.$options.plot.options.graphic = this.$options.display.graphic;
-      this.$options.plot.options.tooltip = this.$options.display.tooltip;
-      this.$options.plot.options.legend = this.$options.display.legend;
-      this.$options.plot.options.xAxis = this.$options.display.xAxis;
-      this.$options.plot.options.yAxis = this.$options.display.yAxis;
-      this.$options.plot.options.series = this.$options.display.series;
-      this.$options.plot.options.grid = this.$options.display.grid.length
-        ? this.$options.display.grid
-        : null;
-      this.$options.plot.options.animationDuration = this.settings.animation_time;
-      this.$options.plot.options.animationDurationUpdate = this.settings.animation_time;
-      this.$options.plot.options.animationEasing = this.settings.animation_type;
-      this.$options.plot.options.animationEasingUpdate = this.settings.animation_type;
-      this.$options.plot.options.stateAnimation.duration = this.settings.animation_time;
-      this.$options.plot.options.stateAnimation.easing = this.settings.animation_type;
-      this.$options.plot.instance.setOption(this.$options.plot.options);
+      if (this.$options.plot) {
+        if (this.$options.plot.instance) this.$options.plot.instance.dispose();
+        this.$options.plot.instance = this.$options.plot.engine.init(
+          this.$options.plot.element,
+          this.settings.theme_dark ? "dark" : "light",
+          this.$options.plot.initOptions
+        );
+        this.$options.plot.options.title = this.$options.display.title;
+        this.$options.plot.options.graphic = this.$options.display.graphic;
+        this.$options.plot.options.tooltip = this.$options.display.tooltip;
+        this.$options.plot.options.legend = this.$options.display.legend;
+        this.$options.plot.options.xAxis = this.$options.display.xAxis;
+        this.$options.plot.options.yAxis = this.$options.display.yAxis;
+        this.$options.plot.options.series = this.$options.display.series;
+        this.$options.plot.options.grid = this.$options.display.grid.length
+          ? this.$options.display.grid
+          : null;
+        this.$options.plot.options.animationDuration = this.settings.animation_time;
+        this.$options.plot.options.animationDurationUpdate = this.settings.animation_time;
+        this.$options.plot.options.animationEasing = this.settings.animation_type;
+        this.$options.plot.options.animationEasingUpdate = this.settings.animation_type;
+        this.$options.plot.options.stateAnimation.duration = this.settings.animation_time;
+        this.$options.plot.options.stateAnimation.easing = this.settings.animation_type;
+        this.$options.plot.instance.setOption(this.$options.plot.options);
+      }
     },
     make_grid: function(top, height) {
       var aslegend = this.settings.split2
@@ -712,30 +737,48 @@ new Vue({
     validate_filter_sort: function(split) {
       if (
         !Object.prototype.hasOwnProperty.call(
-          this.$root.$options.display.options,
+          this.$options.display.options,
           split
         )
       ) {
-        this.$root.$options.display.options[split] = [
-          { aspect: "label", type: "=", value: 0, display_value: 0 },
-          { aspect: "mean", type: ">", value: 0, display_value: 0 },
-          { aspect: "mean", type: "<", value: 0, display_value: 0 },
+        this.$options.display.options[split] = [
+          {
+            aspect: "label",
+            type: "=",
+            value: 0,
+            display_value: 0,
+            enabled: false,
+          },
+          {
+            aspect: "mean",
+            type: ">",
+            value: void 0,
+            display_value: void 0,
+            enabled: false,
+          },
+          {
+            aspect: "mean",
+            type: "<",
+            value: void 0,
+            display_value: void 0,
+            enabled: false,
+          },
         ];
       }
       if (
         !Object.prototype.hasOwnProperty.call(
-          this.$root.$options.display.options,
+          this.$options.display.options,
           "sort"
         )
       )
-        this.$root.$options.display.options.sort = {};
+        this.$options.display.options.sort = {};
       if (
         !Object.prototype.hasOwnProperty.call(
-          this.$root.$options.display.options.sort,
+          this.$options.display.options.sort,
           split
         )
       ) {
-        this.sort = this.$root.$options.display.options.sort[split] = {
+        this.sort = this.$options.display.options.sort[split] = {
           aspect: "label",
           increasing: true,
         };
@@ -743,22 +786,33 @@ new Vue({
     },
     get_filter: function(split, type) {
       type = type || "=";
-      for (var i = this.$root.$options.display.options[split].length; i--; ) {
-        if (this.$root.$options.display.options[split][i].type === type)
-          return this.$root.$options.display.options[split][i];
+      for (var i = this.$options.display.options[split].length; i--; ) {
+        if (this.$options.display.options[split][i].type === type)
+          return this.$options.display.options[split][i];
       }
-      this.$root.$options.display.options[split].push({
+      this.$options.display.options[split].push({
         aspect: type === "=" || type === "!=" ? "label" : "mean",
         type: type,
-        value: 0,
+        value: void 0,
         display_value: 0,
+        enabled: false,
       });
-      return this.$root.$options.display.options[split][
-        this.$root.$options.display.options[split].length - 1
+      return this.$options.display.options[split][
+        this.$options.display.options[split].length - 1
       ];
     },
     update_data: async function() {
       if (this.settings.active) {
+        if (this.settings.as_table && !this.$options.plot) {
+          this.settings.as_table = false;
+          return setTimeout(
+            function() {
+              this.update_data();
+              this.settings.as_table = true;
+            }.bind(this),
+            0
+          );
+        }
         this.settings.active = false;
         var s = this.settings,
           vars = this.$options.source.variables,
@@ -834,7 +888,7 @@ new Vue({
           (s.split1 && d.options.split[0] !== s.split1) ||
           (s.split2 && d.options.split[1] !== s.split2)
         ) {
-          this.$root.gtag("event", "update_data", {
+          this.gtag("event", "update_data", {
             event_category: s.value,
             event_label: s.split1
               ? s.split1 + (s.split2 ? "," + s.split2 : "")
@@ -863,9 +917,7 @@ new Vue({
         ) {
           s.split2 = "";
         }
-        if (s.as_table) {
-          this.table = this.$options.source.reformat(s.format_table, true);
-        } else if (
+        if (
           !(
             s.split1 ||
             (!s.average && this.year_window[0] !== this.year_window[1])
@@ -873,8 +925,6 @@ new Vue({
         ) {
           this.settings.value_mean = sd.total.mean;
         } else {
-          this.settings.as_table = true;
-          this.settings.as_table = false;
           this.resize_plot(dim.height - this.settings.bottom_offset + "px");
           d.legend.data = [];
           d.legend.selected = {};
@@ -1195,53 +1245,57 @@ new Vue({
               });
             }
           }
-          if (
-            d.graphic[0].style.text.length * 12 * d.graphic[0].scaleX >
-            dim.width - (!this.settings.embed && dim.width > 590) * 270
-          ) {
-            scale = Math.max(
-              0.6,
-              (dim.width - (!this.settings.embed && dim.width > 590) * 270) /
-                (d.graphic[0].style.text.length * 12)
-            );
-            d.graphic[0].scaleX = d.graphic[0].scaleY = scale;
-            d.graphic[1].top = scale * 20 + 10;
-          }
-          d.legend.type = d.legend.data.length > 9 ? "scroll" : "plain";
-          d.tooltip.position =
-            screen.width > 500
-              ? null
-              : function(pos, params, el, elRect, size) {
-                  var obj = { top: 45 };
-                  obj[pos[0] < size.viewSize[0] / 2 ? "left" : "right"] = 10;
-                  return obj;
-                };
-          if (this.$options.plot && this.$options.plot.instance) {
-            this.$options.plot.instance.setOption(
-              {
-                textStyle: this.$options.plot.options.textStyle,
-                tooltip: d.tooltip,
-                animationDuration: s.animation_time,
-                animationDurationUpdate: s.animation_time,
-                animationEasing: s.animation_type,
-                animationEasingUpdate: s.animation_type,
-                stateAnimation: {
-                  duration: s.animation_time,
-                  easing: s.animation_type,
+          if (s.as_table) {
+            this.table = this.$options.source.reformat(s.format_table, true);
+          } else {
+            if (
+              d.graphic[0].style.text.length * 12 * d.graphic[0].scaleX >
+              dim.width - (!this.settings.embed && dim.width > 590) * 270
+            ) {
+              scale = Math.max(
+                0.6,
+                (dim.width - (!this.settings.embed && dim.width > 590) * 270) /
+                  (d.graphic[0].style.text.length * 12)
+              );
+              d.graphic[0].scaleX = d.graphic[0].scaleY = scale;
+              d.graphic[1].top = scale * 20 + 10;
+            }
+            d.legend.type = d.legend.data.length > 9 ? "scroll" : "plain";
+            d.tooltip.position =
+              screen.width > 500
+                ? null
+                : function(pos, params, el, elRect, size) {
+                    var obj = { top: 45 };
+                    obj[pos[0] < size.viewSize[0] / 2 ? "left" : "right"] = 10;
+                    return obj;
+                  };
+            if (this.$options.plot && this.$options.plot.instance) {
+              this.$options.plot.instance.setOption(
+                {
+                  textStyle: this.$options.plot.options.textStyle,
+                  tooltip: d.tooltip,
+                  animationDuration: s.animation_time,
+                  animationDurationUpdate: s.animation_time,
+                  animationEasing: s.animation_type,
+                  animationEasingUpdate: s.animation_type,
+                  stateAnimation: {
+                    duration: s.animation_time,
+                    easing: s.animation_type,
+                  },
+                  title: d.title,
+                  legend: d.legend,
+                  xAxis: d.xAxis,
+                  yAxis: d.yAxis,
+                  series: d.series,
+                  grid: d.grid,
+                  graphic: d.graphic,
                 },
-                title: d.title,
-                legend: d.legend,
-                xAxis: d.xAxis,
-                yAxis: d.yAxis,
-                series: d.series,
-                grid: d.grid,
-                graphic: d.graphic,
-              },
-              {
-                notMerge: true,
-              }
-            );
-          } else this.draw_plot();
+                {
+                  notMerge: true,
+                }
+              );
+            } else this.draw_plot();
+          }
         }
         this.settings.active = true;
       }
@@ -1265,7 +1319,6 @@ new Vue({
         }
         if (this.$options.plot.instance) {
           this.$options.plot.instance.resize();
-          this.$root.$options.plot.element.style.width = "100%";
         }
       }
     },
@@ -1385,39 +1438,29 @@ new Vue({
       var w = document.body.getBoundingClientRect().width,
         data_container = document.getElementById("data-container"),
         data_menu = document.getElementById("data-menu");
-      if (this.$root.settings.data_menu_open) {
+      if (this.settings.data_menu_open) {
         data_menu.style.visibility = "hidden";
         data_container.style.right = "0px";
-        data_menu.style.right = "-320px";
-        data_menu.style.width = "320px";
-        this.$root.settings.data_menu_open = false;
+        data_menu.style.right = "-330px";
+        data_menu.style.width = "330px";
+        this.settings.data_menu_open = false;
       } else {
         data_menu.style.visibility = "";
         data_menu.style.right = "0px";
         if (w < 600) {
           data_menu.style.width = "100%";
         } else {
-          data_container.style.right = "320px";
-          data_menu.style.width = "320px";
+          data_container.style.right = "330px";
+          data_menu.style.width = "330px";
         }
-        this.$root.settings.data_menu_open = true;
+        this.settings.data_menu_open = true;
         data_menu.firstElementChild.firstElementChild.focus();
-        this.$root.gtag("event", "click", {
+        this.gtag("event", "click", {
           event_category: "open_menu",
           event_label: "data",
         });
       }
-      if (
-        w >= 600 &&
-        !this.$root.settings.as_table &&
-        this.$root.$options.plot.instance
-      ) {
-        this.$root.$options.plot.element.style.width =
-          this.$root.$el.getBoundingClientRect().width +
-          (this.$root.settings.data_menu_open ? -320 : 0) +
-          "px";
-      }
-      this.$root.resize_plot();
+      this.resize_plot();
     },
   },
   render: h => h(App),

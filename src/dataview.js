@@ -110,6 +110,7 @@ function Dataview(data, levels) {
   this.levels = levels || {};
   this.options = {};
   this.prepare_data = async function(data) {
+    // initial, one-time data processing in preparation for later views
     var vars = {
         // stores information about each variable;
         // filled in by make_entry, make_covars
@@ -189,6 +190,7 @@ function Dataview(data, levels) {
             ? Math.round((a[k][i] / b[k][i]) * 1000) / 1000
             : 0;
     }
+    // processing each dataset (value) in the top level of `data`
     for (val in data) {
       if (val === "year") {
         vars.year = data.year;
@@ -198,12 +200,13 @@ function Dataview(data, levels) {
         val !== "version" &&
         Object.prototype.hasOwnProperty.call(data, val)
       ) {
-        ckt = false;
+        ckt = false; // flag to calculate top-level totals from lower-level totals
         if (Object.prototype.hasOwnProperty.call(data[val], "total")) {
           vars.values.total[val] = data[val].total;
         } else {
           ckt = true;
         }
+        // processing each variable (split) in the given dataset
         for (s1 in data[val]) {
           if (
             s1 !== "total" &&
@@ -212,7 +215,7 @@ function Dataview(data, levels) {
             if (!Object.prototype.hasOwnProperty.call(vars, s1))
               make_entry(s1, vars, this.dim, this.levels[s1]);
             add_covars(val, "values", s1);
-
+            // processing each second-level split
             for (s2 in data[val][s1]) {
               if (Object.prototype.hasOwnProperty.call(data[val][s1], s2)) {
                 if (s2 === "total") {
@@ -419,14 +422,14 @@ Dataview.prototype = {
           typeof arr[i].value === "object" && !arr[i].value.push
             ? Object.keys(arr[i].value)
             : arr[i].value;
-        arr[i].enabled = true;
+        arr[i].enabled = arr[i].display_value === 0 || !!arr[i].display_value;
       }
       if (equality.test(arr[i].type) && arr[i].display_value.length) {
         this.add_level_spec(arr[i], arr[i].display_value, name);
       } else
         arr[i].value = number.test(arr[i].display_value)
           ? Number(arr[i].display_value)
-          : 0;
+          : void 0;
       arr[i].fun = conditions(arr[i]);
       if (!Object.prototype.hasOwnProperty.call(arr[i], "aspect"))
         arr[i].aspect = equality.test(arr[i].type) ? "label" : "mean";
@@ -515,6 +518,9 @@ Dataview.prototype = {
     return r;
   },
   vector_filter: function() {
+    // makes a function to filter and potentially sort vectors with entries for each year
+    // based on criteria included in this.options.year and this.options.sort.year.
+    // also incidentally calculates descriptive statistics of the vector
     var i,
       v,
       s = [],
@@ -635,6 +641,12 @@ Dataview.prototype = {
         };
   },
   filter_levels: function(o, crit, split) {
+    // filters and potentially sorts the levels of a splitting variable,
+    // applying a vector filter to each lowest-level, and making inclusion
+    // and ordering decisions about higher levels
+    // - o: Object containing levels (e.g., this.raw[value][split].total)
+    // - crit: Array containing criteria for the variable (e.g., this.options[split])
+    // - split: name of the variable
     var r, l, i, c, f;
     r = {
       sum: 0,
@@ -652,6 +664,10 @@ Dataview.prototype = {
         if (!crit.length) crit = [crit];
         this.attach_criteria(crit, split);
       }
+      // function to assess each level
+      // - c: Object containing level information (aspects; o[level])
+      // - l: level name
+      // - s: Object containing sorting options
       f =
         Object.prototype.hasOwnProperty.call(this.options.sort, split) &&
         (this.options.sort[split].aspect !== "label" ||
@@ -685,6 +701,7 @@ Dataview.prototype = {
               if (c.label.length > r.display_info.maxlen)
                 r.display_info.maxlen = c.label.length;
             };
+      // applying vector filters to and assesses each level
       for (l in o) {
         if (Object.prototype.hasOwnProperty.call(o, l)) {
           c = this.filter(o[l]);
@@ -709,6 +726,10 @@ Dataview.prototype = {
     r.mean = Math.round((r.sum / r.labels.length) * 1000) / 1000;
     return r;
   },
+  // applies filter_levels to a (child) variable within levels of another (parent) variable
+  // - split: name of child variable
+  // - h: The current view object (this.view) for output
+  // - within: name of the parent variable
   filter_sublevels: function(split, h, within) {
     var l, o, c, r, i, n, il, nl, g;
     if (!Object.prototype.hasOwnProperty.call(h, split)) {
@@ -752,7 +773,9 @@ Dataview.prototype = {
       }
     }
   },
+  // creates a new view (this.view) from the previously specified options (this.options)
   prepare_view: async function() {
+    // calls prepare_data if this is the first call
     if (!Object.prototype.hasOwnProperty.call(this, "variables"))
       try {
         this.variables = await this.prepare_data(this.raw);
@@ -820,8 +843,19 @@ Dataview.prototype = {
     }
     return r;
   },
+  // converts the internal dataset to a table or more explicit object
+  // used for the table view and file export in the UI, and response to API requests
+  // - format: Format of the table, same as format_table option
+  // - to_object: Boolean; if true, returns an object with a header and body entry
   reformat: function(format, to_object) {
     function init_getter(v, fun, rep, average, s2) {
+      // returns a sort of iterator for a variable (year, total, split1, or split2),
+      // which will retrieve data for a single row of the given format.
+      // - v: slot of the current view (this.view.slot[split])
+      // - fun: name of the getter function, as defined in this environment
+      // - rep: number of times to repeat the current index
+      // - average: Boolean; if true, aggregates rows
+      // - s2: Boolean indicating if there is a second split, and v is the first
       const write = to_object
           ? function(p, n) {
               row[n] = p;
@@ -1044,7 +1078,6 @@ Dataview.prototype = {
           ? init_getter(this.view.slot.split2, s2f, 1, this.options.average)
           : null,
       };
-
     // push to header row
     if (!this.options.average) header.push("Year");
     if (s1) {
@@ -1082,7 +1115,6 @@ Dataview.prototype = {
     }
     if (format === "tall" || !s1) header.push(this.view.slot.value);
     nc = header.length - 1;
-
     // write rows
     for (i = 0; i < nr; i++) {
       matrix.push((row = to_object ? {} : []));
@@ -1098,12 +1130,17 @@ Dataview.prototype = {
     return { header: header, rows: matrix };
   },
   to_string: function(m, sep) {
+    // prepares formatted dataset for file output
+    // - m: formatted data, returned from `reformat`
+    // - sep: column separating character (e.g., ',' or '\t')
     for (var n = m.rows.length, i = 0, o = [m.header.join(sep)]; i < n; i++)
       o.push(m.rows[i].join(sep));
     if (o.length < 3) o.push("");
     return o.join("\n");
   },
   parse_query: function(q) {
+    // extracts options from a query string
+    // - q: query string, as (in a browser) from window.location.search
     if ("string" !== typeof q) q = "";
     var arr = q
         .toLowerCase()

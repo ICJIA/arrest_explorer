@@ -88,15 +88,16 @@
       Swap Order <v-icon>mdi-shuffle-variant</v-icon>
     </v-btn>
     <v-switch
-      :label="
-        'Average ' +
+      label="Average"
+      :hint="
+        'Aggregate ' +
           $root.settings.value +
           ' over years' +
-          ($root.settings.split1 ? ' by grouping variables' : '')
+          ($root.settings.split1 ? ' by grouping variables.' : '.')
       "
+      persistent-hint
       v-model="$root.settings.average"
       inset
-      hide-details
     ></v-switch>
 
     <div

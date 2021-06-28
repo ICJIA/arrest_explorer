@@ -5,6 +5,7 @@
     overlay-opacity=".8"
     max-width="1200px"
     persistent
+    scrollable
   >
     <v-card>
       <v-card-title class="intro-header">
@@ -12,14 +13,14 @@
           <v-img
             max-width="250px"
             contain
-            alt="ICJIA logo"
+            alt="Illinois Criminal Justice Information Authority logo"
             src="https://icjia.illinois.gov/researchhub/icjia-logo.png"
           /> </v-col
         ><v-col>
           <v-card-title
             ><span class="text-h3">Arrest Explorer</span></v-card-title
           >
-          <v-card-subtitle
+          <v-card-subtitle style="padding-bottom: 0"
             ><span class="text-h6"
               >Illinois Criminal Justice Information Authority</span
             ></v-card-subtitle

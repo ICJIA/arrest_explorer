@@ -68,7 +68,7 @@ export default {
 
 <style scoped>
 .v-item-group.v-bottom-navigation .v-btn.data-menu-button {
-  min-width: 320px;
+  min-width: 330px;
 }
 .v-dialog__content {
   height: 100%;

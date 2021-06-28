@@ -72,16 +72,11 @@ export default {
           decription:
             "You might look at average arrests within each sex group:",
           base_url: this.$root.settings.url,
-          url: this.$root.display_query(
-            {},
-            {
-              value: "arrests",
-              average: true,
-              split: ["gender"],
-              plot_type: "bar",
-            },
-            true
-          ),
+          url: this.$root.display_query({
+            average: true,
+            split: ["gender"],
+            plot_type: "bar",
+          }),
         },
         {
           name: "arrests_per_arrestee by age_group",
@@ -90,15 +85,11 @@ export default {
           decription:
             "You might look at arrests per arrestee within age groups:",
           base_url: this.$root.settings.url,
-          url: this.$root.display_query(
-            {},
-            {
-              value: "arrests_per_arrestee",
-              split: ["age_group"],
-              plot_type: "line",
-            },
-            true
-          ),
+          url: this.$root.display_query({
+            value: "arrests_per_arrestee",
+            split: ["age_group"],
+            plot_type: "line",
+          }),
         },
         {
           name: "frequent categories over time",
@@ -106,29 +97,26 @@ export default {
           decription:
             "You might look at average arrest charges by offense categories with large means:",
           base_url: this.$root.settings.url,
-          url: this.$root.display_query(
-            {},
-            {
-              value: "arrest_charges",
-              average: true,
-              plot_type: "bar",
-              split: ["offense_category"],
-              offense_category: [
-                {
-                  aspect: "mean",
-                  type: ">",
-                  display_value: "10000",
-                },
-              ],
-              sort: {
-                offense_category: {
-                  aspect: "mean",
-                  increasing: false,
-                },
+          url: this.$root.display_query({
+            value: "arrest_charges",
+            average: true,
+            plot_type: "bar",
+            split: ["offense_category"],
+            offense_category: [
+              {
+                aspect: "mean",
+                type: ">",
+                display_value: "10000",
+                enabled: true,
+              },
+            ],
+            sort: {
+              offense_category: {
+                aspect: "mean",
+                increasing: false,
               },
             },
-            true
-          ),
+          }),
         },
       ],
     };

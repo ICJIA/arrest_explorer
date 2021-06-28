@@ -59,10 +59,10 @@ export default {
 <style scoped>
 #data-menu {
   position: absolute;
-  width: 320px;
+  width: 330px;
   height: 100%;
   top: 0;
-  right: -320px;
+  right: -330px;
   bottom: 2.5em;
 }
 #data-menu .v-card {
@@ -97,8 +97,16 @@ html {
   overflow-y: auto;
 }
 #app,
+.v-application,
 .v-application .title,
-.v-application .body-1 {
+.v-application .body-1,
+.v-application .text-h1,
+.v-application .text-h2,
+.v-application .text-h3,
+.v-application .text-h4,
+.v-application .text-h5,
+.v-application .text-subtitle1,
+.v-application .text-subtitle2 {
   font-family: "Lato", sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
