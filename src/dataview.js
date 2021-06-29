@@ -356,7 +356,13 @@ Dataview.prototype = {
   // resets options, applied any specified, then calls prepare_view
   update: async function(options) {
     var k;
-    this.options = {};
+    this.options = {
+      round:
+        Object.prototype.hasOwnProperty.call(options, "value") &&
+        options.value === "arrests_per_arrestee"
+          ? 1000
+          : 10,
+    };
     if (options) {
       for (k in options)
         if (Object.prototype.hasOwnProperty.call(options, k)) {
@@ -553,6 +559,7 @@ Dataview.prototype = {
           for (
             var i = 0,
               n = s.length,
+              present = 0,
               sum = 0,
               min = Infinity,
               max = -Infinity,
@@ -563,6 +570,7 @@ Dataview.prototype = {
             r.push(arr[s[i]]);
             if (arr[s[i]] !== "NA") {
               if (arr[s[i]]) sum += arr[s[i]];
+              if ("number" === typeof arr[s[i]]) present++;
               if (min > arr[s[i]]) min = arr[s[i]];
               if (max < arr[s[i]]) max = arr[s[i]];
             }
@@ -571,7 +579,10 @@ Dataview.prototype = {
             sum,
             min,
             max,
-            mean: Math.round((sum / n) * 1000) / 1000,
+            mean: present
+              ? Math.round((sum / present) * this.options.round) /
+                this.options.round
+              : 0,
             filtered: r,
           };
         }
@@ -580,6 +591,7 @@ Dataview.prototype = {
           for (
             var i = 0,
               n = rows.length,
+              present = 0,
               sum = 0,
               min = Infinity,
               max = -Infinity,
@@ -590,6 +602,7 @@ Dataview.prototype = {
             r.push(arr[rows[i]]);
             if (arr[rows[i]] !== "NA") {
               if (arr[rows[i]]) sum += arr[rows[i]];
+              if ("number" === typeof arr[rows[i]]) present++;
               if (min > arr[rows[i]]) min = arr[rows[i]];
               if (max < arr[rows[i]]) max = arr[rows[i]];
             }
@@ -598,7 +611,10 @@ Dataview.prototype = {
             sum,
             min,
             max,
-            mean: Math.round((sum / n) * 1000) / 1000,
+            mean: present
+              ? Math.round((sum / present) * this.options.round) /
+                this.options.round
+              : 0,
             filtered: r,
           };
         }
@@ -606,6 +622,7 @@ Dataview.prototype = {
           for (
             var i = 0,
               n = arr.length,
+              present = 0,
               sum = 0,
               min = Infinity,
               max = -Infinity,
@@ -616,6 +633,7 @@ Dataview.prototype = {
             r.push(arr[i]);
             if (arr[i] !== "NA") {
               if (arr[i]) sum += arr[i];
+              if ("number" === typeof arr[i]) present++;
               if (min > arr[i]) min = arr[i];
               if (max < arr[i]) max = arr[i];
             }
@@ -624,7 +642,10 @@ Dataview.prototype = {
             sum,
             min,
             max,
-            mean: Math.round((sum / n) * 1000) / 1000,
+            mean: present
+              ? Math.round((sum / present) * this.options.round) /
+                this.options.round
+              : 0,
             filtered: r,
           };
         };
@@ -723,7 +744,9 @@ Dataview.prototype = {
         }
       }
     }
-    r.mean = Math.round((r.sum / r.labels.length) * 1000) / 1000;
+    r.mean =
+      Math.round((r.sum / r.labels.length) * this.options.round) /
+      this.options.round;
     return r;
   },
   // applies filter_levels to a (child) variable within levels of another (parent) variable
@@ -769,7 +792,9 @@ Dataview.prototype = {
           if (r.max < c.sum) r.max = c.sum;
         }
         if (r.labels.length)
-          r.mean = Math.round((r.sum / r.labels.length) * 1000) / 1000;
+          r.mean =
+            Math.round((r.sum / r.labels.length) * this.options.round) /
+            this.options.round;
       }
     }
   },
