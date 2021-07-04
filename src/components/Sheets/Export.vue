@@ -76,16 +76,6 @@
                     :items="['tall', 'mixed', 'wide']"
                     label="Table Format"
                     v-model="$root.settings.format_table"
-                  ></v-select> </v-col
-                ><v-col>
-                  <v-select
-                    v-if="
-                      $root.settings.format_file !== 'json' ||
-                        $root.settings.format_json !== 'raw'
-                    "
-                    :items="['labels', 'indices', 'codes']"
-                    label="Category Format"
-                    v-model="$root.settings.format_category"
                   ></v-select>
                 </v-col>
               </v-row>

@@ -80,9 +80,6 @@ split_table = function(d){
       d[d[, i] == 'm', i] = 'male'
     }else if(any(grepl('age', d[, i]))) d[, i] = sub('^age ', '', d[, i])
   }
-  su = grep('[^0-9]', d[, nc])
-  d[su, nc] = NA
-  d[, nc] = as.numeric(d[, nc])
   if(nc > 5){
     d = d[, -c(2, 4)]
     nc = ncol(d)
@@ -120,20 +117,23 @@ split_data$year = rev(data[[1]][, 'arrestyear'])
 # convert tables to final 1-3 level combination forms, and write data file
 l1nest = list()
 for(tab in c('arrests', 'arrestees', 'arrest_charges')){
+  l1nest[[tab]] = list()
   tl = split_data[grep(paste0('^', tab), names(split_data))]
   names(tl) = sub('^[^$]*\\$', '', names(tl))
-  if(is.null(dim(tl[[1]]))) stop()
   tl[[1]] = tl[[1]][, 1]
   names(tl)[1] = 'total'
-  l1nest[[tab]] = list()
   for(s in unique(unlist(strsplit(names(tl), '$', fixed = TRUE)))[-1]){
     l1nest[[tab]][[s]] = tl[grep(paste0('^', s), names(tl))]
     names(l1nest[[tab]][[s]]) = sub('^.*\\$', '', names(l1nest[[tab]][[s]]))
-    if(any(su <- names(l1nest[[tab]][[s]]) == s)){
-      l1nest[[tab]][[s]] = l1nest[[tab]][[s]][!su]
+    if(s %in% names(l1nest[[tab]][[s]])){
+      names(l1nest[[tab]][[s]]) = sub(s, 'total', names(l1nest[[tab]][[s]]), fixed = TRUE)
     }
   }
+  l1nest[[tab]]$total = split_data[[tab]]$total
 }
 l1nest$year = split_data$year
 l1nest$version = format(file.info(files[1])$mtime, format = '%m/%d/%Y')
 jsonlite::write_json(l1nest, 'src/data.json', auto_unbox = TRUE, dataframe = 'columns')
+
+# replaced strings with numbers where possible
+writeLines(gsub('"(\\d+)"(?=[,\\]])', '\\1', readLines('src/data.json'), perl = TRUE), 'src/data.json')

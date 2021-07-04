@@ -1,3 +1,5 @@
+"use strict";
+
 const assert = require("assert"),
   Dataview = require("../src/dataview.js"),
   defaults = {
@@ -28,7 +30,7 @@ describe("When parsing a query...", function() {
     );
   });
   it("specified value and format are recognized without names", function() {
-    assert.deepStrictEqual(Dataview.prototype.parse_query("?offender&tsv"), {
+    assert.deepStrictEqual(Dataview.prototype.parse_query("?arrestees&tsv"), {
       value: { type: "=", value: "arrestees" },
       format_file: { type: "=", value: "tsv" },
     });
@@ -37,11 +39,11 @@ describe("When parsing a query...", function() {
     assert.deepStrictEqual(
       Dataview.prototype.parse_query("?a!=f&b>45&c<20&d>=1&e<=0"),
       {
-        e: [{ aspect: "mean", type: "<=", value: 0 }],
-        d: [{ aspect: "mean", type: ">=", value: 1 }],
-        c: [{ aspect: "mean", type: "<", value: 20 }],
-        b: [{ aspect: "mean", type: ">", value: 45 }],
-        a: [{ aspect: "label", type: "!=", value: "f" }],
+        e: [{ aspect: "mean", format: "label", type: "<=", value: 0 }],
+        d: [{ aspect: "mean", format: "label", type: ">=", value: 1 }],
+        c: [{ aspect: "mean", format: "label", type: "<", value: 20 }],
+        b: [{ aspect: "mean", format: "label", type: ">", value: 45 }],
+        a: [{ aspect: "label", format: "label", type: "!=", value: "f" }],
         ...defaults,
       }
     );
@@ -50,9 +52,9 @@ describe("When parsing a query...", function() {
     assert.deepStrictEqual(
       Dataview.prototype.parse_query("?var>=0&var<=100&var!=50").var,
       [
-        { aspect: "label", type: "!=", value: 50 },
-        { aspect: "mean", type: "<=", value: 100 },
-        { aspect: "mean", type: ">=", value: 0 },
+        { aspect: "label", format: "label", type: "!=", value: 50 },
+        { aspect: "mean", format: "label", type: "<=", value: 100 },
+        { aspect: "mean", format: "label", type: ">=", value: 0 },
       ]
     );
   });
@@ -62,9 +64,9 @@ describe("When parsing a query...", function() {
         "?var[mean]>=0&var[label]<=100&var[sum]!=50"
       ).var,
       [
-        { type: "!=", aspect: "sum", value: 50 },
-        { type: "<=", aspect: "label", value: 100 },
-        { type: ">=", aspect: "mean", value: 0 },
+        { type: "!=", aspect: "sum", format: "label", value: 50 },
+        { type: "<=", aspect: "label", format: "label", value: 100 },
+        { type: ">=", aspect: "mean", format: "label", value: 0 },
       ]
     );
   });

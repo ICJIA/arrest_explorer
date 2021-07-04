@@ -219,6 +219,16 @@ html {
 .v-application--is-ltr .v-input--selection-controls__input {
   margin-right: 0;
 }
+.v-card__title {
+  word-break: break-word;
+}
+.v-select__selection,
+.v-select__slot {
+  line-height: 1.2rem;
+}
+.v-input input {
+  max-height: 34px;
+}
 @media screen and (max-width: 590px) {
   #menu-sheet-wrap {
     width: 100%;

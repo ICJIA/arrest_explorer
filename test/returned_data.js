@@ -1,3 +1,5 @@
+"use strict";
+
 const assert = require("assert"),
   Dataview = require("../src/dataview.js"),
   data = new Dataview(
