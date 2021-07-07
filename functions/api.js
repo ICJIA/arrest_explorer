@@ -1,9 +1,12 @@
 "use-strict";
-
 const Dataview = require("../src/dataview.js"),
   numcomp = /^[<>]/,
   multispace = /\s{2,}/,
   hyphen = /\s*-\s*/,
+  firstletter = /\b(\w)/g,
+  capitalize = function(m) {
+    return m.toUpperCase();
+  },
   data = new Dataview(
     require("../src/data.json"),
     require("../src/levels.json")
@@ -35,7 +38,10 @@ function make_name(d, o) {
 }
 
 function standardize_level(l) {
-  return l.replace(hyphen, " - ").replace(multispace, " ");
+  return l
+    .replace(hyphen, " - ")
+    .replace(multispace, " ")
+    .replace(firstletter, capitalize);
 }
 
 exports.handler = async function(event) {
@@ -138,9 +144,8 @@ exports.handler = async function(event) {
               return r;
             }
             if (
-              k !== "year" &&
-              (!Object.prototype.hasOwnProperty.call(o, "split") ||
-                o.split.value.indexOf(k) === -1)
+              !Object.prototype.hasOwnProperty.call(o, "split") ||
+              (k !== "year" && o.split.value.indexOf(k) === -1)
             ) {
               r.body =
                 k +
@@ -149,25 +154,35 @@ exports.handler = async function(event) {
             }
             for (; i--; ) {
               if (numcomp.test(o[k][i].type)) {
-                if ("number" !== typeof o[k][i].value) {
+                if (!"number" === typeof o[k][i].value) {
                   r.body = "only numbers can be compared with > or <";
                   return r;
                 }
               } else {
-                if (!Object.prototype.hasOwnProperty.call(o[k][i], "format"))
-                  o[k][i].format = "label";
-                for (l in o[k][i].value)
-                  if (Object.prototype.hasOwnProperty.call(o[k][i].value, l)) {
-                    if (o[k][i].format === "label") l = l.toLowerCase();
-                    if (
-                      data.levels[k][o[k][i].format].indexOf(
-                        standardize_level(l)
-                      ) === -1
-                    ) {
-                      r.body = "invalid level specified for " + k + ": " + l;
-                      return r;
-                    }
+                if ("string" === typeof o[k][i].value) {
+                  if (
+                    data.variables[k].levels.indexOf(
+                      standardize_level(o[k][i].value)
+                    ) === -1
+                  ) {
+                    r.body =
+                      "invalid level specified for " + k + ": " + o[k][i].value;
+                    return r;
                   }
+                } else
+                  for (l in o[k][i].value)
+                    if (
+                      Object.prototype.hasOwnProperty.call(o[k][i].value, l)
+                    ) {
+                      if (
+                        data.variables[k].levels.indexOf(
+                          standardize_level(l)
+                        ) === -1
+                      ) {
+                        r.body = "invalid level specified for " + k + ": " + l;
+                        return r;
+                      }
+                    }
               }
             }
           }

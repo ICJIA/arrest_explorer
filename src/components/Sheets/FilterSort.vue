@@ -152,7 +152,7 @@
                 $root.format_name($root.settings.filter_showing)
             }}
           </p>
-          <v-row class="level-mean-display-wrapper">
+          <v-row class="level-mean-display-wraper">
             <v-row class="level-mean-display" id="level_mean_display">
               <v-col v-for="(level, i) in level_info" v-bind:key="i">
                 <v-row class="level-mean-bar"
@@ -172,9 +172,7 @@
                   ></div
                 ></v-row>
                 <v-row>{{
-                  isNaN(level.mean)
-                    ? "NA"
-                    : step_size === 1
+                  step_size === 1
                     ? Math.round(level.mean)
                     : Math.round(level.mean * 1e3) / 1e3
                 }}</v-row>
@@ -299,8 +297,10 @@ export default {
         setTimeout(function() {
           var e = document.getElementById("level_mean_display");
           if (e && e.lastElementChild) {
-            e.lastElementChild.scrollIntoView();
-            document.getElementById("filter_first_input").scrollIntoView();
+            e.lastElementChild.scrollIntoViewIfNeeded();
+            document
+              .getElementById("filter_first_input")
+              .scrollIntoViewIfNeeded();
           }
         }, 1);
       }
@@ -384,7 +384,7 @@ export default {
 .theme--light .mean-bar {
   background: #333;
 }
-.level-mean-display-wrapper {
+.level-mean-display-wraper {
   overflow-x: auto;
 }
 .level-mean-display {
@@ -409,14 +409,14 @@ export default {
   bottom: 0;
 }
 .v-subheader {
-  padding: 2.4em 0.5em 0 0;
+  padding: 2.3em 0.5em 0 0;
 }
 .inline-subheader {
   padding-bottom: 1.2em;
 }
 .inline-p {
   padding: 0;
-  margin: 1.6em 0.5em 0 0.5em;
+  margin: 1.55em 0.5em 0 0.5em;
 }
 .levels-row .col:last-child {
   max-width: 60px;

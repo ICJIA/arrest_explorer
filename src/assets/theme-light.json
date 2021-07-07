@@ -24,7 +24,7 @@
       "borderWidth": 1
     },
     "symbolSize": "7",
-    "symbol": "circle",
+    "symbol": "emptyCircle",
     "smooth": false
   },
   "bar": {
