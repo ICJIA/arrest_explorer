@@ -1,0 +1,7 @@
+label,index,code
+Person,0,10
+Property,1,20
+Drug,2,30
+Weapons,3,34
+Other Harm,4,50
+All Other,5,70
