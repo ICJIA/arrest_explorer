@@ -1,5 +1,9 @@
 # This is KG's script that builds the data.json and levels.json objects except using
-# Ernst Melchior's views, the original source of the arrest data for explorer.
+# Ernst Melchior's views, which is effectively the source of the arrest data for explorer.
+
+# this code is intending primarily to translate that data into the JSON form that the arrest explorer app accepts.
+# secondarily it can be used, via the low_N function, or future functions within it, to execute low N replacements.
+
 
 # Load Libraries ----
 
@@ -32,7 +36,7 @@ crimet_std <- function(crimetype){str_to_lower(crimetype)}
 offcat_std <- function(offensecategory){str_to_lower(offensecategory)}
 low_N  <- function(N){fcase(N=='(0-4)',as.double(1),
                             N=='(5-9)',as.double(6),
-                            N>9,as.double(N)
+                            as.double(N) > 9 , as.double(N)
                         )}
 offclass_std <- function(offclass){str_to_lower(offclass)}
 
@@ -40,12 +44,15 @@ offclass_std <- function(offclass){str_to_lower(offclass)}
 # Load Data from SPAC -----
 
 # each SPAC call retrieves the view as a data.table
-# the [] is a data.table call [
-#                               ,.(arrests=arrestsreport18_99)
-#                               ,keyby= .(x,y,z) ] this sorts by the defined x,y,z recodes variables at load
-# any and all variable/columns that are not invoked are dropped.
+# the [] is a data.table call, e.g. :
+# [,.(arrests=arrestsreport18_99) ,keyby= .(x,y,z) ] sorts by the defined x,y,z recodes variables at load
 
-#TODO: fix names, a few have arrest as singular, other like year,etc.
+# any and all variable/columns that are not invoked are de facto dropped, as this is essentially a SQL select.
+
+# WARNING: the app expect everything to be consistently ordered by year, regardless of whether the year are in order
+# consequently all present and future calls should by keyed by arrestyear.
+
+#TODO: fix names, the use of county, year, etc is slightly inconsistent.
 
 data_CHRI <- list(
 
@@ -57,13 +64,13 @@ data_CHRI <- list(
   arrests_by_year_county = SPAC('vt3t')[,.(arrests=arrestsreported18_99)
                                         ,keyby=.(year=arrestyear,
                                                  county=county_std(countyname))] ,
-  arrest_by_year_gender = SPAC('vt4t')[,.(arrests=arrestsreported18_99)
+  arrests_by_year_gender = SPAC('vt4t')[,.(arrests=arrestsreported18_99)
                                                 ,keyby=.(year=arrestyear,
                                                          gender=gender_std(gender))] ,
-  arrest_by_year_race = SPAC('vt5t')[,.(arrests=arrestsreported18_99)
+  arrests_by_year_race = SPAC('vt5t')[,.(arrests=arrestsreported18_99)
                                      ,keyby=.(year=arrestyear,
                                               race=race_std(racedescr))] ,
-  arrest_by_year_county_age = SPAC('vt6t')[,.(arrests=arrestsreported18_99)
+  arrests_by_year_county_age = SPAC('vt6t')[,.(arrests=arrestsreported18_99)
                                            ,keyby=.(year=arrestyear,
                                                     county=county_std(countyname),
                                                     age_group=age_relabel(arrestagegroup))] ,
@@ -129,32 +136,32 @@ data_CHRI <- list(
 
 
 # arrests by max charge internally usually referred to as arrest_charge
-  arrest_by_year_crimetype = SPAC('vt25t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_crimetype = SPAC('vt25t')[,.(arrests=arrestsreported18_99),
                                              keyby=.(year=arrestyear,
                                                      crime_type=crimet_std(crimetype))] ,
-  arrest_by_year_offense = SPAC('vt26t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_offense = SPAC('vt26t')[,.(arrests=arrestsreported18_99),
                                          keyby=.(year=arrestyear,
                                                  offense_category=offcat_std(offensecategory))] ,
-  arrest_by_year_offclass = SPAC('vt27t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_offclass = SPAC('vt27t')[,.(arrests=arrestsreported18_99),
                                           keyby=.(year=arrestyear,
                                                   offense_class=offclass_std(OffenseClass))] ,
-  arrest_by_year_county_crimetype = SPAC('vt28t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_county_crimetype = SPAC('vt28t')[,.(arrests=arrestsreported18_99),
                                                   keyby=.(year=arrestyear,
                                                           county=county_std(countyname),
                                                           crime_type=crimet_std(crimetype))] ,
-  arrest_by_year_county_offense = SPAC('vt29t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_county_offense = SPAC('vt29t')[,.(arrests=arrestsreported18_99),
                                                         keyby=.(year=arrestyear,
                                                                 county=county_std(countyname),
                                                                 offense_category=offcat_std(OffenseCategory))] ,
-  arrest_by_year_county_offclass = SPAC('vt30t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_county_offclass = SPAC('vt30t')[,.(arrests=arrestsreported18_99),
                                                  keyby=.(year=arrestyear,
                                                          county=county_std(countyname),
                                                          offense_class=offclass_std(OffenseClass))] ,
-  arrest_by_year_crimetype_offclass = SPAC('vt31t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_crimetype_offclass = SPAC('vt31t')[,.(arrests=arrestsreported18_99),
                                                keyby=.(year=arrestyear,
                                                        crime_type=crimet_std(crimetype),
                                                        offense_class=offclass_std(OffenseClass))] ,
-  arrest_by_year_offense_offclass = SPAC('vt32t')[,.(arrests=arrestsreported18_99),
+  arrests_by_year_offense_offclass = SPAC('vt32t')[,.(arrests=arrestsreported18_99),
                                                   keyby=.(year=arrestyear,
                                                           offense_category=offcat_std(OffenseCategory),
                                                           offense_class=offclass_std(OffenseClass))]
@@ -206,6 +213,22 @@ write_json(lapply(levels.json, function(l) lapply(as.list(l), as.character)), 'l
 # function 1: convert data.table x to format year by x$variable and drop the years column
 # generally dcast(x, year ~ varA)[,.SD[,2:ncol(.SD)]] where the [ etc .] just drops the first column by selecting 2 to the max column
 
+# col_by_year_wo_year <- function(DT, col_var, year_var='year') {
+#
+#   dcast(DT, get(year_var) ~ (get(col_var)) )[,.SD[,2:ncol(.SD)]]
+#
+# }
+
+col_by_year_wo_year_lowN <- function(DT, col_var, year_var='year') {
+
+  output <- dcast(DT, get(year_var) ~ (get(col_var)) )[,.SD[,2:ncol(.SD)]]
+
+  #this should apply the low N function
+  for(j in colnames(output)) set(output, j=j, value = low_N(output[[j]]))
+
+  output
+}
+
 # functions 2: break a data.table DT into a list of smaller tables based on a variable, then apply function 1 for a second variable within
 #  each subtable
 # quickcast <- function(DT, var, var2) {foreach(selected = DT[,unique(var)] ,
@@ -215,6 +238,31 @@ write_json(lapply(levels.json, function(l) lapply(as.list(l), as.character)), 'l
 #   a[[select]] <- DT[var==selected, dcast(.SD, year ~ var)[,.SD[,2:ncol(.SD)]] ]
 #   a}}
 
+
+list_by_x_col_y <- function(DT, list_var , col_var  )
+{
+  foreach(each_list_level = DT[,unique(get(list_var))],
+          .combine = c) %do% {
+            #because we have to build a list of lists, we have to initialize list, this could maybe be better optimized
+
+            build_list <- list()
+            build_list[[each_list_level]] <- DT[get(list_var)==each_list_level ,col_by_year_wo_year_lowN(.SD, as.character(col_var) )]
+            build_list
+
+
+          }
+
+
+
+}
+
+
+### test function 1
+# returns totals by year by county without year as explicit variable
+col_by_year_wo_year(data_CHRI$arrestees_by_year_county, 'county')
+
+### test function 2
+list_by_x_col_y(data_CHRI$arrests_by_year_county_race, 'county','race')
 
 # optionally a third function and / or set of for reach loops could be called to read data_CHRI
 # by object name and break it into the table, this would be useful for increasing visible systematic
@@ -230,58 +278,21 @@ data.json <- list(
   ## arrests definitions ----
 
   arrests = list(
-    county = list(total = dcast(data_CHRI$arrests_by_year_county, year ~ county)[,.SD[,2:ncol(.SD)]],
-                  race = foreach(sel_county = data_CHRI$arrests_by_year_county_race[,unique(county)] ,
-                                 .combine = c
-                                   ) %do% {
-                                     a <- list()
-                                     a[[sel_county]] <- data_CHRI$arrests_by_year_county_race[county==sel_county, dcast(.SD, year ~ race)[,.SD[,2:ncol(.SD)]] ]
-                                     a},
-                  age_group = foreach(sel_county = data_CHRI$arrest_by_year_county_age[,unique(county)] ,
-                                      .combine = c
-                                  ) %do% {
-                                    a <- list()
-                                    a[[sel_county]] <- data_CHRI$arrest_by_year_county_age[county==sel_county, dcast(.SD, year ~ age_group)[,.SD[,2:ncol(.SD)]] ]
-                                    a},
-                  gender = foreach(sel_county = data_CHRI$arrests_by_year_county_gender[,unique(county)] ,
-                                   .combine = c
-                                  ) %do% {
-                                    a <- list()
-                                    a[[sel_county]] <- data_CHRI$arrests_by_year_county_gender[county==sel_county, dcast(.SD, year ~ gender)[,.SD[,2:ncol(.SD)]] ]
-                                    a}
+    county = list(total = col_by_year_wo_year_lowN(data_CHRI$arrests_by_year_county, 'county'),
+                  race = list_by_x_col_y(data_CHRI$arrests_by_year_county_race, 'county', 'race'),
+                  age_group = list_by_x_col_y(data_CHRI$arrests_by_year_county_age, 'county', 'age_group'),
+                  gender = list_by_x_col_y(data_CHRI$arrests_by_year_county_gender, 'county', 'gender')),
 
-                        ),
-    race = list(total = dcast(data_CHRI$arrest_by_year_race, year ~ race)[,.SD[,2:ncol(.SD)]]
+    race = list(total = col_by_year_wo_year_lowN(data_CHRI$arrests_by_year_race, 'race')),
 
-                  ),
-    gender = list(total =dcast(data_CHRI$arrest_by_year_gender, year ~ gender)[,.SD[,2:ncol(.SD)]],
-                  race = foreach(sel_gender = data_CHRI$arrests_by_year_gender_race[,unique(gender)] ,
-                                 .combine = c
-                  ) %do% {
-                    a <- list()
-                    a[[sel_gender]] <- data_CHRI$arrests_by_year_gender_race[gender==sel_gender, dcast(.SD, year ~ race)[,.SD[,2:ncol(.SD)]] ]
-                    a} ),
-    age_group =list( total = dcast(data_CHRI$arrests_by_year_age, year ~ age_group)[,.SD[,2:ncol(.SD)]]
-                       ,
-                     gender = foreach(sel_age = data_CHRI$arrests_by_year_age_gender[,unique(age_group)] ,
-                                      .combine = c
-                     ) %do% {
-                       a <- list()
-                       a[[sel_age]] <- data_CHRI$arrests_by_year_age_gender[age_group==sel_age, dcast(.SD, year ~ gender)[,.SD[,2:ncol(.SD)]] ]
-                       a}
-                       ,
-                     race = foreach(sel_age = data_CHRI$arrests_by_year_age_race[,unique(age_group)] ,
-                                    .combine = c
-                     ) %do% {
-                       a <- list()
-                       a[[sel_age]] <- data_CHRI$arrests_by_year_age_race[age_group==sel_age, dcast(.SD, year ~ race)[,.SD[,2:ncol(.SD)]] ]
-                       a} )
-                       ,
+    gender = list(total = col_by_year_wo_year_lowN(data_CHRI$arrests_by_year_gender, 'gender'),
+                  race =  list_by_x_col_y(data_CHRI$arrests_by_year_gender_race,'gender','race')),
+
+    age_group =list( total = col_by_year_wo_year_lowN(data_CHRI$arrests_by_year_age, 'age_group'),
+                     gender = list_by_x_col_y(data_CHRI$arrests_by_year_age_gender, 'age_group', 'gender'),
+                     race = list_by_x_col_y(data_CHRI$arrests_by_year_age_race, 'age_group', 'race'))
+                  ,
     total = data_CHRI$arrests_by_year$arrests
-
-
-
-
   ),
 
 
@@ -289,53 +300,21 @@ data.json <- list(
 
 
                    arrestees = list(
-                     age_group = list(total = dcast(data_CHRI$arrestees_by_year_age, year ~ age_group)[,.SD[,2:ncol(.SD)]],
-                                      gender = foreach(sel_age = data_CHRI$arrestees_by_age_gender[,unique(age_group)] ,
-                                                       .combine = c
-                                      ) %do% {
-                                        a <- list()
-                                        a[[sel_age]] <- data_CHRI$arrestees_by_age_gender[age_group==sel_age, dcast(.SD, year ~ gender)[,.SD[,2:ncol(.SD)]] ]
-                                        a} ,
-                                      race = foreach(sel_age = data_CHRI$arrestees_by_year_age_race[,unique(age_group)] ,
-                                                     .combine = c
-                                      ) %do% {
-                                        a <- list()
-                                        a[[sel_age]] <- data_CHRI$arrestees_by_year_age_race[age_group==sel_age, dcast(.SD, year ~ race)[,.SD[,2:ncol(.SD)]] ]
-                                        a}),
-                     county = list(total = dcast(data_CHRI$arrestees_by_year_county, year ~ county)[,.SD[,2:ncol(.SD)]],
-                                   age_group = foreach(sel_county = data_CHRI$arrestees_by_county_age[,unique(county)] ,
-                                                       .combine = c
-                                   ) %do% {
-                                     a <- list()
-                                     a[[sel_county]] <- data_CHRI$arrestees_by_county_age[county==sel_county, dcast(.SD, year ~ age_group)[,.SD[,2:ncol(.SD)]] ]
-                                     a} ,
-                                   gender = foreach(sel_county = data_CHRI$arrestees_by_year_county_gender[,unique(county)] ,
-                                                    .combine = c
-                                   ) %do% {
-                                     a <- list()
-                                     a[[sel_county]] <- data_CHRI$arrestees_by_year_county_gender[county==sel_county, dcast(.SD, year ~ gender)[,.SD[,2:ncol(.SD)]] ]
-                                     a} ,
-                                   race = foreach(sel_county = data_CHRI$arrestees_by_year_county_race[,unique(county)] ,
-                                                  .combine = c
-                                   ) %do% {
-                                     a <- list()
-                                     a[[sel_county]] <- data_CHRI$arrestees_by_year_county_race[county==sel_county, dcast(.SD, year ~ race)[,.SD[,2:ncol(.SD)]] ]
-                                     a}  ),
+                     age_group = list(total = col_by_year_wo_year_lowN(data_CHRI$arrestees_by_year_age, 'age_group'),
+                                      gender = list_by_x_col_y(data_CHRI$arrestees_by_age_gender,'age_group', 'gender'),
+                                      race = list_by_x_col_y(data_CHRI$arrestees_by_year_age_race, 'age_group', 'race')),
+                     county = list(total = col_by_year_wo_year_lowN(data_CHRI$arrestees_by_year_county, 'county'),
+                                   age_group = list_by_x_col_y(data_CHRI$arrestees_by_county_age, 'county', 'age_group') ,
+                                   gender = list_by_x_col_y(data_CHRI$arrestees_by_year_county_gender, 'county', 'gender')
+
+                                     ,
+                                   race = list_by_x_col_y(data_CHRI$arrestees_by_year_county_race, 'county', 'race')),
                      gender = list(
-                       total = dcast(data_CHRI$arrestees_by_year_gender, year ~ gender)[,.SD[,2:ncol(.SD)]]
-                       ,
-                       race = foreach(sel_gender= data_CHRI$arrestees_by_gender_race[,unique(gender)] ,
-                                      .combine = c
-                       ) %do% {
-                         a <- list()
-                         a[[sel_gender]] <- data_CHRI$arrestees_by_gender_race[gender==sel_gender, dcast(.SD, year ~ race)[,.SD[,2:ncol(.SD)]] ]
-                         a}
-                     ),
-                     race = list(total = dcast(data_CHRI$arrestees_by_year_race, year ~ race)[,.SD[,2:ncol(.SD)]]),
+                       total = col_by_year_wo_year_lowN(data_CHRI$arrestees_by_year_gender, 'gender'),
+                       race = list_by_x_col_y(data_CHRI$arrestees_by_gender_race, 'gender', 'race')
+                                    ),
+                     race = list(total = col_by_year_wo_year_lowN(data_CHRI$arrestees_by_year_race, 'race')),
                      total = data_CHRI$arrestees_by_year$arrestees
-
-
-
                    ),
 
 
@@ -343,45 +322,18 @@ data.json <- list(
 
 
                    arrest_charges = list(
-                     county =  list( total = dcast(data_CHRI$arrests_by_year_county, year ~ county)[,.SD[,2:ncol(.SD)]],
-                                     crime_type = foreach(sel_county = data_CHRI$arrest_by_year_county_crimetype[,unique(county)] ,
-                                                          .combine = c
-                                     ) %do% {
-                                       a <- list()
-                                       a[[sel_county]] <- data_CHRI$arrest_by_year_county_crimetype[county==sel_county, dcast(.SD, year ~ crime_type)[,.SD[,2:ncol(.SD)]] ]
-                                       a},
-                                     offense_category =  foreach(sel_county = data_CHRI$arrest_by_year_county_offense[,unique(county)] ,
-                                                                 .combine = c
-                                     ) %do% {
-                                       a <- list()
-                                       a[[sel_county]] <- data_CHRI$arrest_by_year_county_offense[county==sel_county, dcast(.SD, year ~ offense_category)[,.SD[,2:ncol(.SD)]] ]
-                                       a},
-                                     offense_class = foreach(sel_county = data_CHRI$arrest_by_year_county_offclass[,unique(county)] ,
-                                                             .combine = c
-                                     ) %do% {
-                                       a <- list()
-                                       a[[sel_county]] <- data_CHRI$arrest_by_year_county_offclass[county==sel_county, dcast(.SD, year ~ offense_class)[,.SD[,2:ncol(.SD)]] ]
-                                       a}
+                     county =  list( total = col_by_year_wo_year_lowN( data_CHRI$arrests_by_year_county, 'county'),
+                                     crime_type = list_by_x_col_y(data_CHRI$arrests_by_year_county_crimetype, 'county', 'crime_type'),
+                                     offense_category =  list_by_x_col_y(data_CHRI$arrests_by_year_county_offense, 'county', 'offense_category'),
+                                     offense_class = list_by_x_col_y(data_CHRI$arrests_by_year_county_offclass, 'county', 'offense_class')),
+                     crime_type = list(total = col_by_year_wo_year_lowN(data_CHRI$arrests_by_year_crimetype, 'crime_type'),
+                                       offense_class = list_by_x_col_y(data_CHRI$arrests_by_year_crimetype_offclass, 'crime_type', 'offense_class')
 
-                                     ),
-                     crime_type = list(total = dcast(data_CHRI$arrest_by_year_crimetype, year ~ crime_type )[,.SD[,2:ncol(.SD)]],
-                                       offense_class = foreach(sel_crimet = data_CHRI$arrest_by_year_crimetype_offclass[,unique(crime_type)] ,
-                                                               .combine = c
-                                       ) %do% {
-                                         a <- list()
-                                         a[[sel_crimet]] <- data_CHRI$arrest_by_year_crimetype_offclass[crime_type==sel_crimet, dcast(.SD, year ~ offense_class)[,.SD[,2:ncol(.SD)]] ]
-                                         a} ) ,
-                     offense_category = list(total = dcast(data_CHRI$arrest_by_year_offense, year ~ offense_category)[,.SD[,2:ncol(.SD)]] ,
-
-                                             offense_class = foreach(sel_offcat = data_CHRI$arrest_by_year_offense_offclass[,unique(offense_category)] ,
-                                                                     .combine = c
-                                             ) %do% {
-                                               a <- list()
-                                               a[[sel_offcat]] <- data_CHRI$arrest_by_year_offense_offclass[offense_category==sel_offcat, dcast(.SD, year ~ offense_class)[,.SD[,2:ncol(.SD)]] ]
-                                               a}
-
+                                        ) ,
+                     offense_category = list(total = col_by_year_wo_year_lowN(data_CHRI$arrests_by_year_offense, 'offense_category'),
+                                             offense_class = list_by_x_col_y( data_CHRI$arrests_by_year_offense_offclass, 'offense_category', 'offense_class')
                                              ),
-                     offense_class = list(total = dcast(data_CHRI$arrest_by_year_offclass, year ~ offense_class)[,.SD[,2:ncol(.SD)]] ) ,
+                     offense_class = list(total = col_by_year_wo_year_lowN(data_CHRI$arrests_by_year_offclass, 'offense_class')) ,
                      total = data_CHRI$arrests_by_year$arrests  ) ,
 
 ## final vectors in data -----

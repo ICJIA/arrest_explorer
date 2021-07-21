@@ -1,14 +1,16 @@
-const format = /^(?:cs|c$|[jt])/,
-  value = /^(?:[ao]|c[^s])/,
+"use strict";
+
+const format = /^(?:cs|c$|[jt])/i,
+  value = /^(?:ar|ch)/i,
   operators = /([!><]?=|[><])/g,
   equality = /^[!=]/,
   space = /%20/g,
-  greater = /%3e/g,
-  lesser = /%3c/g,
+  greater = /%3e/gi,
+  lesser = /%3c/gi,
   seps = /\s*(?:[,|])+\s*/g,
   not = /^[!-]/,
-  bool = /true|false/,
-  number = /^[+-]?\d*(?:e[+-]?|\.)?\d*$/,
+  bool = /true|false/i,
+  number = /^[+-]?\d*(?:e[+-]?|\.)?\d*$/i,
   integer = /^\d+$/,
   letter = /[A-Za-z]/,
   digit = /\d/,
@@ -130,10 +132,12 @@ function Dataview(data, levels) {
       // - vars: output object
       // - dim: overall dimension object -- increments the column count
       // - levels: variable's entry from the overall levels object
-      levels.display = [];
-      for (var n = levels.label.length, i = 0; i < n; i++) {
-        levels.display.push(levels.label[i]);
-        levels.label[i] = levels.label[i].toLowerCase();
+      if (!Object.prototype.hasOwnProperty.call(levels, "display")) {
+        levels.display = [];
+        for (var n = levels.label.length, i = 0; i < n; i++) {
+          levels.display.push(levels.label[i]);
+          levels.label[i] = levels.label[i].toLowerCase();
+        }
       }
       vars[name] = {
         levels: levels.display,
@@ -173,9 +177,16 @@ function Dataview(data, levels) {
             n = s[k].length;
             if (o && ckt) for (; i < n; i++) o.push(0);
           }
-          if (o && ckt)
-            for (i = 0; i < n; i++) if (s[k][i] !== "NA") o[i] += s[k][i];
+          if (o && ckt) {
+            for (i = 0; i < n; i++)
+              if ("number" === typeof s[k][i]) o[i] += s[k][i];
+          }
         }
+      if (o && ckt)
+        for (k in s)
+          if (Object.prototype.hasOwnProperty.call(s, k)) {
+            for (i = 0; i < n; i++) if (o[i] === 0) o[i] = "NA";
+          }
     }
     function calculate_part(k, o, a, b) {
       // calculates a vector of arrests / arrestees
@@ -186,9 +197,9 @@ function Dataview(data, levels) {
       o[k] = [];
       for (var i = a[k].length; i--; )
         o[k][i] =
-          b[k][i] && b[k][i] !== "NA"
+          b[k][i] && "number" === typeof b[k][i]
             ? Math.round((a[k][i] / b[k][i]) * 1000) / 1000
-            : 0;
+            : "NA";
     }
     // processing each dataset (value) in the top level of `data`
     for (val in data) {
@@ -252,7 +263,8 @@ function Dataview(data, levels) {
                         );
                         if (ckot)
                           for (i = data.year.length; i--; )
-                            data[val].total[i] += data[val][s1].total[k][i];
+                            if ("number" === typeof data[val][s1].total[k][i])
+                              data[val].total[i] += data[val][s1].total[k][i];
                       }
                     }
                     ckt = ckot = false;
@@ -356,6 +368,7 @@ Dataview.prototype = {
   // resets options, applied any specified, then calls prepare_view
   update: async function(options) {
     var k;
+    options = options || {};
     this.options = {
       round:
         Object.prototype.hasOwnProperty.call(options, "value") &&
@@ -388,11 +401,8 @@ Dataview.prototype = {
       o.value.push
     )
       o.value = {};
-    for (
-      var level, format, lvs = s.split ? s.split(seps) : s, i = lvs.length;
-      i--;
-
-    ) {
+    s = String(s);
+    for (var level, format, lvs = s.split(seps), i = lvs.length; i--; ) {
       level = lvs[i].replace(not, "").replace(aspect.name, "");
       if (level) {
         if (!format) {
@@ -414,6 +424,7 @@ Dataview.prototype = {
           aspect: aspect.has.test(lvs[i])
             ? lvs[i].replace(aspect.aspect, "")
             : "label",
+          format: format,
           increasing: not.test(lvs[i]),
         };
       }
@@ -449,6 +460,9 @@ Dataview.prototype = {
           switch (
             typeof this.options[k] === "string"
               ? this.options[k].substr(0, 1).toLowerCase()
+              : "object" === typeof this.options[k] &&
+                Object.prototype.hasOwnProperty.call(this.options[k], "value")
+              ? this.options[k].value.substr(0, 1).toLowerCase()
               : ""
           ) {
             case "i":
@@ -518,7 +532,7 @@ Dataview.prototype = {
             r[i][e] = o[e][i];
             if (sum)
               for (y = o[e][i].length; y--; )
-                if (o[e][i][y] !== "NA") r.total[i][y] += o[e][i][y];
+                if ("number" === typeof o[e][i][y]) r.total[i][y] += o[e][i][y];
           }
       }
     return r;
@@ -559,7 +573,7 @@ Dataview.prototype = {
           for (
             var i = 0,
               n = s.length,
-              present = 0,
+              v = 0,
               sum = 0,
               min = Infinity,
               max = -Infinity,
@@ -568,21 +582,18 @@ Dataview.prototype = {
             i++
           ) {
             r.push(arr[s[i]]);
-            if (arr[s[i]] !== "NA") {
-              if (arr[s[i]]) sum += arr[s[i]];
-              if ("number" === typeof arr[s[i]]) present++;
-              if (min > arr[s[i]]) min = arr[s[i]];
-              if (max < arr[s[i]]) max = arr[s[i]];
-            }
+            v = "number" === typeof arr[s[i]] ? arr[s[i]] : NaN;
+            sum += v;
+            if (min > v) min = v;
+            if (max < v) max = v;
           }
           return {
             sum,
             min,
             max,
-            mean: present
-              ? Math.round((sum / present) * this.options.round) /
-                this.options.round
-              : 0,
+            mean: isNaN(sum)
+              ? "NA"
+              : Math.round((sum / n) * this.options.round) / this.options.round,
             filtered: r,
           };
         }
@@ -591,7 +602,7 @@ Dataview.prototype = {
           for (
             var i = 0,
               n = rows.length,
-              present = 0,
+              v = 0,
               sum = 0,
               min = Infinity,
               max = -Infinity,
@@ -600,21 +611,18 @@ Dataview.prototype = {
             i++
           ) {
             r.push(arr[rows[i]]);
-            if (arr[rows[i]] !== "NA") {
-              if (arr[rows[i]]) sum += arr[rows[i]];
-              if ("number" === typeof arr[rows[i]]) present++;
-              if (min > arr[rows[i]]) min = arr[rows[i]];
-              if (max < arr[rows[i]]) max = arr[rows[i]];
-            }
+            v = "number" === typeof arr[rows[i]] ? arr[rows[i]] : NaN;
+            sum += v;
+            if (min > v) min = v;
+            if (max < v) max = v;
           }
           return {
             sum,
             min,
             max,
-            mean: present
-              ? Math.round((sum / present) * this.options.round) /
-                this.options.round
-              : 0,
+            mean: isNaN(sum)
+              ? "NA"
+              : Math.round((sum / n) * this.options.round) / this.options.round,
             filtered: r,
           };
         }
@@ -622,7 +630,7 @@ Dataview.prototype = {
           for (
             var i = 0,
               n = arr.length,
-              present = 0,
+              v = 0,
               sum = 0,
               min = Infinity,
               max = -Infinity,
@@ -631,28 +639,25 @@ Dataview.prototype = {
             i++
           ) {
             r.push(arr[i]);
-            if (arr[i] !== "NA") {
-              if (arr[i]) sum += arr[i];
-              if ("number" === typeof arr[i]) present++;
-              if (min > arr[i]) min = arr[i];
-              if (max < arr[i]) max = arr[i];
-            }
+            v = "number" === typeof arr[i] ? arr[i] : NaN;
+            sum += v;
+            if (min > v) min = v;
+            if (max < v) max = v;
           }
           return {
             sum,
             min,
             max,
-            mean: present
-              ? Math.round((sum / present) * this.options.round) /
-                this.options.round
-              : 0,
+            mean: isNaN(sum)
+              ? "NA"
+              : Math.round((sum / n) * this.options.round) / this.options.round,
             filtered: r,
           };
         };
   },
   get_variable_label: function(variable, level) {
-    var i;
-    return "" + (i = this.levels[variable].label.indexOf(level)) === -1
+    var i = this.levels[variable].label.indexOf(level);
+    return i === -1
       ? {}
       : {
           label: this.levels[variable].label[i],
@@ -671,6 +676,7 @@ Dataview.prototype = {
     var r, l, i, c, f;
     r = {
       sum: 0,
+      present: 0,
       min: Infinity,
       max: -Infinity,
       display_info: { maxlen: 0, sumlen: 0 },
@@ -722,7 +728,7 @@ Dataview.prototype = {
               if (c.label.length > r.display_info.maxlen)
                 r.display_info.maxlen = c.label.length;
             };
-      // applying vector filters to and assesses each level
+      // applying vector filters to and assessing each level
       for (l in o) {
         if (Object.prototype.hasOwnProperty.call(o, l)) {
           c = this.filter(o[l]);
@@ -737,6 +743,7 @@ Dataview.prototype = {
           c.label = c.labels[this.options.format_category];
           if (!crit || check_object(c, crit)) {
             f(c, l, this.options.sort[split]);
+            r.present++;
             if (c.sum) r.sum += c.sum;
             if (r.min > c.sum) r.min = c.sum;
             if (r.max < c.sum) r.max = c.sum;
@@ -744,9 +751,10 @@ Dataview.prototype = {
         }
       }
     }
-    r.mean =
-      Math.round((r.sum / r.labels.length) * this.options.round) /
-      this.options.round;
+    r.mean = isNaN(r.sum)
+      ? "NA"
+      : Math.round((r.sum / r.present) * this.options.round) /
+        this.options.round;
     return r;
   },
   // applies filter_levels to a (child) variable within levels of another (parent) variable
@@ -772,6 +780,7 @@ Dataview.prototype = {
         (r = {
           label: h[within].display[i],
           sum: 0,
+          present: 0,
           mean: 0,
           min: Infinity,
           max: -Infinity,
@@ -787,14 +796,16 @@ Dataview.prototype = {
           r.display.push(h[split].display[il]);
           r.levels.push((c = this.filter(o[g][l])));
           c.label = h[split].display[il];
+          r.present++;
           if (c.sum) r.sum += c.sum;
           if (r.min > c.sum) r.min = c.sum;
           if (r.max < c.sum) r.max = c.sum;
         }
-        if (r.labels.length)
-          r.mean =
-            Math.round((r.sum / r.labels.length) * this.options.round) /
-            this.options.round;
+        if (r.present)
+          r.mean = isNaN(r.sum)
+            ? "NA"
+            : Math.round((r.sum / r.present) * this.options.round) /
+              this.options.round;
       }
     }
   },
@@ -967,12 +978,7 @@ Dataview.prototype = {
                 header[i + this.adj]
               );
             }
-            if (this.rep === 1) {
-              this.row++;
-            } else if (++this.repped >= this.rep) {
-              this.repped = 0;
-              this.row++;
-            }
+            this.row++;
           },
           across_s2: function() {
             for (var i = 0, n = this.levels; i < n; i++) {
@@ -1013,18 +1019,6 @@ Dataview.prototype = {
           v.data.length &&
           Object.prototype.hasOwnProperty.call(v.data[0], "levels");
       return {
-        get_label: function(o, g, l) {
-          return this.s2 ? o[g][l].label : o[g].label;
-        },
-        get_value: function(o, g, l, i) {
-          return this.s2
-            ? o[g].length > l && o[g][l].filtered.length > i
-              ? o[g][l].filtered[i]
-              : 0
-            : o[g].filtered.length > i
-            ? o[g].filtered[i]
-            : 0;
-        },
         s2: is_split2,
         anys2: s2,
         average: average,
@@ -1167,10 +1161,7 @@ Dataview.prototype = {
     // extracts options from a query string
     // - q: query string, as (in a browser) from window.location.search
     if ("string" !== typeof q) q = "";
-    var arr = q
-        .toLowerCase()
-        .replace(/^\?+/, "")
-        .split(/&+/g),
+    var arr = q.replace(/^\?+/, "").split(/&+/g),
       arg = [],
       i = arr.length,
       par = {},
@@ -1210,6 +1201,7 @@ Dataview.prototype = {
             type: arg[1],
             value: arg[2],
             aspect: arg[3] || (equality.test(arg[1]) ? "label" : "mean"),
+            format: "label",
           });
         } else if (arg[0] === "sort") {
           par.sort = {};
@@ -1231,6 +1223,7 @@ Dataview.prototype = {
                 type: arg[1],
                 value: arg[2],
                 aspect: arg[3] || (equality.test(arg[1]) ? "label" : "mean"),
+                format: "label",
               },
             ];
           }
@@ -1238,14 +1231,16 @@ Dataview.prototype = {
         po = par[arg[0]].length
           ? par[arg[0]][par[arg[0]].length - 1]
           : par[arg[0]];
-        if (typeof po.value === "string" && equality.test(po.type)) {
+        if (typeof po.value !== "object" && equality.test(po.type)) {
           po.value = {};
           seps.lastIndex = 0;
           if (
             seps.test(arg[2]) ||
             (Object.prototype.hasOwnProperty.call(this, "variables") &&
-              Object.prototype.hasOwnProperty.call(this.variables, arg[2]))
+              Object.prototype.hasOwnProperty.call(this.variables, arg[0]))
           ) {
+            if (!Object.prototype.hasOwnProperty.call(par[arg[0]], "format"))
+              par[arg[0]].format = "label";
             if (arg[0] === "split") {
               po.value = arg[2].split(seps);
             } else {

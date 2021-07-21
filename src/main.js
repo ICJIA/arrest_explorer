@@ -1,3 +1,5 @@
+"use strict";
+
 import Vue from "vue";
 import App from "./App.vue";
 import vuetify from "./plugins/vuetify";
@@ -33,7 +35,11 @@ const data_options = [
     "unlock_yaxis_min",
     "unlock_yaxis_max",
   ],
-  store_fallback = { setItem: function() {}, getItem: function() {} },
+  store_fallback = {
+    setItem: function() {},
+    getItem: function() {},
+    removeItem: function() {},
+  },
   store_option = function(k, v) {
     local_storage.setItem(k, JSON.stringify(v));
   },
@@ -41,6 +47,7 @@ const data_options = [
     window.requestAnimationFrame(this.update_data);
   },
   seps = /[\s_]/g,
+  nocap = /^(?:a|an|the|by|of|is)$/,
   default_display_options = {
     value: "arrests",
     split: ["", ""],
@@ -197,6 +204,19 @@ var store_options = [
         this.settings.animation_time = this.settings.disable_plot_animation
           ? 0
           : 700;
+      },
+    ],
+    "settings.remember_view": [
+      function() {
+        var i = data_options.length;
+        if (settings.remember_view) {
+          store_option("display_options", this.$options.display.options);
+          for (; i--; )
+            store_option(data_options[i], this.settings[data_options[i]]);
+        } else {
+          localStorage.removeItem("display_options");
+          for (; i--; ) localStorage.removeItem(data_options[i]);
+        }
       },
     ],
   };
@@ -404,6 +424,8 @@ new Vue({
         window.history.replaceState("", "", this.settings.url);
       for (k in params) {
         if (Object.prototype.hasOwnProperty.call(params, k)) {
+          if (k === "county" && params[k].type === "=")
+            delete this.$options.display.options.county;
           if (k === "year") {
             if (!params[k].length) params[k] = [params[k]];
             for (i = params[k].length; i--; ) {
@@ -632,8 +654,9 @@ new Vue({
       for (var s = n.split(seps), i = s.length, r = ""; i--; ) {
         r =
           (i ? " " : "") +
-          s[i].substr(0, 1).toUpperCase() +
-          s[i].substr(1).toLowerCase() +
+          (nocap.test(s[i])
+            ? s[i]
+            : s[i].substr(0, 1).toUpperCase() + s[i].substr(1).toLowerCase()) +
           r;
       }
       return r;
@@ -1122,7 +1145,7 @@ new Vue({
                       animationEasingUpdate: s.animation_type,
                       animationDuration: s.animation_time,
                       animationDurationUpdate: s.animation_time,
-                      showSymbol: false,
+                      showSymbol: true,
                     });
                   }
                 }
@@ -1157,7 +1180,7 @@ new Vue({
                     animationEasingUpdate: s.animation_type,
                     animationDuration: s.animation_time,
                     animationDurationUpdate: s.animation_time,
-                    showSymbol: false,
+                    showSymbol: true,
                   });
                 }
               }
@@ -1177,7 +1200,7 @@ new Vue({
                     animationEasingUpdate: s.animation_type,
                     animationDuration: s.animation_time,
                     animationDurationUpdate: s.animation_time,
-                    showSymbol: false,
+                    showSymbol: true,
                   });
                   d.legend.data.push(sd.levels[i].label);
                 }
@@ -1192,7 +1215,7 @@ new Vue({
                   animationEasingUpdate: s.animation_type,
                   animationDuration: s.animation_time,
                   animationDurationUpdate: s.animation_time,
-                  showSymbol: false,
+                  showSymbol: true,
                 });
                 if (
                   sd.display_info.sumlen * 12 >
@@ -1210,7 +1233,7 @@ new Vue({
               d.series.push({
                 type: s.plot_type,
                 data: sd.total.filtered,
-                showSymbol: false,
+                showSymbol: true,
               });
             } else {
               d.graphic[0].style.text = "Average " + f.value;
