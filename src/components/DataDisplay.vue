@@ -10,6 +10,7 @@
       >
         {{ $root.$options.display.graphic[1].style.text }}
       </p>
+
     </div>
     <v-data-table
       :headers="$root.table.header"
@@ -20,6 +21,7 @@
       hide-default-footer
     ></v-data-table>
   </div>
+
   <Plot
     v-else-if="
       $root.settings.split1 ||
@@ -27,6 +29,7 @@
           $root.settings.year.window[0] !== $root.settings.year.window[1])
     "
   />
+
   <div class="average-display" v-else>
     <p class="text-h4">
       {{
@@ -47,7 +50,10 @@
             " per year."
       }}
     </p>
+
   </div>
+
+
 </template>
 
 <script>

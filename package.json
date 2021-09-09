@@ -16,7 +16,7 @@
   "devDependencies": {
     "@mdi/font": "latest",
     "@mdi/js": "latest",
-    "@vue/cli-service": "latest",
+    "@vue/cli-service": "^4.5.13",
     "mocha": "latest",
     "nyc": "latest",
     "sass": "latest",

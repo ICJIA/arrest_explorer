@@ -1,11 +1,14 @@
 <template>
   <div>
+
     <SideMenu />
+    <v-flex><div class="text-caption" >Data represent non-expunged adult arrests for class B misdemeanors and higher charges, including unclassified. Bond skip charges are excluded. Data have been modified for privacy.</div> </v-flex>
     <v-bottom-navigation absolute>
       <v-btn title="info and settings" @click="openSideMenu">
         <span>About</span>
         <v-icon>mdi-menu</v-icon>
       </v-btn>
+
       <v-spacer></v-spacer>
       <v-btn
         :title="
@@ -42,7 +45,9 @@
         <v-icon>mdi-database-cog</v-icon>
       </v-btn>
     </v-bottom-navigation>
+
   </div>
+
 </template>
 
 <script>

@@ -29,6 +29,34 @@
       </v-card-title>
       <v-card-text>
         <v-col>
+        <v-row>
+          <h1 class="text--primary">User Agreement</h1>
+          <p class="text--secondary">
+            Use of this site or its data is subject to our
+            <a
+              rel="noreferrer"
+              href="https://icjia.illinois.gov/arrestexplorer/docs/agreement"
+              target="_blank"
+              >User Agreement</a
+            >. By clicking Acknowledge below, you state that you understand that these are not official crime statistics (see Data Source below) and to not reproduce any data except under terms allowed in the User agreement. You also agree to not attempt re-identification of any individuals or attempt to hack the Arrest Explorer application.
+          </p>
+        </v-row>
+        <v-row>
+          <h1 class="text--primary">Data Source</h1>
+          <p class="text--secondary">
+            Data are aggregated adult records, originally provided
+            by the Illinois State Police but with some changes to protect privacy. Note that these exclude juvenile arrests as well as arrests for class C misdemeanors and local ordinance violations.
+            <br/>For more information about how data were prepared, please visit
+            our
+            <a
+              rel="noreferrer"
+              href="https://icjia.illinois.gov/arrestexplorer/docs/"
+              target="_blank"
+              >documentation site</a
+            >.
+          </p>
+        </v-row>
+
           <v-row>
             <h1 class="text--primary">Exploring the Data</h1>
             <p class="text--secondary">
@@ -48,34 +76,8 @@
               <em>offense class</em>, and <em>offense category</em>.
             </p>
           </v-row>
-          <v-row>
-            <h1 class="text--primary">Data Source</h1>
-            <p class="text--secondary">
-              Data are aggregated criminal history records, originally provided
-              by the Illinois State Police.
-              <br />
-              For more information about how data were prepared, please visit
-              our
-              <a
-                rel="noreferrer"
-                href="https://icjia.illinois.gov/arrestexplorer/docs/"
-                target="_blank"
-                >documentation site</a
-              >.
-            </p>
-          </v-row>
-          <v-row>
-            <h1 class="text--primary">User Agreement</h1>
-            <p class="text--secondary">
-              Use of this site or its data is subject to our
-              <a
-                rel="noreferrer"
-                href="https://icjia.illinois.gov/arrestexplorer/docs/agreement"
-                target="_blank"
-                >User Agreement</a
-              >.
-            </p>
-          </v-row>
+
+
           <v-row>
             <h1 class="text--primary">
               Notice of Federal Funding and Federal Disclaimer

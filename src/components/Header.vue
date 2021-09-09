@@ -8,7 +8,8 @@
     />
     <v-btn text title="reset view" @click="$root.reset_view"
       >Arrest Explorer</v-btn
-    >
+    ><v-spacer></v-spacer>
+    
   </v-system-bar>
 </template>
 
