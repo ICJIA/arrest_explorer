@@ -2,7 +2,7 @@
   <div>
 
     <SideMenu />
-    <v-flex><div class="text-caption" >Data represent non-expunged adult arrests for class B misdemeanors and higher charges, including unclassified. Bond skip charges are excluded. Data have been modified for privacy.</div> </v-flex>
+    
     <v-bottom-navigation absolute>
       <v-btn title="info and settings" @click="openSideMenu">
         <span>About</span>

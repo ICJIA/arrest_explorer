@@ -20,8 +20,11 @@
         <div id="data-menu" style="visibility: hidden">
           <DataSheet />
         </div>
-    <v-footer height="auto" absolute="true"><v-flex><div class="text-caption" ><a href="https://icjia.illinois.gov/arrestexplorer/docs/guide/#what-data-is-available" target="_blank">Data represent non-expunged adult arrests for Class B misdemeanors, higher offenses, and unclassified arrests.
-          Bond skip charges are excluded. Data have been modified for privacy.</a></div></v-flex> </v-footer>
+    <v-footer height="auto" absolute="true"><v-flex><div class="text-caption" >
+      <a href="https://icjia.illinois.gov/arrestexplorer/docs/guide/#what-data-is-available" target="_blank">
+        Data represent non-expunged adult arrests for Class B misdemeanors and higher offenses as well as unclassified arrests.
+          Bond skip charges are excluded. Data have been modified for privacy.
+        </a></div></v-flex> </v-footer>
       </v-row>
 
 
