@@ -1,5 +1,9 @@
 <template>
-  <div id="plot"></div>
+
+  <div id="plot">
+  
+      
+  </div>
 </template>
 
 <script>
@@ -61,7 +65,7 @@ export default {
 <style scoped>
 #plot {
   width: 100%;
-  height: 500px;
+
   min-width: 0.5em;
 }
 svg {

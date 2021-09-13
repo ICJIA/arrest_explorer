@@ -1,4 +1,8 @@
 <template>
+
+<div>
+
+
   <div v-if="$root.settings.as_table">
     <div v-if="$root.$options.display.graphic.length !== 0">
       <p class="text-h4">
@@ -53,6 +57,20 @@
 
   </div>
 
+<div>
+    <v-footer height="auto" position="fixed"><v-flex><div class="text-caption" >
+      <a href="https://icjia.illinois.gov/arrestexplorer/docs" 
+      style="text-decoration:none"
+      target="_blank">
+        Data represent non-expunged adult arrests for Class B misdemeanors and higher offenses. Hispanic was first report in 2015. Data have been modified to protect privacy, including not reporting zeros, click here for full details.
+        </a></div></v-flex> </v-footer>
+
+
+</div>
+
+
+
+</div>
 
 </template>
 
