@@ -10,7 +10,10 @@
       >Arrest Explorer</v-btn
     ><v-spacer></v-spacer>
     
+
+    
   </v-system-bar>
+
 </template>
 
 <style scoped>

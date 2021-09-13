@@ -63,11 +63,17 @@ export default {
 </script>
 
 <style scoped>
+
 #plot {
-  width: 100%;
+
+  width: 100% ;
 
   min-width: 0.5em;
-}
+} 
+
+
+
+
 svg {
   overflow: visible;
 }

@@ -1,9 +1,12 @@
 <template>
   <div>
 
+
     <SideMenu />
-    
+              
     <v-bottom-navigation absolute>
+    
+      
       <v-btn title="info and settings" @click="openSideMenu">
         <span>About</span>
         <v-icon>mdi-menu</v-icon>
@@ -44,9 +47,16 @@
         <span>Data Menu</span>
         <v-icon>mdi-database-cog</v-icon>
       </v-btn>
+
     </v-bottom-navigation>
 
-        
+
+        <div>
+
+
+
+</div>
+
 
 
 

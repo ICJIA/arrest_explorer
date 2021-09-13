@@ -25,14 +25,17 @@
       hide-default-footer
     ></v-data-table>
   </div>
-
-  <Plot
-    v-else-if="
+  
+  <div v-else-if="
       $root.settings.split1 ||
         (!$root.settings.average &&
           $root.settings.year.window[0] !== $root.settings.year.window[1])
     "
-  />
+    >
+  <Plot />
+
+ </div>
+  
 
   <div class="average-display" v-else>
     <p class="text-h4">
@@ -56,17 +59,12 @@
     </p>
 
   </div>
-
-<div>
-    <v-footer height="auto" position="fixed"><v-flex><div class="text-caption" >
-      <a href="https://icjia.illinois.gov/arrestexplorer/docs" 
+  <v-footer position="absolute" padless="true" height="auto">
+        <a href="https://icjia.illinois.gov/arrestexplorer/docs/#what-data-is-available" 
       style="text-decoration:none"
-      target="_blank">
-        Data represent non-expunged adult arrests for Class B misdemeanors and higher offenses. Hispanic was first report in 2015. Data have been modified to protect privacy, including not reporting zeros, click here for full details.
-        </a></div></v-flex> </v-footer>
-
-
-</div>
+      target="_blank" class="text-caption">
+        Data represent adult arrests with certain exclusions. They have been modified for privacy. Click here for details.
+        </a></v-footer>
 
 
 
@@ -118,4 +116,5 @@ export default {
 .text-h4 {
   margin: 0;
 }
+
 </style>
