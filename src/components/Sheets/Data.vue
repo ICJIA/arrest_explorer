@@ -108,12 +108,6 @@
           $root.settings.split1
       "
     >
-      <v-expansion-panels>
-        <v-expansion-panel>
-          <v-expansion-panel-header @click="addListeners">
-            Display Options
-          </v-expansion-panel-header>
-          <v-expansion-panel-content>
             <v-select
               v-if="$root.settings.as_table"
               label="Table Format"
@@ -126,30 +120,15 @@
                 :items="$root.settings.plot_types"
                 v-model="$root.settings.plot_type"
               ></v-select>
+
               <v-switch
                 v-if="$root.settings.split2 && !$root.settings.average"
                 label="Scale vertical axes per group"
                 v-model="$root.settings.unlock_yaxis_max"
                 inset
               ></v-switch>
-              <v-switch
-                label="Disable plot animation"
-                v-model="$root.settings.disable_plot_animation"
-                inset
-              ></v-switch>
-              <v-switch
-                label="Plot as SVG"
-                v-model="$root.settings.svg"
-                inset
-              ></v-switch>
-              <v-btn block text @click="$root.refresh_data">
-                <span>Redraw Plot</span>
-                <v-icon right>mdi-reload</v-icon>
-              </v-btn>
             </div>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
+
     </div>
   </v-card>
 </template>
