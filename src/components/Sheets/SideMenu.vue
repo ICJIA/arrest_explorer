@@ -51,6 +51,7 @@
           ><v-icon>mdi-help</v-icon></v-list-item-icon
         >
         <v-list-item-title>Show Initial Landing Screen Again</v-list-item-title>
+      
       </v-list-item>
       <v-list-item
         @click="
@@ -70,11 +71,7 @@
           v-model="$root.settings.theme_dark"
           inset
         ></v-switch>
-        <v-switch
-          label="Remember Data View"
-          v-model="$root.settings.remember_view"
-          inset
-        ></v-switch>
+
         <v-switch
           label="Share Interaction Data"
           v-model="$root.settings.send_data"
