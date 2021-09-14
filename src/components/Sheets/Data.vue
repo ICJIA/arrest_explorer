@@ -15,7 +15,7 @@
       aria-label="step 1. Data-set to view"
       :items="$root.$options.source.variables.values.values"
       v-model="$root.settings.value"
-      hint="View arrest_charges for crime-related variables, and others for demographic variables."
+      hint="Arrests, Arrestees, and Arrests_per_Arrestee can be broken down by count and demographics. Arrest_charges counts Arrests by the highest associated charge, and can be broken down by details of the charge, but not demographics."
       persistent-hint
       dense
       solo-inverted
@@ -72,6 +72,20 @@
         </v-col>
       </v-row>
     </v-col>
+    
+    <v-switch
+      label="Aggregate"
+      :hint="
+        'Average ' +
+          $root.settings.value +
+          ' over years' +
+          ($root.settings.split1 ? ' by grouping variables.' : '.')
+      "
+      persistent-hint
+      v-model="$root.settings.average"
+      inset
+    ></v-switch>
+
     <v-subheader class="step-subheader"
       >(<strong>3</strong>) Break by variables</v-subheader
     >
@@ -87,18 +101,10 @@
     >
       Swap Order <v-icon>mdi-shuffle-variant</v-icon>
     </v-btn>
-    <v-switch
-      label="Aggregate"
-      :hint="
-        'Average ' +
-          $root.settings.value +
-          ' over years' +
-          ($root.settings.split1 ? ' by grouping variables.' : '.')
-      "
-      persistent-hint
-      v-model="$root.settings.average"
-      inset
-    ></v-switch>
+    
+     <v-subheader class="step-subheader"
+      >(<strong>4</strong>) Output Options</v-subheader
+    >
 
     <div
       v-if="
