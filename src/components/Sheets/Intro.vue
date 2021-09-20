@@ -35,7 +35,7 @@
             Use of this site or its data is subject to our
             <a
               rel="noreferrer"
-              href="https://icjia.illinois.gov/arrestexplorer/docs/agreement"
+              href="https://icjia.illinois.gov/arrestexplorer/docs/user_agreement"
               target="_blank"
               >User Agreement</a
             >. By clicking Acknowledge below, you state that you understand that these are not official crime statistics (see Data Source below) and to not reproduce any data except under terms allowed in the User agreement. You also agree to not attempt re-identification of any individuals or attempt to hack the Arrest Explorer application.
