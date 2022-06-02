@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "echarts": "latest",
-    "vue": "latest",
-    "vuetify": "latest"
+    "vue": "2.6.14",
+    "vuetify": "2.5.8"
   },
   "devDependencies": {
     "@mdi/font": "latest",
@@ -19,11 +19,11 @@
     "@vue/cli-service": "^4.5.13",
     "mocha": "latest",
     "nyc": "latest",
-    "sass": "latest",
-    "sass-loader": "10.2.0",
-    "vue-cli-plugin-vuetify": "latest",
-    "vue-template-compiler": "latest",
-    "vuetify-loader": "latest"
+    "sass": "1.26.10",
+    "sass-loader": "9.0.3",
+    "vue-cli-plugin-vuetify": "^2.4.2",
+    "vue-template-compiler": "^2.6.14",
+    "vuetify-loader": "^1.7.3"
   },
   "prettier": {
     "printWidth": 80,
