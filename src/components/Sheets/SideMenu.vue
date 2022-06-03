@@ -51,7 +51,6 @@
           ><v-icon>mdi-help</v-icon></v-list-item-icon
         >
         <v-list-item-title>Show Initial Landing Screen Again</v-list-item-title>
-      
       </v-list-item>
       <v-list-item
         @click="
@@ -95,12 +94,12 @@
 
 <script>
 export default {
-  data: function() {
+  data: function () {
     return {
       links: [
         {
           label: "Documentation",
-          href: "https://icjia.illinois.gov/arrestexplorer/docs/",
+          href: "https://arrestexplorer-docs.netlify.app/",
           external: true,
         },
         {
@@ -117,7 +116,7 @@ export default {
     };
   },
   methods: {
-    reset: function() {
+    reset: function () {
       localStorage.clear();
       window.location.replace(this.$root.settings.url);
     },

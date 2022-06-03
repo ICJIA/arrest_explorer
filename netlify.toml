@@ -6,10 +6,10 @@
   to = '/.netlify/functions/api'
   status = 200
 
-[[redirects]]
-  from = '/docs'
-  to = 'https://brilliant-kitten-33c85a.netlify.app'
-  status = 200
+# [[redirects]]
+#   from = '/docs'
+#   to = 'https://brilliant-kitten-33c85a.netlify.app'
+#   status = 200
 
 [[redirects]]
   from = '/*'
