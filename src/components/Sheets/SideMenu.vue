@@ -99,7 +99,7 @@ export default {
       links: [
         {
           label: "Documentation",
-          href: "https://arrestexplorer-docs.netlify.app/",
+          href: "https://icjia.illinois.gov/arrestexplorer/docs/",
           external: true,
         },
         {
